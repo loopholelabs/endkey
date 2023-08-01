@@ -31,6 +31,14 @@ definitions:
       tag:
         type: string
     type: object
+  models.CAResponse:
+    properties:
+      authority:
+        type: string
+      ca_certificate:
+        format: base64
+        type: string
+    type: object
   models.ClientCertificateResponse:
     properties:
       additional_dns_names:
@@ -340,6 +348,44 @@ paths:
             type: string
       tags:
       - authority
+  /certificate/ca:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the CA Certificate
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CAResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - certificate
   /certificate/client:
     post:
       consumes:

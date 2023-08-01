@@ -112,7 +112,7 @@ func (a *APIKey) CreateAPIKey(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "client template is invalid")
 	}
 
-	a.logger.Info().Msgf("creating API Key '%s' for Authority '%s' (with Server Template '%s' and Client Template '%') for root key with ID %s", body.Name, body.Authority, body.ServerTemplate, body.ClientTemplate, rk.Identifier)
+	a.logger.Info().Msgf("creating API Key '%s' for Authority '%s' (with Server Template '%s' and Client Template '%s') for root key with ID %s", body.Name, body.Authority, body.ServerTemplate, body.ClientTemplate, rk.Identifier)
 
 	ak, secret, err := a.options.Database().CreateAPIKey(ctx.Context(), body.Name, body.Authority, body.ServerTemplate, body.ClientTemplate)
 	if err != nil {

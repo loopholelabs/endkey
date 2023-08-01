@@ -44,9 +44,14 @@ const (
 	APIKeyKind Kind = "api"
 )
 
+const (
+	HeaderString = "Authorization"
+	BearerString = "Bearer "
+)
+
 var (
-	Header       = []byte("Authorization")
-	BearerHeader = []byte("Bearer ")
+	Header = []byte(HeaderString)
+	Bearer = []byte(BearerString)
 )
 
 type Authorization struct {
@@ -68,11 +73,11 @@ func (v *Authorization) getHeader(ctx *fiber.Ctx) ([]byte, error) {
 		return nil, authMetric.Error(fiber.StatusUnauthorized, "invalid authorization header")
 	}
 
-	if !bytes.Equal(authHeader[:len(BearerHeader)], BearerHeader) {
+	if !bytes.Equal(authHeader[:len(Bearer)], Bearer) {
 		return nil, authMetric.Error(fiber.StatusUnauthorized, "invalid authorization header")
 	}
 
-	return authHeader[len(BearerHeader):], nil
+	return authHeader[len(Bearer):], nil
 }
 
 func (v *Authorization) RootKeyValidate(ctx *fiber.Ctx) error {

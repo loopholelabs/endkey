@@ -38,6 +38,7 @@ import (
 var (
 	createServerMetric = metrics.NewStatusMetric("v1_certificate_server_create", "The total number of certificate server create requests")
 	createClientMetric = metrics.NewStatusMetric("v1_certificate_client_create", "The total number of certificate client create requests")
+	getCAMetric        = metrics.NewStatusMetric("v1_certificate_ca_get", "The total number of certificate ca get requests")
 )
 
 type Certificate struct {
@@ -65,6 +66,7 @@ func (a *Certificate) init() {
 	a.app.Use(a.options.Auth().APIKeyValidate)
 	a.app.Post("/server", createServerMetric.Middleware(), a.CreateServer)
 	a.app.Post("/client", createClientMetric.Middleware(), a.CreateClient)
+	a.app.Get("/ca", getCAMetric.Middleware(), a.GetCA)
 }
 
 // CreateServer godoc
@@ -454,6 +456,40 @@ func (a *Certificate) CreateClient(ctx *fiber.Ctx) error {
 		Expiry:                template.NotAfter.Format(time.RFC3339),
 		CACertificate:         base64.StdEncoding.EncodeToString(auth.CaCertificatePem),
 		PublicCertificate:     base64.StdEncoding.EncodeToString(certPEM),
+	})
+}
+
+// GetCA godoc
+// @Description  Retrieves the CA Certificate
+// @Tags         certificate
+// @Accept       json
+// @Produce      json
+// @Success      200  {object} models.CAResponse
+// @Failure      400  {string} string
+// @Failure      401  {string} string
+// @Failure      404  {string} string
+// @Failure      409  {string} string
+// @Failure      412  {string} string
+// @Failure      500  {string} string
+// @Router       /certificate/ca [get]
+func (a *Certificate) GetCA(ctx *fiber.Ctx) error {
+	a.logger.Debug().Msgf("received GetCA request from %s", ctx.IP())
+
+	ak, err := authorization.GetAPIKey(ctx)
+	if err != nil {
+		a.logger.Error().Err(err).Msg("failed to get api key from context")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get api key from request context")
+	}
+
+	auth, err := ak.Edges.AuthorityOrErr()
+	if err != nil {
+		a.logger.Error().Err(err).Msg("failed to get authority edge from api key")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get authority from api key")
+	}
+
+	return ctx.JSON(&models.CAResponse{
+		Authority:     auth.Identifier,
+		CACertificate: base64.StdEncoding.EncodeToString(auth.CaCertificatePem),
 	})
 }
 

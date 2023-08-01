@@ -49,3 +49,8 @@ type ClientCertificateResponse struct {
 	CACertificate         string   `json:"ca_certificate" format:"base64"`
 	PublicCertificate     string   `json:"public_certificate" format:"base64"`
 }
+
+type CAResponse struct {
+	Authority     string `json:"authority"`
+	CACertificate string `json:"ca_certificate" format:"base64"`
+}

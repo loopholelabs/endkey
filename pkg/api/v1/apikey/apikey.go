@@ -71,7 +71,7 @@ func (a *APIKey) init() {
 // @Failure      409  {string} string
 // @Failure      412  {string} string
 // @Failure      500  {string} string
-// @Router       /authority [post]
+// @Router       /apikey [post]
 func (a *APIKey) CreateAPIKey(ctx *fiber.Ctx) error {
 	a.logger.Debug().Msgf("received CreateAPIKey request from %s", ctx.IP())
 

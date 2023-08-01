@@ -11,4 +11,4 @@ COPY . .
 RUN go build -o endkey -tags netgo ./cmd/.
 
 EXPOSE 8080
-ENTRYPOINT ["./endkey", "api", "--log stdout", "--debug"]
+ENTRYPOINT ["./endkey", "api", "--log=stdout", "--debug"]

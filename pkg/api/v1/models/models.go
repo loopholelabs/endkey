@@ -15,3 +15,7 @@
 */
 
 package models
+
+type HealthResponse struct {
+	Database bool `json:"database"`
+}

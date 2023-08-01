@@ -13,6 +13,7 @@ import (
 	"github.com/loopholelabs/endkey/pkg/client/apikey"
 	"github.com/loopholelabs/endkey/pkg/client/authority"
 	"github.com/loopholelabs/endkey/pkg/client/certificate"
+	"github.com/loopholelabs/endkey/pkg/client/health"
 	"github.com/loopholelabs/endkey/pkg/client/template"
 )
 
@@ -61,6 +62,7 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *EndKeyAPIV
 	cli.Apikey = apikey.New(transport, formats)
 	cli.Authority = authority.New(transport, formats)
 	cli.Certificate = certificate.New(transport, formats)
+	cli.Health = health.New(transport, formats)
 	cli.Template = template.New(transport, formats)
 	return cli
 }
@@ -112,6 +114,8 @@ type EndKeyAPIV1 struct {
 
 	Certificate certificate.ClientService
 
+	Health health.ClientService
+
 	Template template.ClientService
 
 	Transport runtime.ClientTransport
@@ -123,5 +127,6 @@ func (c *EndKeyAPIV1) SetTransport(transport runtime.ClientTransport) {
 	c.Apikey.SetTransport(transport)
 	c.Authority.SetTransport(transport)
 	c.Certificate.SetTransport(transport)
+	c.Health.SetTransport(transport)
 	c.Template.SetTransport(transport)
 }

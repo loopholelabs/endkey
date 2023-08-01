@@ -1,4 +1,6 @@
 basePath: /v1
+consumes:
+- application/json
 definitions:
   models.APIKeyResponse:
     properties:
@@ -181,6 +183,11 @@ definitions:
       validity:
         type: string
     type: object
+  models.HealthResponse:
+    properties:
+      database:
+        type: boolean
+    type: object
   models.ServerCertificateResponse:
     properties:
       additional_dns_names:
@@ -234,7 +241,8 @@ info:
   contact:
     email: admin@loopholelabs.io
     name: API Support
-  description: API for EndKey, V1
+  description: Returns the health and status of the various services that make up
+    the API.
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
@@ -422,6 +430,25 @@ paths:
             type: string
       tags:
       - certificate
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Returns the health and status of the various services that make
+        up the API.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.HealthResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - health
   /template/client:
     post:
       consumes:
@@ -512,6 +539,8 @@ paths:
             type: string
       tags:
       - template
+produces:
+- application/json
 schemes:
 - https
 swagger: "2.0"

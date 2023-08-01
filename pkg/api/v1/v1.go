@@ -24,6 +24,7 @@ import (
 	"github.com/loopholelabs/endkey/pkg/api/v1/authority"
 	"github.com/loopholelabs/endkey/pkg/api/v1/certificate"
 	"github.com/loopholelabs/endkey/pkg/api/v1/docs"
+	"github.com/loopholelabs/endkey/pkg/api/v1/models"
 	"github.com/loopholelabs/endkey/pkg/api/v1/options"
 	"github.com/loopholelabs/endkey/pkg/api/v1/template"
 	"github.com/prometheus/client_golang/prometheus"
@@ -33,6 +34,7 @@ import (
 )
 
 var (
+	healthMetric  = metrics.NewStatusMetric("v1_health_total", "The total number of health calls")
 	swaggerMetric = metrics.NewStatusMetric("v1_swagger_total", "The total number of swagger calls")
 )
 
@@ -90,6 +92,22 @@ func (v *V1) init() {
 	v.app.Get("/metrics", func(c *fiber.Ctx) error {
 		metricsHandler(c.Context())
 		return nil
+	})
+
+	v.app.Get("/health", healthMetric.Middleware(), v.Health)
+}
+
+// Health godoc
+// @Description  Returns the health and status of the various services that make up the API.
+// @Tags         health
+// @Accept       json
+// @Produce      json
+// @Success      200 {object} models.HealthResponse
+// @Failure      500 {string} string
+// @Router       /health [get]
+func (v *V1) Health(ctx *fiber.Ctx) error {
+	return ctx.JSON(&models.HealthResponse{
+		Database: true,
 	})
 }
 

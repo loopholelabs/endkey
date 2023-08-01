@@ -1,0 +1,472 @@
+basePath: /v1
+definitions:
+  models.APIKeyResponse:
+    properties:
+      authority:
+        type: string
+      client_template:
+        type: string
+      identifier:
+        type: string
+      name:
+        type: string
+      secret:
+        type: string
+      server_template:
+        type: string
+    type: object
+  models.AuthorityResponse:
+    properties:
+      ca_certificate:
+        format: base64
+        type: string
+      common_name:
+        type: string
+      expiry:
+        type: string
+      identifier:
+        type: string
+      tag:
+        type: string
+    type: object
+  models.ClientCertificateResponse:
+    properties:
+      additional_dns_names:
+        items:
+          type: string
+        type: array
+      additional_ip_addresses:
+        items:
+          type: string
+        type: array
+      authority:
+        type: string
+      ca_certificate:
+        format: base64
+        type: string
+      expiry:
+        type: string
+      public_certificate:
+        format: base64
+        type: string
+      template:
+        type: string
+    type: object
+  models.ClientTemplateResponse:
+    properties:
+      allow_additional_dns_names:
+        type: boolean
+      allow_additional_ips:
+        type: boolean
+      authority:
+        type: string
+      common_name:
+        type: string
+      dns_names:
+        items:
+          type: string
+        type: array
+      identifier:
+        type: string
+      ip_addresses:
+        items:
+          type: string
+        type: array
+      tag:
+        type: string
+      validity:
+        type: string
+    type: object
+  models.CreateAPIKeyRequest:
+    properties:
+      authority:
+        type: string
+      client_template:
+        type: string
+      name:
+        type: string
+      server_template:
+        type: string
+    type: object
+  models.CreateAuthorityRequest:
+    properties:
+      common_name:
+        type: string
+      identifier:
+        type: string
+      tag:
+        type: string
+      validity:
+        type: string
+    type: object
+  models.CreateClientCertificateRequest:
+    properties:
+      additional_dns_names:
+        items:
+          type: string
+        type: array
+      additional_ip_addresses:
+        items:
+          type: string
+        type: array
+      csr:
+        format: base64
+        type: string
+      template:
+        type: string
+    type: object
+  models.CreateClientTemplateRequest:
+    properties:
+      allow_additional_dns_names:
+        type: boolean
+      allow_additional_ips:
+        type: boolean
+      authority:
+        type: string
+      common_name:
+        type: string
+      dns_names:
+        items:
+          type: string
+        type: array
+      identifier:
+        type: string
+      ip_addresses:
+        items:
+          type: string
+        type: array
+      tag:
+        type: string
+      validity:
+        type: string
+    type: object
+  models.CreateServerCertificateRequest:
+    properties:
+      additional_dns_names:
+        items:
+          type: string
+        type: array
+      additional_ip_addresses:
+        items:
+          type: string
+        type: array
+      csr:
+        format: base64
+        type: string
+      template:
+        type: string
+    type: object
+  models.CreateServerTemplateRequest:
+    properties:
+      allow_additional_dns_names:
+        type: boolean
+      allow_additional_ips:
+        type: boolean
+      authority:
+        type: string
+      common_name:
+        type: string
+      dns_names:
+        items:
+          type: string
+        type: array
+      identifier:
+        type: string
+      ip_addresses:
+        items:
+          type: string
+        type: array
+      tag:
+        type: string
+      validity:
+        type: string
+    type: object
+  models.ServerCertificateResponse:
+    properties:
+      additional_dns_names:
+        items:
+          type: string
+        type: array
+      additional_ip_addresses:
+        items:
+          type: string
+        type: array
+      authority:
+        type: string
+      ca_certificate:
+        format: base64
+        type: string
+      expiry:
+        type: string
+      public_certificate:
+        format: base64
+        type: string
+      template:
+        type: string
+    type: object
+  models.ServerTemplateResponse:
+    properties:
+      allow_additional_dns_names:
+        type: boolean
+      allow_additional_ips:
+        type: boolean
+      authority:
+        type: string
+      common_name:
+        type: string
+      dns_names:
+        items:
+          type: string
+        type: array
+      identifier:
+        type: string
+      ip_addresses:
+        items:
+          type: string
+        type: array
+      tag:
+        type: string
+      validity:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: admin@loopholelabs.io
+    name: API Support
+  description: API for EndKey, V1
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://loopholelabs.io/privacy
+  title: EndKey API V1
+  version: "1.0"
+paths:
+  /authority:
+    post:
+      consumes:
+      - application/json
+      description: Create a new Authority
+      parameters:
+      - description: Create Authority Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateAuthorityRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AuthorityResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - authority
+  /certificate/client:
+    post:
+      consumes:
+      - application/json
+      description: Create a new Client Certificate
+      parameters:
+      - description: Create Client Certificate Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateClientCertificateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ClientCertificateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - certificate
+  /certificate/server:
+    post:
+      consumes:
+      - application/json
+      description: Create a new Server Certificate
+      parameters:
+      - description: Create Server Certificate Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateServerCertificateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ServerCertificateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - certificate
+  /template/client:
+    post:
+      consumes:
+      - application/json
+      description: Create a new Client Template
+      parameters:
+      - description: Create Client Template Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateClientTemplateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ClientTemplateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - template
+  /template/server:
+    post:
+      consumes:
+      - application/json
+      description: Create a new Server Template
+      parameters:
+      - description: Create Server Template Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateServerTemplateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ServerTemplateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - template
+schemes:
+- https
+swagger: "2.0"

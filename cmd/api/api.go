@@ -45,6 +45,9 @@ func Cmd() command.SetupCommand[*config.Config] {
 				ch.Printer.Println("Starting EndKey API listening on ", ch.Config.ListenAddress)
 				errCh := make(chan error, 1)
 				a, err := api.New(ch.Config, log.Logger)
+				if err != nil {
+					return fmt.Errorf("failed to create EndKey API: %w", err)
+				}
 				go func() {
 					errCh <- a.Start()
 				}()

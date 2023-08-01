@@ -1,0 +1,23 @@
+name: Deploy to Fly
+
+on:
+  push:
+    branches:
+      - dev
+      - staging
+      - prod
+  workflow_dispatch:
+
+jobs:
+  deploy-api:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --config=$CONFIG_PATH --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          CONFIG_PATH: "fly.${{ github.ref_name }}.toml"

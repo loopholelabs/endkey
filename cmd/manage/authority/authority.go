@@ -47,13 +47,18 @@ func Cmd() command.SetupCommand[*config.Config] {
 			Use:   "authority",
 			Short: "Create, list, and manage Authorities",
 			PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-				if rootkey == "" {
+				ch.Config.AuthenticationKey = rootkey
+
+				err := ch.Config.Validate()
+				if err != nil {
+					return err
+				}
+
+				if ch.Config.AuthenticationKey == "" {
 					return ErrRootKeyRequired
 				}
 
-				ch.Config.AuthenticationKey = rootkey
-
-				return ch.Config.Validate()
+				return nil
 			},
 		}
 

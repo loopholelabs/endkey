@@ -78,26 +78,6 @@ func Cmd() command.SetupCommand[*config.Config] {
 					return err
 				}
 
-				if identifier == "" {
-					return ErrIdentifierRequired
-				}
-
-				if databaseURL == "" {
-					return ErrDatabaseURLRequired
-				}
-
-				if listenAddress == "" {
-					return ErrListenAddressRequired
-				}
-
-				if len(encryptionKey) != 32 {
-					return ErrEncryptionKeyRequired
-				}
-
-				if endpoint == "" {
-					return ErrEndpointRequired
-				}
-
 				ch.Config.Identifier = identifier
 				ch.Config.DatabaseURL = databaseURL
 				ch.Config.ListenAddress = listenAddress
@@ -107,7 +87,32 @@ func Cmd() command.SetupCommand[*config.Config] {
 				ch.Config.Endpoint = endpoint
 				ch.Config.TLS = tls
 
-				return ch.Config.Validate()
+				err = ch.Config.Validate()
+				if err != nil {
+					return err
+				}
+
+				if ch.Config.Identifier == "" {
+					return ErrIdentifierRequired
+				}
+
+				if ch.Config.DatabaseURL == "" {
+					return ErrDatabaseURLRequired
+				}
+
+				if ch.Config.ListenAddress == "" {
+					return ErrListenAddressRequired
+				}
+
+				if len(ch.Config.EncryptionKey) != 32 {
+					return ErrEncryptionKeyRequired
+				}
+
+				if ch.Config.Endpoint == "" {
+					return ErrEndpointRequired
+				}
+
+				return nil
 			},
 			RunE: func(cmd *cobra.Command, args []string) error {
 				ch.Printer.Println("Starting EndKey API listening on ", ch.Config.ListenAddress)

@@ -47,14 +47,19 @@ func Cmd() command.SetupCommand[*config.Config] {
 			Use:   "manage",
 			Short: "Commands for management of the EndKey API",
 			PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-				if endpoint == "" {
-					return ErrEndpointRequired
-				}
-
 				ch.Config.Endpoint = endpoint
 				ch.Config.TLS = tls
 
-				return ch.Config.Validate()
+				err := ch.Config.Validate()
+				if err != nil {
+					return err
+				}
+
+				if ch.Config.Endpoint == "" {
+					return ErrEndpointRequired
+				}
+
+				return nil
 			},
 		}
 

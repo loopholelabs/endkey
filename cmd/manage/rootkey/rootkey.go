@@ -51,13 +51,18 @@ func Cmd() command.SetupCommand[*config.Config] {
 			Use:   "rootkey",
 			Short: "Create, list, and manage Root Keys",
 			PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-				if rootkey == "" {
+				ch.Config.AuthenticationKey = rootkey
+
+				err := ch.Config.Validate()
+				if err != nil {
+					return err
+				}
+
+				if ch.Config.AuthenticationKey == "" {
 					return ErrRootKeyRequired
 				}
 
-				ch.Config.AuthenticationKey = rootkey
-
-				return ch.Config.Validate()
+				return nil
 			},
 		}
 

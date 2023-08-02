@@ -17,9 +17,12 @@
 package config
 
 import (
-	"errors"
 	"fmt"
+	httptransport "github.com/go-openapi/runtime/client"
+	"github.com/go-openapi/strfmt"
 	"github.com/loopholelabs/cmdutils/pkg/config"
+	"github.com/loopholelabs/endkey/pkg/api/authorization"
+	"github.com/loopholelabs/endkey/pkg/client"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -30,14 +33,6 @@ import (
 var _ config.Config = (*Config)(nil)
 
 var (
-	ErrIdentifierRequired    = errors.New("identifier is required")
-	ErrDatabaseURLRequired   = errors.New("database url is required")
-	ErrListenAddressRequired = errors.New("listen address is required")
-	ErrEndpointRequired      = errors.New("endpoint is required")
-	ErrEncryptionKeyRequired = errors.New("encryption key is required")
-)
-
-var (
 	configFile string
 	logFile    string
 )
@@ -46,10 +41,6 @@ const (
 	defaultConfigPath = "~/.config/endkey"
 	configName        = "endkey.yml"
 	logName           = "endkey.log"
-
-	DefaultListenAddress = "127.0.0.1:8080"
-	DefaultEndpoint      = "localhost:8080"
-	DefaultTLS           = false
 )
 
 // Config is dynamically sourced from various files and environment variables.
@@ -57,45 +48,24 @@ type Config struct {
 	Identifier            string `mapstructure:"identifier"`
 	DatabaseURL           string `mapstructure:"database_url"`
 	ListenAddress         string `mapstructure:"listen_address"`
-	Endpoint              string `mapstructure:"endpoint"`
-	TLS                   bool   `mapstructure:"tls"`
 	EncryptionKey         []byte `mapstructure:"encryption_key"`
 	PreviousEncryptionKey []byte `mapstructure:"previous_encryption_key"`
+
+	Endpoint string `mapstructure:"endpoint"`
+	TLS      bool   `mapstructure:"tls"`
+
+	AuthenticationKey string `mapstructure:"authentication_key"`
+
+	client *client.EndKeyAPIV1 `mapstructure:"-"`
 }
 
 func New() *Config {
-	return &Config{
-		ListenAddress: DefaultListenAddress,
-		Endpoint:      DefaultEndpoint,
-	}
+	return new(Config)
 }
 
-func (c *Config) RootPersistentFlags(flags *pflag.FlagSet) {
-	flags.StringVar(&c.Identifier, "identifier", "", "The identifier for the service")
-	flags.StringVar(&c.DatabaseURL, "database-url", "", "The database url")
-	flags.StringVar(&c.ListenAddress, "listen-address", DefaultListenAddress, "The listen address")
-	flags.StringVar(&c.Endpoint, "endpoint", DefaultEndpoint, "The endpoint")
-	flags.BoolVar(&c.TLS, "tls", DefaultTLS, "Enable TLS")
-	flags.BytesHexVar(&c.EncryptionKey, "encryption-key", nil, "The encryption key (hex encoded)")
-	flags.BytesHexVar(&c.PreviousEncryptionKey, "previous-encryption-key", nil, "The previous encryption key (hex encoded)")
-}
+func (c *Config) RootPersistentFlags(_ *pflag.FlagSet) {}
 
-func (c *Config) GlobalRequiredFlags(cmd *cobra.Command) error {
-	err := cmd.MarkFlagRequired("identifier")
-	if err != nil {
-		return err
-	}
-
-	err = cmd.MarkFlagRequired("database-url")
-	if err != nil {
-		return err
-	}
-
-	err = cmd.MarkFlagRequired("encryption-key")
-	if err != nil {
-		return err
-	}
-
+func (c *Config) GlobalRequiredFlags(_ *cobra.Command) error {
 	return nil
 }
 
@@ -105,25 +75,7 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("unable to unmarshal config: %w", err)
 	}
 
-	if c.Identifier == "" {
-		return ErrIdentifierRequired
-	}
-
-	if c.DatabaseURL == "" {
-		return ErrDatabaseURLRequired
-	}
-
-	if c.ListenAddress == "" {
-		return ErrListenAddressRequired
-	}
-
-	if c.Endpoint == "" {
-		return ErrEndpointRequired
-	}
-
-	if len(c.EncryptionKey) != 32 {
-		return ErrEncryptionKeyRequired
-	}
+	c.SetClient(c.NewClient())
 
 	return nil
 }
@@ -175,4 +127,26 @@ func (c *Config) SetLogFile(file string) {
 
 func (c *Config) SetConfigFile(file string) {
 	configFile = file
+}
+
+// NewClient creates an API client from our configuration
+func (c *Config) NewClient() *client.EndKeyAPIV1 {
+	scheme := "http"
+	if c.TLS {
+		scheme = "https"
+	}
+	r := httptransport.New(c.Endpoint, client.DefaultBasePath, []string{scheme})
+	if c.AuthenticationKey != "" {
+		r.DefaultAuthentication = httptransport.APIKeyAuth(authorization.HeaderString, "header", authorization.BearerString+c.AuthenticationKey)
+	}
+
+	return client.New(r, strfmt.Default)
+}
+
+func (c *Config) SetClient(client *client.EndKeyAPIV1) {
+	c.client = client
+}
+
+func (c *Config) Client() *client.EndKeyAPIV1 {
+	return c.client
 }

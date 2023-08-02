@@ -16,32 +16,13 @@
 
 package loader
 
-import (
-	"context"
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
-	"crypto/tls"
-	"crypto/x509"
-	"encoding/base64"
-	"errors"
-	httptransport "github.com/go-openapi/runtime/client"
-	"github.com/go-openapi/strfmt"
-	"github.com/loopholelabs/endkey/internal/utils"
-	"github.com/loopholelabs/endkey/pkg/api/authorization"
-	"github.com/loopholelabs/endkey/pkg/client"
-	"github.com/loopholelabs/endkey/pkg/client/certificate"
-	"github.com/loopholelabs/endkey/pkg/client/models"
-	tlsClient "github.com/loopholelabs/tls/pkg/client"
-)
+import "errors"
 
 var (
 	ErrInvalidEndpoint = errors.New("invalid endpoint")
 	ErrInvalidAPIKey   = errors.New("invalid api key")
 	ErrInvalidTemplate = errors.New("invalid template")
 )
-
-var _ tlsClient.Loader = (*Loader)(nil)
 
 type Options struct {
 	Endpoint              string
@@ -50,98 +31,4 @@ type Options struct {
 	Template              string
 	AdditionalDNSNames    []string
 	AdditionalIPAddresses []string
-}
-
-type Loader struct {
-	options *Options
-	client  *client.EndKeyAPIV1
-}
-
-func New(options *Options) (*Loader, error) {
-	if options.Endpoint == "" {
-		return nil, ErrInvalidEndpoint
-	}
-
-	if options.APIKey == "" {
-		return nil, ErrInvalidAPIKey
-	}
-
-	if options.Template == "" {
-		return nil, ErrInvalidTemplate
-	}
-
-	scheme := "http"
-	if options.TLS {
-		scheme = "https"
-	}
-	r := httptransport.New(options.Endpoint, client.DefaultBasePath, []string{scheme})
-	r.DefaultAuthentication = httptransport.APIKeyAuth(authorization.HeaderString, "header", authorization.BearerString+options.APIKey)
-
-	c := client.New(r, strfmt.Default)
-
-	return &Loader{
-		options: options,
-		client:  c,
-	}, nil
-}
-
-func (l *Loader) RootCA(ctx context.Context) (*x509.CertPool, error) {
-	result, err := l.client.Certificate.GetCertificateCa(certificate.NewGetCertificateCaParamsWithContext(ctx))
-	if err != nil {
-		return nil, err
-	}
-
-	caPEM, err := base64.StdEncoding.DecodeString(result.GetPayload().CaCertificate)
-	if err != nil {
-		return nil, err
-	}
-
-	caPool := x509.NewCertPool()
-	caPool.AppendCertsFromPEM(caPEM)
-
-	return caPool, nil
-}
-
-func (l *Loader) ClientCertificate(ctx context.Context) (*tls.Certificate, error) {
-	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		return nil, err
-	}
-
-	template := &x509.CertificateRequest{
-		SignatureAlgorithm: x509.ECDSAWithSHA256,
-	}
-
-	csrPEM, err := x509.CreateCertificateRequest(rand.Reader, template, privateKey)
-	if err != nil {
-		return nil, err
-	}
-
-	req := &models.ModelsCreateClientCertificateRequest{
-		AdditionalDNSNames:    l.options.AdditionalDNSNames,
-		AdditionalIPAddresses: l.options.AdditionalIPAddresses,
-		Csr:                   base64.StdEncoding.EncodeToString(csrPEM),
-		Template:              l.options.Template,
-	}
-
-	result, err := l.client.Certificate.PostCertificateClient(certificate.NewPostCertificateClientParamsWithContext(ctx).WithRequest(req))
-	if err != nil {
-		return nil, err
-	}
-
-	certPEM, err := base64.StdEncoding.DecodeString(result.GetPayload().PublicCertificate)
-	if err != nil {
-		return nil, err
-	}
-
-	cert, err := utils.DecodeX509Certificate(certPEM)
-	if err != nil {
-		return nil, err
-	}
-
-	return &tls.Certificate{
-		Certificate: [][]byte{cert.Raw},
-		Leaf:        cert,
-		PrivateKey:  privateKey,
-	}, nil
 }

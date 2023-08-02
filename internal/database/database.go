@@ -27,7 +27,6 @@ import (
 	"github.com/loopholelabs/endkey/internal/ent"
 	"github.com/rs/zerolog"
 	"sync"
-	"time"
 )
 
 var (
@@ -36,7 +35,6 @@ var (
 )
 
 var (
-	zeroTime           time.Time
 	emptyEncryptionKey = [32]byte{}
 )
 
@@ -85,7 +83,7 @@ func New(options *Options, logger *zerolog.Logger) (*Database, error) {
 		cancel:  cancel,
 	}
 
-	rk, secret, err := d.CreateRootKey(ctx, true)
+	rk, secret, err := d.CreateRootKey(ctx, "bootstrap")
 	if err != nil {
 		if !errors.Is(err, ErrAlreadyExists) {
 			cancel()

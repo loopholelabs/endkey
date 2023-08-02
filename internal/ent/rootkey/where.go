@@ -64,6 +64,11 @@ func Identifier(v string) predicate.RootKey {
 	return predicate.RootKey(sql.FieldEQ(FieldIdentifier, v))
 }
 
+// Name applies equality check predicate on the "name" field. It's identical to NameEQ.
+func Name(v string) predicate.RootKey {
+	return predicate.RootKey(sql.FieldEQ(FieldName, v))
+}
+
 // Salt applies equality check predicate on the "salt" field. It's identical to SaltEQ.
 func Salt(v []byte) predicate.RootKey {
 	return predicate.RootKey(sql.FieldEQ(FieldSalt, v))
@@ -72,11 +77,6 @@ func Salt(v []byte) predicate.RootKey {
 // Hash applies equality check predicate on the "hash" field. It's identical to HashEQ.
 func Hash(v []byte) predicate.RootKey {
 	return predicate.RootKey(sql.FieldEQ(FieldHash, v))
-}
-
-// Bootstrap applies equality check predicate on the "bootstrap" field. It's identical to BootstrapEQ.
-func Bootstrap(v string) predicate.RootKey {
-	return predicate.RootKey(sql.FieldEQ(FieldBootstrap, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -184,6 +184,71 @@ func IdentifierContainsFold(v string) predicate.RootKey {
 	return predicate.RootKey(sql.FieldContainsFold(FieldIdentifier, v))
 }
 
+// NameEQ applies the EQ predicate on the "name" field.
+func NameEQ(v string) predicate.RootKey {
+	return predicate.RootKey(sql.FieldEQ(FieldName, v))
+}
+
+// NameNEQ applies the NEQ predicate on the "name" field.
+func NameNEQ(v string) predicate.RootKey {
+	return predicate.RootKey(sql.FieldNEQ(FieldName, v))
+}
+
+// NameIn applies the In predicate on the "name" field.
+func NameIn(vs ...string) predicate.RootKey {
+	return predicate.RootKey(sql.FieldIn(FieldName, vs...))
+}
+
+// NameNotIn applies the NotIn predicate on the "name" field.
+func NameNotIn(vs ...string) predicate.RootKey {
+	return predicate.RootKey(sql.FieldNotIn(FieldName, vs...))
+}
+
+// NameGT applies the GT predicate on the "name" field.
+func NameGT(v string) predicate.RootKey {
+	return predicate.RootKey(sql.FieldGT(FieldName, v))
+}
+
+// NameGTE applies the GTE predicate on the "name" field.
+func NameGTE(v string) predicate.RootKey {
+	return predicate.RootKey(sql.FieldGTE(FieldName, v))
+}
+
+// NameLT applies the LT predicate on the "name" field.
+func NameLT(v string) predicate.RootKey {
+	return predicate.RootKey(sql.FieldLT(FieldName, v))
+}
+
+// NameLTE applies the LTE predicate on the "name" field.
+func NameLTE(v string) predicate.RootKey {
+	return predicate.RootKey(sql.FieldLTE(FieldName, v))
+}
+
+// NameContains applies the Contains predicate on the "name" field.
+func NameContains(v string) predicate.RootKey {
+	return predicate.RootKey(sql.FieldContains(FieldName, v))
+}
+
+// NameHasPrefix applies the HasPrefix predicate on the "name" field.
+func NameHasPrefix(v string) predicate.RootKey {
+	return predicate.RootKey(sql.FieldHasPrefix(FieldName, v))
+}
+
+// NameHasSuffix applies the HasSuffix predicate on the "name" field.
+func NameHasSuffix(v string) predicate.RootKey {
+	return predicate.RootKey(sql.FieldHasSuffix(FieldName, v))
+}
+
+// NameEqualFold applies the EqualFold predicate on the "name" field.
+func NameEqualFold(v string) predicate.RootKey {
+	return predicate.RootKey(sql.FieldEqualFold(FieldName, v))
+}
+
+// NameContainsFold applies the ContainsFold predicate on the "name" field.
+func NameContainsFold(v string) predicate.RootKey {
+	return predicate.RootKey(sql.FieldContainsFold(FieldName, v))
+}
+
 // SaltEQ applies the EQ predicate on the "salt" field.
 func SaltEQ(v []byte) predicate.RootKey {
 	return predicate.RootKey(sql.FieldEQ(FieldSalt, v))
@@ -262,81 +327,6 @@ func HashLT(v []byte) predicate.RootKey {
 // HashLTE applies the LTE predicate on the "hash" field.
 func HashLTE(v []byte) predicate.RootKey {
 	return predicate.RootKey(sql.FieldLTE(FieldHash, v))
-}
-
-// BootstrapEQ applies the EQ predicate on the "bootstrap" field.
-func BootstrapEQ(v string) predicate.RootKey {
-	return predicate.RootKey(sql.FieldEQ(FieldBootstrap, v))
-}
-
-// BootstrapNEQ applies the NEQ predicate on the "bootstrap" field.
-func BootstrapNEQ(v string) predicate.RootKey {
-	return predicate.RootKey(sql.FieldNEQ(FieldBootstrap, v))
-}
-
-// BootstrapIn applies the In predicate on the "bootstrap" field.
-func BootstrapIn(vs ...string) predicate.RootKey {
-	return predicate.RootKey(sql.FieldIn(FieldBootstrap, vs...))
-}
-
-// BootstrapNotIn applies the NotIn predicate on the "bootstrap" field.
-func BootstrapNotIn(vs ...string) predicate.RootKey {
-	return predicate.RootKey(sql.FieldNotIn(FieldBootstrap, vs...))
-}
-
-// BootstrapGT applies the GT predicate on the "bootstrap" field.
-func BootstrapGT(v string) predicate.RootKey {
-	return predicate.RootKey(sql.FieldGT(FieldBootstrap, v))
-}
-
-// BootstrapGTE applies the GTE predicate on the "bootstrap" field.
-func BootstrapGTE(v string) predicate.RootKey {
-	return predicate.RootKey(sql.FieldGTE(FieldBootstrap, v))
-}
-
-// BootstrapLT applies the LT predicate on the "bootstrap" field.
-func BootstrapLT(v string) predicate.RootKey {
-	return predicate.RootKey(sql.FieldLT(FieldBootstrap, v))
-}
-
-// BootstrapLTE applies the LTE predicate on the "bootstrap" field.
-func BootstrapLTE(v string) predicate.RootKey {
-	return predicate.RootKey(sql.FieldLTE(FieldBootstrap, v))
-}
-
-// BootstrapContains applies the Contains predicate on the "bootstrap" field.
-func BootstrapContains(v string) predicate.RootKey {
-	return predicate.RootKey(sql.FieldContains(FieldBootstrap, v))
-}
-
-// BootstrapHasPrefix applies the HasPrefix predicate on the "bootstrap" field.
-func BootstrapHasPrefix(v string) predicate.RootKey {
-	return predicate.RootKey(sql.FieldHasPrefix(FieldBootstrap, v))
-}
-
-// BootstrapHasSuffix applies the HasSuffix predicate on the "bootstrap" field.
-func BootstrapHasSuffix(v string) predicate.RootKey {
-	return predicate.RootKey(sql.FieldHasSuffix(FieldBootstrap, v))
-}
-
-// BootstrapIsNil applies the IsNil predicate on the "bootstrap" field.
-func BootstrapIsNil() predicate.RootKey {
-	return predicate.RootKey(sql.FieldIsNull(FieldBootstrap))
-}
-
-// BootstrapNotNil applies the NotNil predicate on the "bootstrap" field.
-func BootstrapNotNil() predicate.RootKey {
-	return predicate.RootKey(sql.FieldNotNull(FieldBootstrap))
-}
-
-// BootstrapEqualFold applies the EqualFold predicate on the "bootstrap" field.
-func BootstrapEqualFold(v string) predicate.RootKey {
-	return predicate.RootKey(sql.FieldEqualFold(FieldBootstrap, v))
-}
-
-// BootstrapContainsFold applies the ContainsFold predicate on the "bootstrap" field.
-func BootstrapContainsFold(v string) predicate.RootKey {
-	return predicate.RootKey(sql.FieldContainsFold(FieldBootstrap, v))
 }
 
 // And groups predicates with the AND operator between them.

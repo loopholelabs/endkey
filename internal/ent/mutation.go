@@ -2502,9 +2502,9 @@ type RootKeyMutation struct {
 	id            *int
 	created_at    *time.Time
 	identifier    *string
+	name          *string
 	salt          *[]byte
 	hash          *[]byte
-	bootstrap     *string
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*RootKey, error)
@@ -2681,6 +2681,42 @@ func (m *RootKeyMutation) ResetIdentifier() {
 	m.identifier = nil
 }
 
+// SetName sets the "name" field.
+func (m *RootKeyMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *RootKeyMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the RootKey entity.
+// If the RootKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RootKeyMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *RootKeyMutation) ResetName() {
+	m.name = nil
+}
+
 // SetSalt sets the "salt" field.
 func (m *RootKeyMutation) SetSalt(b []byte) {
 	m.salt = &b
@@ -2753,55 +2789,6 @@ func (m *RootKeyMutation) ResetHash() {
 	m.hash = nil
 }
 
-// SetBootstrap sets the "bootstrap" field.
-func (m *RootKeyMutation) SetBootstrap(s string) {
-	m.bootstrap = &s
-}
-
-// Bootstrap returns the value of the "bootstrap" field in the mutation.
-func (m *RootKeyMutation) Bootstrap() (r string, exists bool) {
-	v := m.bootstrap
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldBootstrap returns the old "bootstrap" field's value of the RootKey entity.
-// If the RootKey object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *RootKeyMutation) OldBootstrap(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldBootstrap is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldBootstrap requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldBootstrap: %w", err)
-	}
-	return oldValue.Bootstrap, nil
-}
-
-// ClearBootstrap clears the value of the "bootstrap" field.
-func (m *RootKeyMutation) ClearBootstrap() {
-	m.bootstrap = nil
-	m.clearedFields[rootkey.FieldBootstrap] = struct{}{}
-}
-
-// BootstrapCleared returns if the "bootstrap" field was cleared in this mutation.
-func (m *RootKeyMutation) BootstrapCleared() bool {
-	_, ok := m.clearedFields[rootkey.FieldBootstrap]
-	return ok
-}
-
-// ResetBootstrap resets all changes to the "bootstrap" field.
-func (m *RootKeyMutation) ResetBootstrap() {
-	m.bootstrap = nil
-	delete(m.clearedFields, rootkey.FieldBootstrap)
-}
-
 // Where appends a list predicates to the RootKeyMutation builder.
 func (m *RootKeyMutation) Where(ps ...predicate.RootKey) {
 	m.predicates = append(m.predicates, ps...)
@@ -2843,14 +2830,14 @@ func (m *RootKeyMutation) Fields() []string {
 	if m.identifier != nil {
 		fields = append(fields, rootkey.FieldIdentifier)
 	}
+	if m.name != nil {
+		fields = append(fields, rootkey.FieldName)
+	}
 	if m.salt != nil {
 		fields = append(fields, rootkey.FieldSalt)
 	}
 	if m.hash != nil {
 		fields = append(fields, rootkey.FieldHash)
-	}
-	if m.bootstrap != nil {
-		fields = append(fields, rootkey.FieldBootstrap)
 	}
 	return fields
 }
@@ -2864,12 +2851,12 @@ func (m *RootKeyMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case rootkey.FieldIdentifier:
 		return m.Identifier()
+	case rootkey.FieldName:
+		return m.Name()
 	case rootkey.FieldSalt:
 		return m.Salt()
 	case rootkey.FieldHash:
 		return m.Hash()
-	case rootkey.FieldBootstrap:
-		return m.Bootstrap()
 	}
 	return nil, false
 }
@@ -2883,12 +2870,12 @@ func (m *RootKeyMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldCreatedAt(ctx)
 	case rootkey.FieldIdentifier:
 		return m.OldIdentifier(ctx)
+	case rootkey.FieldName:
+		return m.OldName(ctx)
 	case rootkey.FieldSalt:
 		return m.OldSalt(ctx)
 	case rootkey.FieldHash:
 		return m.OldHash(ctx)
-	case rootkey.FieldBootstrap:
-		return m.OldBootstrap(ctx)
 	}
 	return nil, fmt.Errorf("unknown RootKey field %s", name)
 }
@@ -2912,6 +2899,13 @@ func (m *RootKeyMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetIdentifier(v)
 		return nil
+	case rootkey.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
 	case rootkey.FieldSalt:
 		v, ok := value.([]byte)
 		if !ok {
@@ -2925,13 +2919,6 @@ func (m *RootKeyMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetHash(v)
-		return nil
-	case rootkey.FieldBootstrap:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetBootstrap(v)
 		return nil
 	}
 	return fmt.Errorf("unknown RootKey field %s", name)
@@ -2962,11 +2949,7 @@ func (m *RootKeyMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *RootKeyMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(rootkey.FieldBootstrap) {
-		fields = append(fields, rootkey.FieldBootstrap)
-	}
-	return fields
+	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -2979,11 +2962,6 @@ func (m *RootKeyMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *RootKeyMutation) ClearField(name string) error {
-	switch name {
-	case rootkey.FieldBootstrap:
-		m.ClearBootstrap()
-		return nil
-	}
 	return fmt.Errorf("unknown RootKey nullable field %s", name)
 }
 
@@ -2997,14 +2975,14 @@ func (m *RootKeyMutation) ResetField(name string) error {
 	case rootkey.FieldIdentifier:
 		m.ResetIdentifier()
 		return nil
+	case rootkey.FieldName:
+		m.ResetName()
+		return nil
 	case rootkey.FieldSalt:
 		m.ResetSalt()
 		return nil
 	case rootkey.FieldHash:
 		m.ResetHash()
-		return nil
-	case rootkey.FieldBootstrap:
-		m.ResetBootstrap()
 		return nil
 	}
 	return fmt.Errorf("unknown RootKey field %s", name)

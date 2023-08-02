@@ -8,6 +8,8 @@ definitions:
         type: string
       client_template:
         type: string
+      created_at:
+        type: string
       identifier:
         type: string
       name:
@@ -23,6 +25,8 @@ definitions:
         format: base64
         type: string
       common_name:
+        type: string
+      created_at:
         type: string
       expiry:
         type: string
@@ -71,6 +75,8 @@ definitions:
       authority:
         type: string
       common_name:
+        type: string
+      created_at:
         type: string
       dns_names:
         items:
@@ -191,10 +197,42 @@ definitions:
       validity:
         type: string
     type: object
+  models.DeleteAPIKeyRequest:
+    properties:
+      authority:
+        type: string
+      name:
+        type: string
+    type: object
+  models.DeleteClientTemplateRequest:
+    properties:
+      authority:
+        type: string
+      identifier:
+        type: string
+    type: object
+  models.DeleteServerTemplateRequest:
+    properties:
+      authority:
+        type: string
+      identifier:
+        type: string
+    type: object
   models.HealthResponse:
     properties:
       database:
         type: boolean
+    type: object
+  models.RootKeyResponse:
+    properties:
+      created_at:
+        type: string
+      identifier:
+        type: string
+      name:
+        type: string
+      secret:
+        type: string
     type: object
   models.ServerCertificateResponse:
     properties:
@@ -229,6 +267,8 @@ definitions:
         type: string
       common_name:
         type: string
+      created_at:
+        type: string
       dns_names:
         items:
           type: string
@@ -259,6 +299,50 @@ info:
   version: "1.0"
 paths:
   /apikey:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an API Key
+      parameters:
+      - description: Delete API Key Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.DeleteAPIKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - apikey
     post:
       consumes:
       - application/json
@@ -303,7 +387,92 @@ paths:
             type: string
       tags:
       - apikey
+  /apikey/{authority}:
+    get:
+      consumes:
+      - application/json
+      description: Lists all the api keys
+      parameters:
+      - description: Authority Identifier
+        in: path
+        name: authority
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.APIKeyResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - apikey
   /authority:
+    get:
+      consumes:
+      - application/json
+      description: List authorities
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.AuthorityResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - authority
     post:
       consumes:
       - application/json
@@ -315,6 +484,93 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/models.CreateAuthorityRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AuthorityResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - authority
+  /authority/{identifier}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an authority
+      parameters:
+      - description: Authority Identifier
+        in: path
+        name: identifier
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - authority
+    get:
+      consumes:
+      - application/json
+      description: Get an authority
+      parameters:
+      - description: Authority Identifier
+        in: path
+        name: identifier
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -495,7 +751,222 @@ paths:
             type: string
       tags:
       - health
+  /rootkey:
+    get:
+      consumes:
+      - application/json
+      description: Lists all the root keys
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.RootKeyResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - rootkey
+  /rootkey/{name}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a Root Key
+      parameters:
+      - description: Root Key Name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - rootkey
+    post:
+      consumes:
+      - application/json
+      description: Create a new Root Key
+      parameters:
+      - description: Root Key Name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.RootKeyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - rootkey
+  /rootkey/rotate/{name}:
+    post:
+      consumes:
+      - application/json
+      description: Rotates a given Root Key
+      parameters:
+      - description: Root Key Name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.RootKeyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - rootkey
   /template/client:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a Client Template
+      parameters:
+      - description: Delete Server Client Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.DeleteClientTemplateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - template
     post:
       consumes:
       - application/json
@@ -540,7 +1011,97 @@ paths:
             type: string
       tags:
       - template
+  /template/client/{authority}:
+    get:
+      consumes:
+      - application/json
+      description: List all Client Templates
+      parameters:
+      - description: Authority Identifier
+        in: path
+        name: authority
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ClientTemplateResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - template
   /template/server:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a Server Template
+      parameters:
+      - description: Delete Server Template Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.DeleteServerTemplateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - template
     post:
       consumes:
       - application/json
@@ -559,6 +1120,52 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.ServerTemplateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - template
+  /template/server/{authority}:
+    get:
+      consumes:
+      - application/json
+      description: List all Server Templates
+      parameters:
+      - description: Authority Identifier
+        in: path
+        name: authority
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ServerTemplateResponse'
+            type: array
         "400":
           description: Bad Request
           schema:

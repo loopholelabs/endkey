@@ -56,6 +56,35 @@ func (d *Database) GetServerTemplate(ctx context.Context, identifier string, aut
 	return templ, nil
 }
 
+func (d *Database) ListServerTemplates(ctx context.Context, authorityID string) (ent.ServerTemplates, error) {
+	templs, err := d.sql.ServerTemplate.Query().Where(servertemplate.HasAuthorityWith(authority.Identifier(authorityID))).All(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return templs, nil
+}
+
+func (d *Database) DeleteServerTemplate(ctx context.Context, identifier string, authorityID string) error {
+	_, err := d.sql.ServerTemplate.Delete().Where(servertemplate.Identifier(identifier), servertemplate.HasAuthorityWith(authority.Identifier(authorityID))).Exec(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrNotFound
+		}
+
+		if ent.IsConstraintError(err) {
+			return ErrAlreadyExists
+		}
+
+		return err
+	}
+
+	return nil
+}
+
 func (d *Database) CreateClientTemplate(ctx context.Context, identifier string, authorityID string, commonName string, tag string, dnsNames []string, additionalDNS bool, IPs []string, additionalIPs bool, validity string) (*ent.ClientTemplate, error) {
 	auth, err := d.sql.Authority.Query().Where(authority.Identifier(authorityID)).Only(ctx)
 	if err != nil {
@@ -86,4 +115,33 @@ func (d *Database) GetClientTemplate(ctx context.Context, identifier string, aut
 	}
 
 	return templ, nil
+}
+
+func (d *Database) ListClientTemplates(ctx context.Context, authorityID string) (ent.ClientTemplates, error) {
+	templs, err := d.sql.ClientTemplate.Query().Where(clienttemplate.HasAuthorityWith(authority.Identifier(authorityID))).All(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return templs, nil
+}
+
+func (d *Database) DeleteClientTemplate(ctx context.Context, identifier string, authorityID string) error {
+	_, err := d.sql.ClientTemplate.Delete().Where(clienttemplate.Identifier(identifier), clienttemplate.HasAuthorityWith(authority.Identifier(authorityID))).Exec(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrNotFound
+		}
+
+		if ent.IsConstraintError(err) {
+			return ErrAlreadyExists
+		}
+
+		return err
+	}
+
+	return nil
 }

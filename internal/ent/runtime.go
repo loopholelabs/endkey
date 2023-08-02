@@ -97,12 +97,16 @@ func init() {
 	rootkeyDescIdentifier := rootkeyFields[1].Descriptor()
 	// rootkey.IdentifierValidator is a validator for the "identifier" field. It is called by the builders before save.
 	rootkey.IdentifierValidator = rootkeyDescIdentifier.Validators[0].(func(string) error)
+	// rootkeyDescName is the schema descriptor for name field.
+	rootkeyDescName := rootkeyFields[2].Descriptor()
+	// rootkey.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	rootkey.NameValidator = rootkeyDescName.Validators[0].(func(string) error)
 	// rootkeyDescSalt is the schema descriptor for salt field.
-	rootkeyDescSalt := rootkeyFields[2].Descriptor()
+	rootkeyDescSalt := rootkeyFields[3].Descriptor()
 	// rootkey.SaltValidator is a validator for the "salt" field. It is called by the builders before save.
 	rootkey.SaltValidator = rootkeyDescSalt.Validators[0].(func([]byte) error)
 	// rootkeyDescHash is the schema descriptor for hash field.
-	rootkeyDescHash := rootkeyFields[3].Descriptor()
+	rootkeyDescHash := rootkeyFields[4].Descriptor()
 	// rootkey.HashValidator is a validator for the "hash" field. It is called by the builders before save.
 	rootkey.HashValidator = rootkeyDescHash.Validators[0].(func([]byte) error)
 	servertemplateFields := schema.ServerTemplate{}.Fields()

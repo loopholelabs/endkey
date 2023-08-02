@@ -24,6 +24,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/loopholelabs/endkey/internal/database"
 	"github.com/loopholelabs/endkey/internal/metrics"
@@ -38,6 +39,9 @@ import (
 
 var (
 	createMetric = metrics.NewStatusMetric("v1_authority_create", "The total number of authority create requests")
+	listMetric   = metrics.NewStatusMetric("v1_authority_list", "The total number of authority list requests")
+	getMetric    = metrics.NewStatusMetric("v1_authority_get", "The total number of authority get requests")
+	deleteMetric = metrics.NewStatusMetric("v1_authority_delete", "The total number of authority delete requests")
 )
 
 type Authority struct {
@@ -64,6 +68,9 @@ func (a *Authority) init() {
 
 	a.app.Use(a.options.Auth().RootKeyValidate)
 	a.app.Post("/", createMetric.Middleware(), a.CreateAuthority)
+	a.app.Get("/", listMetric.Middleware(), a.ListAuthorities)
+	a.app.Get("/:identifier", getMetric.Middleware(), a.GetAuthority)
+	a.app.Delete("/:identifier", deleteMetric.Middleware(), a.DeleteAuthority)
 }
 
 // CreateAuthority godoc
@@ -181,12 +188,179 @@ func (a *Authority) CreateAuthority(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(&models.AuthorityResponse{
+		CreatedAt:     authority.CreatedAt.Format(time.RFC3339),
 		Identifier:    authority.Identifier,
 		CommonName:    body.CommonName,
 		Tag:           body.Tag,
 		Expiry:        ca.NotAfter.Format(time.RFC3339),
 		CACertificate: base64.StdEncoding.EncodeToString(caPEM),
 	})
+}
+
+// GetAuthority godoc
+// @Description  Get an authority
+// @Tags         authority
+// @Accept       json
+// @Produce      json
+// @Param        identifier path string true "Authority Identifier"
+// @Success      200  {object} models.AuthorityResponse
+// @Failure      400  {string} string
+// @Failure      401  {string} string
+// @Failure      404  {string} string
+// @Failure      409  {string} string
+// @Failure      412  {string} string
+// @Failure      500  {string} string
+// @Router       /authority/{identifier} [get]
+func (a *Authority) GetAuthority(ctx *fiber.Ctx) error {
+	a.logger.Debug().Msgf("received GetAuthority request from %s", ctx.IP())
+
+	rk, err := authorization.GetRootKey(ctx)
+	if err != nil {
+		a.logger.Error().Err(err).Msg("failed to get root key from context")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")
+	}
+
+	identifier := ctx.Params("identifier")
+	if identifier == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "identifier is required")
+	}
+
+	if !utils.ValidString(identifier) {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid identifier")
+	}
+
+	a.logger.Info().Msgf("getting authority '%s' for root key with ID %s", identifier, rk.Identifier)
+
+	authority, err := a.options.Database().GetAuthority(ctx.Context(), identifier)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return fiber.NewError(fiber.StatusNotFound, "authority not found")
+		}
+
+		a.logger.Error().Err(err).Msg("failed to create authority")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to create authority")
+	}
+
+	ca, err := utils.DecodeX509Certificate(authority.CaCertificatePem)
+	if err != nil {
+		a.logger.Error().Err(err).Msg("failed to decode ca certificate")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to decode ca certificate")
+	}
+
+	return ctx.JSON(&models.AuthorityResponse{
+		CreatedAt:     authority.CreatedAt.Format(time.RFC3339),
+		Identifier:    authority.Identifier,
+		CommonName:    ca.Subject.CommonName,
+		Tag:           ca.Subject.OrganizationalUnit[0],
+		Expiry:        ca.NotAfter.Format(time.RFC3339),
+		CACertificate: base64.StdEncoding.EncodeToString(authority.CaCertificatePem),
+	})
+}
+
+// ListAuthorities godoc
+// @Description  List authorities
+// @Tags         authority
+// @Accept       json
+// @Produce      json
+// @Success      200  {array} models.AuthorityResponse
+// @Failure      400  {string} string
+// @Failure      401  {string} string
+// @Failure      404  {string} string
+// @Failure      409  {string} string
+// @Failure      412  {string} string
+// @Failure      500  {string} string
+// @Router       /authority [get]
+func (a *Authority) ListAuthorities(ctx *fiber.Ctx) error {
+	a.logger.Debug().Msgf("received ListAuthorities request from %s", ctx.IP())
+
+	rk, err := authorization.GetRootKey(ctx)
+	if err != nil {
+		a.logger.Error().Err(err).Msg("failed to get root key from context")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")
+	}
+
+	a.logger.Info().Msgf("listing authorities for root key with ID %s", rk.Identifier)
+
+	authorities, err := a.options.Database().ListAuthorities(ctx.Context())
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return fiber.NewError(fiber.StatusNotFound, "no authorities found")
+		}
+
+		a.logger.Error().Err(err).Msg("failed to list authorities")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to list authorities")
+	}
+
+	ret := make([]*models.AuthorityResponse, 0, len(authorities))
+	for _, authority := range authorities {
+		ca, err := utils.DecodeX509Certificate(authority.CaCertificatePem)
+		if err != nil {
+			a.logger.Error().Err(err).Msg("failed to decode ca certificate")
+			return fiber.NewError(fiber.StatusInternalServerError, "failed to decode ca certificate")
+		}
+
+		ret = append(ret, &models.AuthorityResponse{
+			CreatedAt:  authority.CreatedAt.Format(time.RFC3339),
+			Identifier: authority.Identifier,
+			CommonName: ca.Subject.CommonName,
+			Tag:        ca.Subject.OrganizationalUnit[0],
+			Expiry:     ca.NotAfter.Format(time.RFC3339),
+		})
+	}
+
+	return ctx.JSON(ret)
+}
+
+// DeleteAuthority godoc
+// @Description  Delete an authority
+// @Tags         authority
+// @Accept       json
+// @Produce      json
+// @Param 	     identifier path string true "Authority Identifier"
+// @Success      200  {string} string
+// @Failure      400  {string} string
+// @Failure      401  {string} string
+// @Failure      404  {string} string
+// @Failure      409  {string} string
+// @Failure      412  {string} string
+// @Failure      500  {string} string
+// @Router       /authority/{identifier} [delete]
+func (a *Authority) DeleteAuthority(ctx *fiber.Ctx) error {
+	a.logger.Debug().Msgf("received DeleteAuthority request from %s", ctx.IP())
+
+	rk, err := authorization.GetRootKey(ctx)
+	if err != nil {
+		a.logger.Error().Err(err).Msg("failed to get root key from context")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")
+	}
+
+	identifier := ctx.Params("identifier")
+	if identifier == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "identifier is required")
+	}
+
+	if !utils.ValidString(identifier) {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid identifier")
+	}
+
+	a.logger.Info().Msgf("deleting authority '%s' for root key with ID %s", identifier, rk.Identifier)
+
+	err = a.options.Database().DeleteAuthority(ctx.Context(), identifier)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return fiber.NewError(fiber.StatusNotFound, "authority not found")
+		}
+
+		if errors.Is(err, database.ErrAlreadyExists) {
+			return fiber.NewError(fiber.StatusConflict, "cannot delete authority because resources are still associated with it")
+		}
+
+		a.logger.Error().Err(err).Msg("failed to delete authority")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to delete authority")
+	}
+
+	return ctx.SendString(fmt.Sprintf("authority '%s' deleted", identifier))
+
 }
 
 func (a *Authority) App() *fiber.App {

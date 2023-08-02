@@ -19,7 +19,8 @@ package main
 import (
 	"github.com/loopholelabs/cmdutils/pkg/command"
 	"github.com/loopholelabs/endkey/cmd/api"
-	"github.com/loopholelabs/endkey/pkg/config"
+	"github.com/loopholelabs/endkey/cmd/manage"
+	"github.com/loopholelabs/endkey/internal/config"
 	"github.com/loopholelabs/endkey/version"
 )
 
@@ -30,5 +31,5 @@ var Cmd = command.New[*config.Config](
 	true,
 	version.V,
 	config.New,
-	[]command.SetupCommand[*config.Config]{api.Cmd()},
+	[]command.SetupCommand[*config.Config]{api.Cmd(), manage.Cmd()},
 )

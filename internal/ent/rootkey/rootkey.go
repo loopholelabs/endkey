@@ -17,12 +17,12 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldIdentifier holds the string denoting the identifier field in the database.
 	FieldIdentifier = "identifier"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
 	// FieldSalt holds the string denoting the salt field in the database.
 	FieldSalt = "salt"
 	// FieldHash holds the string denoting the hash field in the database.
 	FieldHash = "hash"
-	// FieldBootstrap holds the string denoting the bootstrap field in the database.
-	FieldBootstrap = "bootstrap"
 	// Table holds the table name of the rootkey in the database.
 	Table = "root_keys"
 )
@@ -32,9 +32,9 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldIdentifier,
+	FieldName,
 	FieldSalt,
 	FieldHash,
-	FieldBootstrap,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -52,6 +52,8 @@ var (
 	DefaultCreatedAt func() time.Time
 	// IdentifierValidator is a validator for the "identifier" field. It is called by the builders before save.
 	IdentifierValidator func(string) error
+	// NameValidator is a validator for the "name" field. It is called by the builders before save.
+	NameValidator func(string) error
 	// SaltValidator is a validator for the "salt" field. It is called by the builders before save.
 	SaltValidator func([]byte) error
 	// HashValidator is a validator for the "hash" field. It is called by the builders before save.
@@ -76,7 +78,7 @@ func ByIdentifier(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldIdentifier, opts...).ToFunc()
 }
 
-// ByBootstrap orders the results by the bootstrap field.
-func ByBootstrap(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldBootstrap, opts...).ToFunc()
+// ByName orders the results by the name field.
+func ByName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldName, opts...).ToFunc()
 }

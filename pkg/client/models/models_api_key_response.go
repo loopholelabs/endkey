@@ -23,6 +23,9 @@ type ModelsAPIKeyResponse struct {
 	// client template
 	ClientTemplate string `json:"client_template,omitempty"`
 
+	// created at
+	CreatedAt string `json:"created_at,omitempty"`
+
 	// identifier
 	Identifier string `json:"identifier,omitempty"`
 

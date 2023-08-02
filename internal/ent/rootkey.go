@@ -21,12 +21,12 @@ type RootKey struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Identifier holds the value of the "identifier" field.
 	Identifier string `json:"identifier,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
 	// Salt holds the value of the "salt" field.
 	Salt []byte `json:"salt,omitempty"`
 	// Hash holds the value of the "hash" field.
-	Hash []byte `json:"hash,omitempty"`
-	// Bootstrap holds the value of the "bootstrap" field.
-	Bootstrap    string `json:"bootstrap,omitempty"`
+	Hash         []byte `json:"hash,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -39,7 +39,7 @@ func (*RootKey) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case rootkey.FieldID:
 			values[i] = new(sql.NullInt64)
-		case rootkey.FieldIdentifier, rootkey.FieldBootstrap:
+		case rootkey.FieldIdentifier, rootkey.FieldName:
 			values[i] = new(sql.NullString)
 		case rootkey.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -76,6 +76,12 @@ func (rk *RootKey) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				rk.Identifier = value.String
 			}
+		case rootkey.FieldName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field name", values[i])
+			} else if value.Valid {
+				rk.Name = value.String
+			}
 		case rootkey.FieldSalt:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field salt", values[i])
@@ -87,12 +93,6 @@ func (rk *RootKey) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field hash", values[i])
 			} else if value != nil {
 				rk.Hash = *value
-			}
-		case rootkey.FieldBootstrap:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field bootstrap", values[i])
-			} else if value.Valid {
-				rk.Bootstrap = value.String
 			}
 		default:
 			rk.selectValues.Set(columns[i], values[i])
@@ -136,14 +136,14 @@ func (rk *RootKey) String() string {
 	builder.WriteString("identifier=")
 	builder.WriteString(rk.Identifier)
 	builder.WriteString(", ")
+	builder.WriteString("name=")
+	builder.WriteString(rk.Name)
+	builder.WriteString(", ")
 	builder.WriteString("salt=")
 	builder.WriteString(fmt.Sprintf("%v", rk.Salt))
 	builder.WriteString(", ")
 	builder.WriteString("hash=")
 	builder.WriteString(fmt.Sprintf("%v", rk.Hash))
-	builder.WriteString(", ")
-	builder.WriteString("bootstrap=")
-	builder.WriteString(rk.Bootstrap)
 	builder.WriteByte(')')
 	return builder.String()
 }

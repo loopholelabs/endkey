@@ -27,18 +27,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (d *Database) GetAPIKey(ctx context.Context, identifier string) (*ent.APIKey, error) {
-	ak, err := d.sql.APIKey.Query().Where(apikey.Identifier(identifier)).WithAuthority().WithClientTemplate().WithServerTemplate().Only(ctx)
-	if err != nil {
-		if ent.IsNotFound(err) {
-			return nil, ErrNotFound
-		}
-		return nil, err
-	}
-
-	return ak, nil
-}
-
 func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityID string, serverTemplateID string, clientTemplateID string) (*ent.APIKey, []byte, error) {
 	identifier := uuid.New().String()
 	secret := []byte(uuid.New().String())
@@ -89,4 +77,45 @@ func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityID st
 	}
 
 	return ak, secret, nil
+}
+
+func (d *Database) GetAPIKey(ctx context.Context, identifier string) (*ent.APIKey, error) {
+	ak, err := d.sql.APIKey.Query().Where(apikey.Identifier(identifier)).WithAuthority().WithClientTemplate().WithServerTemplate().Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return ak, nil
+}
+
+func (d *Database) ListAPIKeys(ctx context.Context, authorityID string) (ent.APIKeys, error) {
+	aks, err := d.sql.APIKey.Query().Where(apikey.HasAuthorityWith(authority.Identifier(authorityID))).WithServerTemplate().WithClientTemplate().All(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return aks, nil
+}
+
+func (d *Database) DeleteAPIKey(ctx context.Context, name string, authorityID string) error {
+	_, err := d.sql.APIKey.Delete().Where(apikey.Name(name), apikey.HasAuthorityWith(authority.Identifier(authorityID))).Exec(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrNotFound
+		}
+
+		if ent.IsConstraintError(err) {
+			return ErrAlreadyExists
+		}
+
+		return err
+	}
+
+	return nil
 }

@@ -23,7 +23,13 @@ type CreateAPIKeyRequest struct {
 	ClientTemplate string `json:"client_template"`
 }
 
+type DeleteAPIKeyRequest struct {
+	Name      string `json:"name"`
+	Authority string `json:"authority"`
+}
+
 type APIKeyResponse struct {
+	CreatedAt      string `json:"created_at"`
 	Identifier     string `json:"identifier"`
 	Name           string `json:"name"`
 	Authority      string `json:"authority"`

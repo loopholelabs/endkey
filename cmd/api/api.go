@@ -17,18 +17,42 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"github.com/loopholelabs/cmdutils"
 	"github.com/loopholelabs/cmdutils/pkg/command"
+	"github.com/loopholelabs/endkey/internal/config"
 	"github.com/loopholelabs/endkey/internal/log"
 	"github.com/loopholelabs/endkey/internal/utils"
 	"github.com/loopholelabs/endkey/pkg/api"
-	"github.com/loopholelabs/endkey/pkg/config"
 	"github.com/spf13/cobra"
+)
+
+var (
+	ErrIdentifierRequired    = errors.New("identifier is required")
+	ErrDatabaseURLRequired   = errors.New("database url is required")
+	ErrListenAddressRequired = errors.New("listen address is required")
+	ErrEndpointRequired      = errors.New("endpoint is required")
+	ErrEncryptionKeyRequired = errors.New("encryption key is required")
+)
+
+const (
+	DefaultListenAddress = "127.0.0.1:8080"
+	DefaultEndpoint      = "localhost:8080"
+	DefaultTLS           = false
 )
 
 // Cmd encapsulates the commands for starting the API
 func Cmd() command.SetupCommand[*config.Config] {
+	var identifier string
+	var databaseURL string
+	var listenAddress string
+	var encryptionKey []byte
+	var previousEncryptionKey []byte
+
+	var endpoint string
+	var tls bool
+
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		apiCmd := &cobra.Command{
 			Use: "api",
@@ -38,6 +62,50 @@ func Cmd() command.SetupCommand[*config.Config] {
 				if err != nil {
 					return err
 				}
+
+				err = cmd.MarkFlagRequired("identifier")
+				if err != nil {
+					return err
+				}
+
+				err = cmd.MarkFlagRequired("database-url")
+				if err != nil {
+					return err
+				}
+
+				err = cmd.MarkFlagRequired("encryption-key")
+				if err != nil {
+					return err
+				}
+
+				if identifier == "" {
+					return ErrIdentifierRequired
+				}
+
+				if databaseURL == "" {
+					return ErrDatabaseURLRequired
+				}
+
+				if listenAddress == "" {
+					return ErrListenAddressRequired
+				}
+
+				if len(encryptionKey) != 32 {
+					return ErrEncryptionKeyRequired
+				}
+
+				if endpoint == "" {
+					return ErrEndpointRequired
+				}
+
+				ch.Config.Identifier = identifier
+				ch.Config.DatabaseURL = databaseURL
+				ch.Config.ListenAddress = listenAddress
+				ch.Config.EncryptionKey = encryptionKey
+				ch.Config.PreviousEncryptionKey = previousEncryptionKey
+
+				ch.Config.Endpoint = endpoint
+				ch.Config.TLS = tls
 
 				return ch.Config.Validate()
 			},
@@ -65,6 +133,16 @@ func Cmd() command.SetupCommand[*config.Config] {
 				return nil
 			},
 		}
+
+		apiCmd.Flags().StringVar(&identifier, "identifier", "", "The identifier for the service")
+		apiCmd.Flags().StringVar(&databaseURL, "database-url", "", "The database url")
+		apiCmd.Flags().StringVar(&listenAddress, "listen-address", DefaultListenAddress, "The listen address")
+		apiCmd.Flags().BytesHexVar(&encryptionKey, "encryption-key", nil, "The encryption key (hex encoded)")
+		apiCmd.Flags().BytesHexVar(&previousEncryptionKey, "previous-encryption-key", nil, "The previous encryption key (hex encoded)")
+
+		apiCmd.Flags().StringVar(&endpoint, "endpoint", DefaultEndpoint, "The endpoint")
+		apiCmd.Flags().BoolVar(&tls, "tls", DefaultTLS, "Enable TLS")
+
 		cmd.AddCommand(apiCmd)
 	}
 }

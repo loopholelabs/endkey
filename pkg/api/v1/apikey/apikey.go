@@ -18,6 +18,7 @@ package apikey
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/loopholelabs/endkey/internal/database"
 	"github.com/loopholelabs/endkey/internal/metrics"
@@ -26,10 +27,13 @@ import (
 	"github.com/loopholelabs/endkey/pkg/api/v1/models"
 	"github.com/loopholelabs/endkey/pkg/api/v1/options"
 	"github.com/rs/zerolog"
+	"time"
 )
 
 var (
 	createMetric = metrics.NewStatusMetric("v1_apikey_create", "The total number of api key create requests")
+	listMetric   = metrics.NewStatusMetric("v1_apikey_list", "The total number of api key list requests")
+	deleteMetric = metrics.NewStatusMetric("v1_apikey_delete", "The total number of api key delete requests")
 )
 
 type APIKey struct {
@@ -56,6 +60,8 @@ func (a *APIKey) init() {
 
 	a.app.Use(a.options.Auth().RootKeyValidate)
 	a.app.Post("/", createMetric.Middleware(), a.CreateAPIKey)
+	a.app.Get("/:authority", listMetric.Middleware(), a.ListAPIKeys)
+	a.app.Delete("/", deleteMetric.Middleware(), a.DeleteAPIKey)
 }
 
 // CreateAPIKey godoc
@@ -73,7 +79,7 @@ func (a *APIKey) init() {
 // @Failure      500  {string} string
 // @Router       /apikey [post]
 func (a *APIKey) CreateAPIKey(ctx *fiber.Ctx) error {
-	a.logger.Debug().Msgf("received CreateAPIKey request from %s", ctx.IP())
+	a.logger.Debug().Msgf("received CreateRootKey request from %s", ctx.IP())
 
 	rk, err := authorization.GetRootKey(ctx)
 	if err != nil {
@@ -132,6 +138,140 @@ func (a *APIKey) CreateAPIKey(ctx *fiber.Ctx) error {
 		ClientTemplate: body.ClientTemplate,
 		Secret:         string(secret),
 	})
+}
+
+// ListAPIKeys godoc
+// @Description  Lists all the api keys
+// @Tags         apikey
+// @Accept       json
+// @Produce      json
+// @Param 	     authority  path  string  true  "Authority Identifier"
+// @Success      200  {array} models.APIKeyResponse
+// @Failure      400  {string} string
+// @Failure      401  {string} string
+// @Failure      404  {string} string
+// @Failure      409  {string} string
+// @Failure      412  {string} string
+// @Failure      500  {string} string
+// @Router       /apikey/{authority} [get]
+func (a *APIKey) ListAPIKeys(ctx *fiber.Ctx) error {
+	a.logger.Debug().Msgf("received ListAPIKeys request from %s", ctx.IP())
+
+	rk, err := authorization.GetRootKey(ctx)
+	if err != nil {
+		a.logger.Error().Err(err).Msg("failed to get root key from context")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")
+	}
+
+	authority := ctx.Params("authority")
+
+	if authority == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "authority is required")
+	}
+
+	if !utils.ValidString(authority) {
+		return fiber.NewError(fiber.StatusBadRequest, "authority is invalid")
+	}
+
+	a.logger.Info().Msgf("listing API Keys for Authority '%s' for root key with ID %s", authority, rk.Identifier)
+
+	aks, err := a.options.Database().ListAPIKeys(ctx.Context(), authority)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return fiber.NewError(fiber.StatusNotFound, "no api keys found")
+		}
+
+		a.logger.Error().Err(err).Msg("failed to list api keys")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to list api keys")
+	}
+
+	ret := make([]*models.APIKeyResponse, 0, len(aks))
+	for _, ak := range aks {
+		r := &models.APIKeyResponse{
+			CreatedAt:  ak.CreatedAt.Format(time.RFC3339),
+			Identifier: ak.Identifier,
+			Name:       ak.Name,
+			Authority:  authority,
+		}
+		serverTempl, err := ak.Edges.ServerTemplateOrErr()
+		if err == nil {
+			r.ServerTemplate = serverTempl.Identifier
+		}
+
+		clientTempl, err := ak.Edges.ClientTemplateOrErr()
+		if err == nil {
+			r.ClientTemplate = clientTempl.Identifier
+		}
+
+		ret = append(ret, r)
+	}
+
+	return ctx.JSON(ret)
+}
+
+// DeleteAPIKey godoc
+// @Description  Delete an API Key
+// @Tags         apikey
+// @Accept       json
+// @Produce      json
+// @Param        request  body models.DeleteAPIKeyRequest  true  "Delete API Key Request"
+// @Success      200  {string} string
+// @Failure      400  {string} string
+// @Failure      401  {string} string
+// @Failure      404  {string} string
+// @Failure      409  {string} string
+// @Failure      412  {string} string
+// @Failure      500  {string} string
+// @Router       /apikey [delete]
+func (a *APIKey) DeleteAPIKey(ctx *fiber.Ctx) error {
+	a.logger.Debug().Msgf("received DeleteAPIKey request from %s", ctx.IP())
+
+	rk, err := authorization.GetRootKey(ctx)
+	if err != nil {
+		a.logger.Error().Err(err).Msg("failed to get root key from context")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")
+	}
+
+	body := new(models.DeleteAPIKeyRequest)
+	err = ctx.BodyParser(body)
+	if err != nil {
+		a.logger.Error().Err(err).Msg("failed to parse body")
+		return fiber.NewError(fiber.StatusBadRequest, "failed to parse body")
+	}
+
+	if body.Name == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "name is required")
+	}
+
+	if !utils.ValidString(body.Name) || body.Name == "bootstrap" {
+		return fiber.NewError(fiber.StatusBadRequest, "name is invalid")
+	}
+
+	if body.Authority == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "authority is required")
+	}
+
+	if !utils.ValidString(body.Authority) {
+		return fiber.NewError(fiber.StatusBadRequest, "authority is invalid")
+	}
+
+	a.logger.Info().Msgf("deleting api key '%s' for authority '%s' for root key with ID %s", body.Name, body.Authority, rk.Identifier)
+
+	err = a.options.Database().DeleteAPIKey(ctx.Context(), body.Name, body.Authority)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return fiber.NewError(fiber.StatusNotFound, "api key not found")
+		}
+
+		if errors.Is(err, database.ErrAlreadyExists) {
+			return fiber.NewError(fiber.StatusConflict, "cannot delete api key because resources are still associated with it")
+		}
+
+		a.logger.Error().Err(err).Msg("failed to api root key")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to api root key")
+	}
+
+	return ctx.SendString(fmt.Sprintf("api key '%s' for authority '%s' deleted", body.Name, body.Authority))
 }
 
 func (a *APIKey) App() *fiber.App {

@@ -24,6 +24,7 @@ type CreateAuthorityRequest struct {
 }
 
 type AuthorityResponse struct {
+	CreatedAt     string `json:"created_at"`
 	Identifier    string `json:"identifier"`
 	CommonName    string `json:"common_name"`
 	Tag           string `json:"tag"`

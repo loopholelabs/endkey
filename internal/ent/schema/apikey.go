@@ -41,11 +41,9 @@ func (APIKey) Fields() []ent.Field {
 		// A unique identifier for the API Key, immutable, globally unique
 		field.String("identifier").NotEmpty().Unique().Immutable(),
 
-		// In theory we can rename the API Key in the future
-		// because the identifier is immutable, but for now it's disabled
+		// An easily recognizable name for the API Key, immutable
 		//
-		// The name also does not have to be globally unique, but we do
-		// need an index to guarantee uniqueness per organization
+		// Its uniqueness is guaranteed within the Authority that it is scoped to
 		field.String("name").NotEmpty().Immutable(),
 
 		// A randomly generated salt for the API Key, immutable

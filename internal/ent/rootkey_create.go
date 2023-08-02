@@ -40,6 +40,12 @@ func (rkc *RootKeyCreate) SetIdentifier(s string) *RootKeyCreate {
 	return rkc
 }
 
+// SetName sets the "name" field.
+func (rkc *RootKeyCreate) SetName(s string) *RootKeyCreate {
+	rkc.mutation.SetName(s)
+	return rkc
+}
+
 // SetSalt sets the "salt" field.
 func (rkc *RootKeyCreate) SetSalt(b []byte) *RootKeyCreate {
 	rkc.mutation.SetSalt(b)
@@ -49,20 +55,6 @@ func (rkc *RootKeyCreate) SetSalt(b []byte) *RootKeyCreate {
 // SetHash sets the "hash" field.
 func (rkc *RootKeyCreate) SetHash(b []byte) *RootKeyCreate {
 	rkc.mutation.SetHash(b)
-	return rkc
-}
-
-// SetBootstrap sets the "bootstrap" field.
-func (rkc *RootKeyCreate) SetBootstrap(s string) *RootKeyCreate {
-	rkc.mutation.SetBootstrap(s)
-	return rkc
-}
-
-// SetNillableBootstrap sets the "bootstrap" field if the given value is not nil.
-func (rkc *RootKeyCreate) SetNillableBootstrap(s *string) *RootKeyCreate {
-	if s != nil {
-		rkc.SetBootstrap(*s)
-	}
 	return rkc
 }
 
@@ -120,6 +112,14 @@ func (rkc *RootKeyCreate) check() error {
 			return &ValidationError{Name: "identifier", err: fmt.Errorf(`ent: validator failed for field "RootKey.identifier": %w`, err)}
 		}
 	}
+	if _, ok := rkc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "RootKey.name"`)}
+	}
+	if v, ok := rkc.mutation.Name(); ok {
+		if err := rootkey.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "RootKey.name": %w`, err)}
+		}
+	}
 	if _, ok := rkc.mutation.Salt(); !ok {
 		return &ValidationError{Name: "salt", err: errors.New(`ent: missing required field "RootKey.salt"`)}
 	}
@@ -170,6 +170,10 @@ func (rkc *RootKeyCreate) createSpec() (*RootKey, *sqlgraph.CreateSpec) {
 		_spec.SetField(rootkey.FieldIdentifier, field.TypeString, value)
 		_node.Identifier = value
 	}
+	if value, ok := rkc.mutation.Name(); ok {
+		_spec.SetField(rootkey.FieldName, field.TypeString, value)
+		_node.Name = value
+	}
 	if value, ok := rkc.mutation.Salt(); ok {
 		_spec.SetField(rootkey.FieldSalt, field.TypeBytes, value)
 		_node.Salt = value
@@ -177,10 +181,6 @@ func (rkc *RootKeyCreate) createSpec() (*RootKey, *sqlgraph.CreateSpec) {
 	if value, ok := rkc.mutation.Hash(); ok {
 		_spec.SetField(rootkey.FieldHash, field.TypeBytes, value)
 		_node.Hash = value
-	}
-	if value, ok := rkc.mutation.Bootstrap(); ok {
-		_spec.SetField(rootkey.FieldBootstrap, field.TypeString, value)
-		_node.Bootstrap = value
 	}
 	return _node, _spec
 }

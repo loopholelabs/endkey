@@ -68,9 +68,6 @@ func (rku *RootKeyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if rku.mutation.BootstrapCleared() {
-		_spec.ClearField(rootkey.FieldBootstrap, field.TypeString)
-	}
 	if n, err = sqlgraph.UpdateNodes(ctx, rku.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{rootkey.Label}
@@ -161,9 +158,6 @@ func (rkuo *RootKeyUpdateOne) sqlSave(ctx context.Context) (_node *RootKey, err 
 				ps[i](selector)
 			}
 		}
-	}
-	if rkuo.mutation.BootstrapCleared() {
-		_spec.ClearField(rootkey.FieldBootstrap, field.TypeString)
 	}
 	_node = &RootKey{config: rkuo.config}
 	_spec.Assign = _node.assignValues

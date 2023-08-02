@@ -28,7 +28,13 @@ type CreateServerTemplateRequest struct {
 	Validity                string   `json:"validity"`
 }
 
+type DeleteServerTemplateRequest struct {
+	Identifier string `json:"identifier"`
+	Authority  string `json:"authority"`
+}
+
 type ServerTemplateResponse struct {
+	CreatedAt               string   `json:"created_at"`
 	Identifier              string   `json:"identifier"`
 	Authority               string   `json:"authority"`
 	CommonName              string   `json:"common_name"`
@@ -52,7 +58,13 @@ type CreateClientTemplateRequest struct {
 	Validity                string   `json:"validity"`
 }
 
+type DeleteClientTemplateRequest struct {
+	Identifier string `json:"identifier"`
+	Authority  string `json:"authority"`
+}
+
 type ClientTemplateResponse struct {
+	CreatedAt               string   `json:"created_at"`
 	Identifier              string   `json:"identifier"`
 	Authority               string   `json:"authority"`
 	CommonName              string   `json:"common_name"`

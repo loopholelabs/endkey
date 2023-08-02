@@ -39,6 +39,13 @@ func (RootKey) Fields() []ent.Field {
 		// A unique identifier for the Root Key, immutable, globally unique
 		field.String("identifier").NotEmpty().Unique().Immutable(),
 
+		// An easily recognizable name for the Root Key, immutable
+		//
+		// If this is the Bootstrap Root Key, it's name will be set to "bootstrap"
+		// and it will not be possible to delete or change it. This is to ensure
+		// that there is always at least one Root Key in the system.
+		field.String("name").NotEmpty().Immutable().Unique(),
+
 		// A randomly generated salt for the Root Key, immutable
 		field.Bytes("salt").NotEmpty().Immutable(),
 
@@ -46,13 +53,6 @@ func (RootKey) Fields() []ent.Field {
 		//
 		// The secret is never stored, and the salt is immutable
 		field.Bytes("hash").NotEmpty().Immutable(),
-
-		// Whether this is the Bootstrap Root Key
-		//
-		// This field will be set to "bootstrap" if this is the bootstrap Root Key
-		// and will be null. By making this field immutable and unique,
-		// we can ensure that only one bootstrap Root Key exists.
-		field.String("bootstrap").Optional().Immutable().Unique(),
 	}
 }
 

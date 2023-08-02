@@ -30,9 +30,89 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
+	DeleteApikey(params *DeleteApikeyParams, opts ...ClientOption) (*DeleteApikeyOK, error)
+
+	GetApikeyAuthority(params *GetApikeyAuthorityParams, opts ...ClientOption) (*GetApikeyAuthorityOK, error)
+
 	PostApikey(params *PostApikeyParams, opts ...ClientOption) (*PostApikeyOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
+}
+
+/*
+DeleteApikey Delete an API Key
+*/
+func (a *Client) DeleteApikey(params *DeleteApikeyParams, opts ...ClientOption) (*DeleteApikeyOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeleteApikeyParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "DeleteApikey",
+		Method:             "DELETE",
+		PathPattern:        "/apikey",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"https"},
+		Params:             params,
+		Reader:             &DeleteApikeyReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeleteApikeyOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DeleteApikey: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+GetApikeyAuthority Lists all the api keys
+*/
+func (a *Client) GetApikeyAuthority(params *GetApikeyAuthorityParams, opts ...ClientOption) (*GetApikeyAuthorityOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetApikeyAuthorityParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "GetApikeyAuthority",
+		Method:             "GET",
+		PathPattern:        "/apikey/{authority}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"https"},
+		Params:             params,
+		Reader:             &GetApikeyAuthorityReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetApikeyAuthorityOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetApikeyAuthority: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*

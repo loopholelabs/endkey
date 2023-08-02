@@ -20,6 +20,7 @@ import (
 	"context"
 	"github.com/loopholelabs/endkey/internal/aes"
 	"github.com/loopholelabs/endkey/internal/ent"
+	"github.com/loopholelabs/endkey/internal/ent/authority"
 )
 
 var (
@@ -41,6 +42,47 @@ func (d *Database) CreateAuthority(ctx context.Context, identifier string, caPem
 	}
 
 	return a, nil
+}
+
+func (d *Database) GetAuthority(ctx context.Context, identifier string) (*ent.Authority, error) {
+	a, err := d.sql.Authority.Query().Where(authority.Identifier(identifier)).Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return a, nil
+}
+
+func (d *Database) ListAuthorities(ctx context.Context) (ent.Authorities, error) {
+	as, err := d.sql.Authority.Query().All(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return as, nil
+}
+
+func (d *Database) DeleteAuthority(ctx context.Context, identifier string) error {
+	_, err := d.sql.Authority.Delete().Where(authority.Identifier(identifier)).Exec(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrNotFound
+		}
+
+		if ent.IsConstraintError(err) {
+			return ErrAlreadyExists
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func (d *Database) DecryptAuthorityPrivateKey(a *ent.Authority) ([]byte, error) {

@@ -18,7 +18,7 @@ package version
 
 import (
 	"github.com/loopholelabs/cmdutils/pkg/version"
-	"github.com/loopholelabs/endkey/pkg/config"
+	"github.com/loopholelabs/endkey/internal/config"
 )
 
 var (

@@ -29,6 +29,9 @@ type ModelsClientTemplateResponse struct {
 	// common name
 	CommonName string `json:"common_name,omitempty"`
 
+	// created at
+	CreatedAt string `json:"created_at,omitempty"`
+
 	// dns names
 	DNSNames []string `json:"dns_names"`
 

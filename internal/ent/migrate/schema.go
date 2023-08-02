@@ -100,9 +100,9 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "identifier", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "salt", Type: field.TypeBytes},
 		{Name: "hash", Type: field.TypeBytes},
-		{Name: "bootstrap", Type: field.TypeString, Unique: true, Nullable: true},
 	}
 	// RootKeysTable holds the schema information for the "root_keys" table.
 	RootKeysTable = &schema.Table{

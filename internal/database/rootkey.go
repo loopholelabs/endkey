@@ -24,6 +24,63 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+func (d *Database) CreateRootKey(ctx context.Context, name string) (*ent.RootKey, []byte, error) {
+	identifier := uuid.New().String()
+	secret := []byte(uuid.New().String())
+	salt := []byte(uuid.New().String())
+	hash, err := bcrypt.GenerateFromPassword(append(salt, secret...), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	rk, err := d.sql.RootKey.Create().SetIdentifier(identifier).SetName(name).SetHash(hash).SetSalt(salt).Save(ctx)
+	if err != nil {
+		if ent.IsConstraintError(err) {
+			return nil, nil, ErrAlreadyExists
+		}
+		return nil, nil, err
+	}
+
+	return rk, secret, nil
+}
+
+func (d *Database) RotateRootKey(ctx context.Context, name string) (*ent.RootKey, []byte, error) {
+	identifier := uuid.New().String()
+	secret := []byte(uuid.New().String())
+	salt := []byte(uuid.New().String())
+	hash, err := bcrypt.GenerateFromPassword(append(salt, secret...), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tx, err := d.sql.Tx(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = tx.RootKey.Delete().Where(rootkey.Name(name)).Exec(ctx)
+	if err != nil {
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			return nil, nil, rollbackErr
+		}
+		return nil, nil, err
+	}
+	rk, err := tx.RootKey.Create().SetIdentifier(identifier).SetName(name).SetHash(hash).SetSalt(salt).Save(ctx)
+	if err != nil {
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			return nil, nil, rollbackErr
+		}
+		return nil, nil, err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return rk, secret, nil
+}
+
 func (d *Database) GetRootKey(ctx context.Context, identifier string) (*ent.RootKey, error) {
 	rk, err := d.sql.RootKey.Query().Where(rootkey.Identifier(identifier)).Only(ctx)
 	if err != nil {
@@ -36,27 +93,31 @@ func (d *Database) GetRootKey(ctx context.Context, identifier string) (*ent.Root
 	return rk, nil
 }
 
-func (d *Database) CreateRootKey(ctx context.Context, bootstrap bool) (*ent.RootKey, []byte, error) {
-	identifier := uuid.New().String()
-	secret := []byte(uuid.New().String())
-	salt := []byte(uuid.New().String())
-	hash, err := bcrypt.GenerateFromPassword(append(salt, secret...), bcrypt.DefaultCost)
+func (d *Database) ListRootKeys(ctx context.Context) (ent.RootKeys, error) {
+	rks, err := d.sql.RootKey.Query().All(ctx)
 	if err != nil {
-		return nil, nil, err
-	}
-
-	rkBuilder := d.sql.RootKey.Create().SetIdentifier(identifier).SetHash(hash).SetSalt(salt)
-	if bootstrap {
-		rkBuilder = rkBuilder.SetBootstrap("bootstrap")
-	}
-
-	rk, err := rkBuilder.Save(ctx)
-	if err != nil {
-		if ent.IsConstraintError(err) {
-			return nil, nil, ErrAlreadyExists
+		if ent.IsNotFound(err) {
+			return nil, ErrNotFound
 		}
-		return nil, nil, err
+		return nil, err
 	}
 
-	return rk, secret, nil
+	return rks, nil
+}
+
+func (d *Database) DeleteRootKey(ctx context.Context, name string) error {
+	_, err := d.sql.RootKey.Delete().Where(rootkey.Name(name)).Exec(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrNotFound
+		}
+
+		if ent.IsConstraintError(err) {
+			return ErrAlreadyExists
+		}
+
+		return err
+	}
+
+	return nil
 }

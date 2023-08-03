@@ -72,7 +72,30 @@ func (d *Database) ListAuthorities(ctx context.Context, uk *ent.UserKey) (ent.Au
 }
 
 func (d *Database) DeleteAuthorityByName(ctx context.Context, name string, uk *ent.UserKey) error {
-	_, err := d.sql.Authority.Delete().Where(authority.Name(name), authority.HasUserKeyWith(userkey.ID(uk.ID))).Exec(ctx)
+	auth, err := d.sql.Authority.Query().Where(authority.Name(name), authority.HasUserKeyWith(userkey.ID(uk.ID))).WithAPIKeys().WithServerTemplates().WithClientTemplates().Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrNotFound
+		}
+		return err
+	}
+
+	_, err = auth.Edges.APIKeysOrErr()
+	if err == nil {
+		return ErrAlreadyExists
+	}
+
+	_, err = auth.Edges.ServerTemplatesOrErr()
+	if err == nil {
+		return ErrAlreadyExists
+	}
+
+	_, err = auth.Edges.ClientTemplatesOrErr()
+	if err == nil {
+		return ErrAlreadyExists
+	}
+
+	err = d.sql.Authority.DeleteOne(auth).Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return ErrNotFound

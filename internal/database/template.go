@@ -85,7 +85,20 @@ func (d *Database) ListServerTemplates(ctx context.Context, authorityName string
 }
 
 func (d *Database) DeleteServerTemplateByName(ctx context.Context, name string, authorityName string, uk *ent.UserKey) error {
-	_, err := d.sql.ServerTemplate.Delete().Where(servertemplate.Name(name), servertemplate.HasAuthorityWith(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID)))).Exec(ctx)
+	templ, err := d.sql.ServerTemplate.Query().Where(servertemplate.Name(name), servertemplate.HasAuthorityWith(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID)))).WithAPIKeys().Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrNotFound
+		}
+		return err
+	}
+
+	_, err = templ.Edges.APIKeysOrErr()
+	if err == nil {
+		return ErrAlreadyExists
+	}
+
+	err = d.sql.ServerTemplate.DeleteOne(templ).Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return ErrNotFound
@@ -159,7 +172,20 @@ func (d *Database) ListClientTemplates(ctx context.Context, authorityName string
 }
 
 func (d *Database) DeleteClientTemplateByName(ctx context.Context, name string, authorityName string, uk *ent.UserKey) error {
-	_, err := d.sql.ClientTemplate.Delete().Where(clienttemplate.Name(name), clienttemplate.HasAuthorityWith(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID)))).Exec(ctx)
+	templ, err := d.sql.ClientTemplate.Query().Where(clienttemplate.Name(name), clienttemplate.HasAuthorityWith(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID)))).WithAPIKeys().Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrNotFound
+		}
+		return err
+	}
+
+	_, err = templ.Edges.APIKeysOrErr()
+	if err == nil {
+		return ErrAlreadyExists
+	}
+
+	err = d.sql.ClientTemplate.DeleteOne(templ).Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return ErrNotFound

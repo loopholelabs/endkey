@@ -137,7 +137,19 @@ func (d *Database) ListUserKeys(ctx context.Context) (ent.UserKeys, error) {
 }
 
 func (d *Database) DeleteUserKeyByName(ctx context.Context, name string) error {
-	_, err := d.sql.UserKey.Delete().Where(userkey.Name(name)).Exec(ctx)
+	uk, err := d.sql.UserKey.Query().Where(userkey.Name(name)).WithAuthorities().Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return ErrNotFound
+		}
+	}
+
+	_, err = uk.Edges.AuthoritiesOrErr()
+	if err == nil {
+		return ErrAlreadyExists
+	}
+
+	err = d.sql.UserKey.DeleteOne(uk).Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return ErrNotFound

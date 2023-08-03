@@ -56,7 +56,7 @@ func New(options *options.Options, logger *zerolog.Logger) *Template {
 func (a *Template) init() {
 	a.logger.Debug().Msg("initializing")
 
-	a.app.Use(a.options.Auth().RootKeyValidate)
+	a.app.Use(a.options.Auth().UserKeyValidate)
 
 	a.app.Post("/server", createServerMetric.Middleware(), a.CreateServer)
 	a.app.Get("/server/:authority_name", listServerMetric.Middleware(), a.ListServer)

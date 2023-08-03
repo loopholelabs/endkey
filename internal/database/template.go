@@ -180,8 +180,8 @@ func (d *Database) DeleteClientTemplateByName(ctx context.Context, name string, 
 		return err
 	}
 
-	_, err = templ.Edges.APIKeysOrErr()
-	if err == nil {
+	aks, err := templ.Edges.APIKeysOrErr()
+	if err == nil && len(aks) > 0 {
 		return ErrAlreadyExists
 	}
 

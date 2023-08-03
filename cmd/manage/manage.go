@@ -20,10 +20,7 @@ import (
 	"errors"
 	"github.com/loopholelabs/cmdutils"
 	"github.com/loopholelabs/cmdutils/pkg/command"
-	"github.com/loopholelabs/endkey/cmd/manage/apikey"
-	"github.com/loopholelabs/endkey/cmd/manage/authority"
 	"github.com/loopholelabs/endkey/cmd/manage/rootkey"
-	"github.com/loopholelabs/endkey/cmd/manage/template"
 	"github.com/loopholelabs/endkey/cmd/manage/userkey"
 	"github.com/loopholelabs/endkey/internal/config"
 	"github.com/spf13/cobra"
@@ -31,6 +28,7 @@ import (
 
 var (
 	ErrEndpointRequired = errors.New("endpoint is required")
+	ErrRootKeyRequired  = errors.New("rootkey is required")
 )
 
 const (
@@ -43,6 +41,8 @@ func Cmd() command.SetupCommand[*config.Config] {
 	var endpoint string
 	var tls bool
 
+	var rk string
+
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		manageCmd := &cobra.Command{
 			Use:   "manage",
@@ -51,6 +51,8 @@ func Cmd() command.SetupCommand[*config.Config] {
 				ch.Config.Endpoint = endpoint
 				ch.Config.TLS = tls
 
+				ch.Config.AuthenticationKey = rk
+
 				err := ch.Config.Validate()
 				if err != nil {
 					return err
@@ -58,6 +60,10 @@ func Cmd() command.SetupCommand[*config.Config] {
 
 				if ch.Config.Endpoint == "" {
 					return ErrEndpointRequired
+				}
+
+				if ch.Config.AuthenticationKey == "" {
+					return ErrRootKeyRequired
 				}
 
 				return nil
@@ -70,17 +76,10 @@ func Cmd() command.SetupCommand[*config.Config] {
 		userKeySetup := userkey.Cmd()
 		userKeySetup(manageCmd, ch)
 
-		apiKeySetup := apikey.Cmd()
-		apiKeySetup(manageCmd, ch)
-
-		authoritySetup := authority.Cmd()
-		authoritySetup(manageCmd, ch)
-
-		templateSetup := template.Cmd()
-		templateSetup(manageCmd, ch)
-
 		manageCmd.PersistentFlags().StringVar(&endpoint, "endpoint", DefaultEndpoint, "The endpoint of the EndKey API")
 		manageCmd.PersistentFlags().BoolVar(&tls, "tls", DefaultTLS, "Whether or not to use TLS")
+
+		manageCmd.PersistentFlags().StringVar(&rk, "root-key", "", "The root key for the EndKey API")
 
 		cmd.AddCommand(manageCmd)
 	}

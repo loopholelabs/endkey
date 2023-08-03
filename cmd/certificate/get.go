@@ -39,8 +39,8 @@ import (
 	"time"
 )
 
-// ClientCmd encapsulates the commands for getting a Client Certificate
-func ClientCmd() command.SetupCommand[*config.Config] {
+// GetCmd encapsulates the commands for getting a Certificate
+func GetCmd() command.SetupCommand[*config.Config] {
 	var additionalDNSNames []string
 	var additionalIPAddresses []string
 
@@ -49,23 +49,22 @@ func ClientCmd() command.SetupCommand[*config.Config] {
 
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		clientCmd := &cobra.Command{
-			Use:   "client <template> <root-path> <certificate-path> <key-path>",
-			Args:  cobra.ExactArgs(4),
+			Use:   "get <root-path> <certificate-path> <key-path>",
+			Args:  cobra.ExactArgs(3),
 			Short: "Get a Client Certificate with the given template",
 			RunE: func(cmd *cobra.Command, args []string) error {
 				ctx := cmd.Context()
 
-				template := args[0]
-				rootPath := args[1]
-				certificatePath := args[2]
-				keyPath := args[3]
+				rootPath := args[0]
+				certificatePath := args[1]
+				keyPath := args[2]
 
 				var end func()
 				interval := time.NewTimer(time.Millisecond * 100)
 				if daemon {
-					ch.Printer.Printf("Starting Daemon for Client Certificate for Template %s ...", template)
+					ch.Printer.Printf("Starting Daemon to retrieve template...\n")
 				} else {
-					end = ch.Printer.PrintProgress(fmt.Sprintf("Getting Client Certificate for Template %s ...", template))
+					end = ch.Printer.PrintProgress("Getting Certificate ...")
 				}
 
 				for {
@@ -76,7 +75,7 @@ func ClientCmd() command.SetupCommand[*config.Config] {
 						}
 						return nil
 					case <-interval.C:
-						res, privateKey, err := GetCertificate(ctx, ch.Config.Client(), template, additionalDNSNames, additionalIPAddresses)
+						res, privateKey, err := GetCertificate(ctx, ch.Config.Client(), additionalDNSNames, additionalIPAddresses)
 						if end != nil {
 							end()
 						}
@@ -110,11 +109,12 @@ func ClientCmd() command.SetupCommand[*config.Config] {
 						}
 
 						if ch.Printer.Format() == printer.Human {
-							ch.Printer.Printf("Created Client Certificate from Template '%s'\n", printer.Bold(res.TemplateName))
+							ch.Printer.Printf("Retrieved certificate from template '%s'\n", printer.Bold(res.TemplateName))
 						} else {
-							err := ch.Printer.PrintResource(clientModel{
+							err := ch.Printer.PrintResource(certificateModel{
 								Authority:     res.AuthorityName,
 								Template:      res.TemplateName,
+								Kind:          res.TemplateKind,
 								AdditionalDNS: strings.Join(res.AdditionalDNSNames, ","),
 								AdditionalIP:  strings.Join(res.AdditionalIPAddresses, ","),
 								Expiry:        res.Expiry,
@@ -153,7 +153,7 @@ func ClientCmd() command.SetupCommand[*config.Config] {
 		}
 
 		clientCmd.Flags().StringSliceVar(&additionalDNSNames, "dns", []string{}, "Additional DNS Names to add to the certificate")
-		clientCmd.Flags().StringSliceVar(&additionalIPAddresses, "ip", []string{}, "Additional IP Addresses to add to the certificate")
+		clientCmd.Flags().StringSliceVar(&additionalIPAddresses, "ips", []string{}, "Additional IP Addresses to add to the certificate")
 
 		clientCmd.Flags().BoolVar(&daemon, "daemon", false, "Run the command as a daemon")
 		clientCmd.Flags().StringVar(&execute, "execute", "", "Execute a command after creating the certificate")
@@ -162,7 +162,7 @@ func ClientCmd() command.SetupCommand[*config.Config] {
 	}
 }
 
-func GetCertificate(ctx context.Context, client *client.EndKeyAPIV1, template string, additionalDNSNames []string, additionalIPAddresses []string) (*models.ModelsClientCertificateResponse, *ecdsa.PrivateKey, error) {
+func GetCertificate(ctx context.Context, client *client.EndKeyAPIV1, additionalDNSNames []string, additionalIPAddresses []string) (*models.ModelsCertificateResponse, *ecdsa.PrivateKey, error) {
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to generate private key: %w", err)
@@ -177,16 +177,15 @@ func GetCertificate(ctx context.Context, client *client.EndKeyAPIV1, template st
 		return nil, nil, fmt.Errorf("failed to create CSR: %w", err)
 	}
 
-	req := &models.ModelsCreateClientCertificateRequest{
+	req := &models.ModelsCreateCertificateRequest{
 		AdditionalDNSNames:    additionalDNSNames,
 		AdditionalIPAddresses: additionalIPAddresses,
 		Csr:                   base64.StdEncoding.EncodeToString(csrPEM),
-		TemplateName:          template,
 	}
 
-	res, err := client.Certificate.PostCertificateClient(certificate.NewPostCertificateClientParamsWithContext(ctx).WithRequest(req))
+	res, err := client.Certificate.PostCertificate(certificate.NewPostCertificateParamsWithContext(ctx).WithRequest(req))
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get client certificate: %w", err)
+		return nil, nil, fmt.Errorf("failed to get certificate: %w", err)
 	}
 
 	return res.GetPayload(), privateKey, nil

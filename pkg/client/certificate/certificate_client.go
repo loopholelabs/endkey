@@ -30,32 +30,30 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	GetCertificateCa(params *GetCertificateCaParams, opts ...ClientOption) (*GetCertificateCaOK, error)
+	GetCertificate(params *GetCertificateParams, opts ...ClientOption) (*GetCertificateOK, error)
 
-	PostCertificateClient(params *PostCertificateClientParams, opts ...ClientOption) (*PostCertificateClientOK, error)
-
-	PostCertificateServer(params *PostCertificateServerParams, opts ...ClientOption) (*PostCertificateServerOK, error)
+	PostCertificate(params *PostCertificateParams, opts ...ClientOption) (*PostCertificateOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
 
 /*
-GetCertificateCa Retrieves the CA Certificate
+GetCertificate Retrieves the CA Certificate
 */
-func (a *Client) GetCertificateCa(params *GetCertificateCaParams, opts ...ClientOption) (*GetCertificateCaOK, error) {
+func (a *Client) GetCertificate(params *GetCertificateParams, opts ...ClientOption) (*GetCertificateOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetCertificateCaParams()
+		params = NewGetCertificateParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "GetCertificateCa",
+		ID:                 "GetCertificate",
 		Method:             "GET",
-		PathPattern:        "/certificate/ca",
+		PathPattern:        "/certificate",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"https"},
 		Params:             params,
-		Reader:             &GetCertificateCaReader{formats: a.formats},
+		Reader:             &GetCertificateReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -67,33 +65,33 @@ func (a *Client) GetCertificateCa(params *GetCertificateCaParams, opts ...Client
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetCertificateCaOK)
+	success, ok := result.(*GetCertificateOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetCertificateCa: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for GetCertificate: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
 /*
-PostCertificateClient Create a new Client Certificate
+PostCertificate Create a new Certificate
 */
-func (a *Client) PostCertificateClient(params *PostCertificateClientParams, opts ...ClientOption) (*PostCertificateClientOK, error) {
+func (a *Client) PostCertificate(params *PostCertificateParams, opts ...ClientOption) (*PostCertificateOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewPostCertificateClientParams()
+		params = NewPostCertificateParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "PostCertificateClient",
+		ID:                 "PostCertificate",
 		Method:             "POST",
-		PathPattern:        "/certificate/client",
+		PathPattern:        "/certificate",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"https"},
 		Params:             params,
-		Reader:             &PostCertificateClientReader{formats: a.formats},
+		Reader:             &PostCertificateReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -105,51 +103,13 @@ func (a *Client) PostCertificateClient(params *PostCertificateClientParams, opts
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*PostCertificateClientOK)
+	success, ok := result.(*PostCertificateOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostCertificateClient: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-PostCertificateServer Create a new Server Certificate
-*/
-func (a *Client) PostCertificateServer(params *PostCertificateServerParams, opts ...ClientOption) (*PostCertificateServerOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewPostCertificateServerParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "PostCertificateServer",
-		Method:             "POST",
-		PathPattern:        "/certificate/server",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"https"},
-		Params:             params,
-		Reader:             &PostCertificateServerReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*PostCertificateServerOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostCertificateServer: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for PostCertificate: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

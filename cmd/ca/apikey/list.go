@@ -55,12 +55,12 @@ func ListCmd() command.SetupCommand[*config.Config] {
 				keys := make([]apiKeyRedactedModel, 0, len(res.GetPayload()))
 				for _, key := range res.GetPayload() {
 					keys = append(keys, apiKeyRedactedModel{
-						Created:        key.CreatedAt,
-						ID:             key.ID,
-						Name:           key.Name,
-						Authority:      key.AuthorityName,
-						ServerTemplate: key.ServerTemplateName,
-						ClientTemplate: key.ClientTemplateName,
+						Created:      key.CreatedAt,
+						ID:           key.ID,
+						Name:         key.Name,
+						Authority:    key.AuthorityName,
+						TemplateKind: key.TemplateKind,
+						TemplateName: key.TemplateName,
 					})
 				}
 

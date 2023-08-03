@@ -6,8 +6,6 @@ definitions:
     properties:
       authority_name:
         type: string
-      client_template_name:
-        type: string
       created_at:
         type: string
       id:
@@ -16,7 +14,9 @@ definitions:
         type: string
       secret:
         type: string
-      server_template_name:
+      template_kind:
+        type: string
+      template_name:
         type: string
     type: object
   models.AuthorityResponse:
@@ -45,7 +45,7 @@ definitions:
         format: base64
         type: string
     type: object
-  models.ClientCertificateResponse:
+  models.CertificateResponse:
     properties:
       additional_dns_names:
         items:
@@ -64,6 +64,8 @@ definitions:
         type: string
       public_certificate:
         format: base64
+        type: string
+      template_kind:
         type: string
       template_name:
         type: string
@@ -101,11 +103,11 @@ definitions:
     properties:
       authority_name:
         type: string
-      client_template_name:
-        type: string
       name:
         type: string
-      server_template_name:
+      template_kind:
+        type: string
+      template_name:
         type: string
     type: object
   models.CreateAuthorityRequest:
@@ -119,7 +121,7 @@ definitions:
       validity:
         type: string
     type: object
-  models.CreateClientCertificateRequest:
+  models.CreateCertificateRequest:
     properties:
       additional_dns_names:
         items:
@@ -131,8 +133,6 @@ definitions:
         type: array
       csr:
         format: base64
-        type: string
-      template_name:
         type: string
     type: object
   models.CreateClientTemplateRequest:
@@ -158,22 +158,6 @@ definitions:
       tag:
         type: string
       validity:
-        type: string
-    type: object
-  models.CreateServerCertificateRequest:
-    properties:
-      additional_dns_names:
-        items:
-          type: string
-        type: array
-      additional_ip_addresses:
-        items:
-          type: string
-        type: array
-      csr:
-        format: base64
-        type: string
-      template_name:
         type: string
     type: object
   models.CreateServerTemplateRequest:
@@ -236,29 +220,6 @@ definitions:
       name:
         type: string
       secret:
-        type: string
-    type: object
-  models.ServerCertificateResponse:
-    properties:
-      additional_dns_names:
-        items:
-          type: string
-        type: array
-      additional_ip_addresses:
-        items:
-          type: string
-        type: array
-      authority_name:
-        type: string
-      ca_certificate:
-        format: base64
-        type: string
-      expiry:
-        type: string
-      public_certificate:
-        format: base64
-        type: string
-      template_name:
         type: string
     type: object
   models.ServerTemplateResponse:
@@ -621,7 +582,7 @@ paths:
             type: string
       tags:
       - authority
-  /certificate/ca:
+  /certificate:
     get:
       consumes:
       - application/json
@@ -659,70 +620,24 @@ paths:
             type: string
       tags:
       - certificate
-  /certificate/client:
     post:
       consumes:
       - application/json
-      description: Create a new Client Certificate
+      description: Create a new Certificate
       parameters:
-      - description: Create Client Certificate Request
+      - description: Create Certificate Request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.CreateClientCertificateRequest'
+          $ref: '#/definitions/models.CreateCertificateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.ClientCertificateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            type: string
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-        "409":
-          description: Conflict
-          schema:
-            type: string
-        "412":
-          description: Precondition Failed
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      tags:
-      - certificate
-  /certificate/server:
-    post:
-      consumes:
-      - application/json
-      description: Create a new Server Certificate
-      parameters:
-      - description: Create Server Certificate Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.CreateServerCertificateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.ServerCertificateResponse'
+            $ref: '#/definitions/models.CertificateResponse'
         "400":
           description: Bad Request
           schema:

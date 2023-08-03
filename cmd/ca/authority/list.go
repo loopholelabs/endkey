@@ -17,49 +17,49 @@
 package authority
 
 import (
-	"encoding/base64"
-	"fmt"
 	"github.com/loopholelabs/cmdutils"
 	"github.com/loopholelabs/cmdutils/pkg/command"
+	"github.com/loopholelabs/cmdutils/pkg/printer"
 	"github.com/loopholelabs/endkey/internal/config"
 	"github.com/loopholelabs/endkey/pkg/client/authority"
 	"github.com/spf13/cobra"
 )
 
-// GetCmd encapsulates the commands for getting Authorities
-func GetCmd() command.SetupCommand[*config.Config] {
+// ListCmd encapsulates the commands for listing Authorities
+func ListCmd() command.SetupCommand[*config.Config] {
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		listCmd := &cobra.Command{
-			Use:   "get <name>",
-			Short: "get an Authority given its name",
-			Args:  cobra.ExactArgs(1),
+			Use:   "list",
+			Short: "list Authorities",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, args []string) error {
 				ctx := cmd.Context()
 				client := ch.Config.Client()
-
-				name := args[0]
-
-				end := ch.Printer.PrintProgress(fmt.Sprintf("Retrieving Authority %s...", name))
-				res, err := client.Authority.GetAuthorityName(authority.NewGetAuthorityNameParamsWithContext(ctx).WithName(name))
+				end := ch.Printer.PrintProgress("Retrieving Authorities...")
+				res, err := client.Authority.GetAuthority(authority.NewGetAuthorityParamsWithContext(ctx))
 				end()
 				if err != nil {
 					return err
 				}
 
-				caCert, err := base64.StdEncoding.DecodeString(res.GetPayload().CaCertificate)
-				if err != nil {
-					return fmt.Errorf("failed to decode CA certificate: %w", err)
+				if len(res.GetPayload()) == 0 && ch.Printer.Format() == printer.Human {
+					ch.Printer.Println("No Authorities have been created yet.")
+					return nil
 				}
 
-				return ch.Printer.PrintResource(authorityModel{
-					Created:       res.GetPayload().CreatedAt,
-					ID:            res.GetPayload().ID,
-					Name:          res.GetPayload().Name,
-					CommonName:    res.GetPayload().CommonName,
-					Tag:           res.GetPayload().Tag,
-					Expiry:        res.GetPayload().Expiry,
-					CACertificate: string(caCert),
-				})
+				keys := make([]authorityRedactedModel, 0, len(res.GetPayload()))
+				for _, auth := range res.GetPayload() {
+					keys = append(keys, authorityRedactedModel{
+						Created:    auth.CreatedAt,
+						ID:         auth.ID,
+						Name:       auth.Name,
+						CommonName: auth.CommonName,
+						Tag:        auth.Tag,
+						Expiry:     auth.Expiry,
+					})
+				}
+
+				return ch.Printer.PrintResource(keys)
 			},
 		}
 

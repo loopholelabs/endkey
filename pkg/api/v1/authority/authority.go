@@ -141,7 +141,7 @@ func (a *Authority) CreateAuthority(ctx *fiber.Ctx) error {
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
 			CommonName:         body.CommonName,
-			Organization:       []string{a.options.Identifier()},
+			Organization:       []string{a.options.Identifier(), body.Name},
 			Country:            []string{"-"},
 			Province:           []string{"-"},
 			Locality:           []string{"-"},

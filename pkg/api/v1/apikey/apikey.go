@@ -26,6 +26,7 @@ import (
 	"github.com/loopholelabs/endkey/pkg/api/authorization"
 	"github.com/loopholelabs/endkey/pkg/api/v1/models"
 	"github.com/loopholelabs/endkey/pkg/api/v1/options"
+	"github.com/loopholelabs/endkey/pkg/template"
 	"github.com/rs/zerolog"
 	"time"
 )
@@ -110,21 +111,25 @@ func (a *APIKey) CreateAPIKey(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "authority name is invalid")
 	}
 
-	if body.ServerTemplateName != "" && !utils.ValidString(body.ServerTemplateName) {
-		return fiber.NewError(fiber.StatusBadRequest, "server template name is invalid")
+	if body.TemplateName == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "template name is required")
+
 	}
 
-	if body.ClientTemplateName != "" && !utils.ValidString(body.ClientTemplateName) {
-		return fiber.NewError(fiber.StatusBadRequest, "client template is name invalid")
+	if !utils.ValidString(body.TemplateName) {
+		return fiber.NewError(fiber.StatusBadRequest, "template name is invalid")
 	}
 
-	if body.ServerTemplateName == "" && body.ClientTemplateName == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "server template name or client template name is required")
+	templateKind := template.Kind(body.TemplateKind)
+	switch templateKind {
+	case template.Server, template.Client:
+	default:
+		return fiber.NewError(fiber.StatusBadRequest, "template kind is invalid")
 	}
 
-	a.logger.Info().Msgf("creating api key '%s' for authority '%s' (with server template '%s' and client template '%s') for user key %s", body.Name, body.AuthorityName, body.ServerTemplateName, body.ClientTemplateName, uk.Name)
+	a.logger.Info().Msgf("creating api key '%s' for authority '%s' (with template '%s' and kind '%s') for user key %s", body.Name, body.AuthorityName, body.TemplateName, body.TemplateName, uk.Name)
 
-	ak, secret, err := a.options.Database().CreateAPIKey(ctx.Context(), body.Name, body.AuthorityName, uk, body.ServerTemplateName, body.ClientTemplateName)
+	ak, secret, err := a.options.Database().CreateAPIKey(ctx.Context(), body.Name, body.AuthorityName, uk, body.TemplateName, templateKind)
 	if err != nil {
 		if errors.Is(err, database.ErrAlreadyExists) {
 			return fiber.NewError(fiber.StatusConflict, "api key already exists for this authority")
@@ -135,12 +140,12 @@ func (a *APIKey) CreateAPIKey(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(&models.APIKeyResponse{
-		ID:                 ak.ID,
-		Name:               ak.Name,
-		AuthorityName:      body.AuthorityName,
-		ServerTemplateName: body.ServerTemplateName,
-		ClientTemplateName: body.ClientTemplateName,
-		Secret:             string(secret),
+		ID:            ak.ID,
+		Name:          ak.Name,
+		AuthorityName: body.AuthorityName,
+		TemplateName:  body.TemplateName,
+		TemplateKind:  body.TemplateKind,
+		Secret:        string(secret),
 	})
 }
 
@@ -197,14 +202,16 @@ func (a *APIKey) ListAPIKeys(ctx *fiber.Ctx) error {
 			Name:          ak.Name,
 			AuthorityName: authorityName,
 		}
-		serverTempl, err := ak.Edges.ServerTemplateOrErr()
-		if err == nil {
-			r.ServerTemplateName = serverTempl.Name
-		}
-
 		clientTempl, err := ak.Edges.ClientTemplateOrErr()
 		if err == nil {
-			r.ClientTemplateName = clientTempl.Name
+			r.TemplateName = clientTempl.Name
+			r.TemplateKind = string(template.Client)
+		} else {
+			serverTempl, err := ak.Edges.ServerTemplateOrErr()
+			if err == nil {
+				r.TemplateName = serverTempl.Name
+				r.TemplateKind = string(template.Server)
+			}
 		}
 
 		ret = append(ret, r)

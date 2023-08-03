@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"github.com/google/uuid"
 	"github.com/loopholelabs/endkey/internal/ent"
 	"github.com/loopholelabs/endkey/internal/ent/apikey"
@@ -25,10 +26,15 @@ import (
 	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
 	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
 	"github.com/loopholelabs/endkey/internal/ent/userkey"
+	"github.com/loopholelabs/endkey/pkg/template"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityName string, uk *ent.UserKey, serverTemplateName string, clientTemplateName string) (*ent.APIKey, []byte, error) {
+var (
+	ErrInvalidTemplateKind = errors.New("invalid template kind")
+)
+
+func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityName string, uk *ent.UserKey, templateName string, templateKind template.Kind) (*ent.APIKey, []byte, error) {
 	id := uuid.New().String()
 	secret := []byte(uuid.New().String())
 	salt := []byte(uuid.New().String())
@@ -47,8 +53,9 @@ func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityName 
 
 	akBuilder := d.sql.APIKey.Create().SetID(id).SetName(name).SetHash(hash).SetSalt(salt).SetAuthority(auth)
 
-	if serverTemplateName != "" {
-		st, err := d.sql.ServerTemplate.Query().Where(servertemplate.Name(serverTemplateName)).Only(ctx)
+	switch templateKind {
+	case template.Server:
+		st, err := d.sql.ServerTemplate.Query().Where(servertemplate.Name(templateName)).Only(ctx)
 		if err != nil {
 			if ent.IsNotFound(err) {
 				return nil, nil, ErrNotFound
@@ -56,10 +63,8 @@ func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityName 
 			return nil, nil, err
 		}
 		akBuilder = akBuilder.SetServerTemplate(st)
-	}
-
-	if clientTemplateName != "" {
-		ct, err := d.sql.ClientTemplate.Query().Where(clienttemplate.Name(clientTemplateName)).Only(ctx)
+	case template.Client:
+		ct, err := d.sql.ClientTemplate.Query().Where(clienttemplate.Name(templateName)).Only(ctx)
 		if err != nil {
 			if ent.IsNotFound(err) {
 				return nil, nil, ErrNotFound
@@ -67,6 +72,8 @@ func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityName 
 			return nil, nil, err
 		}
 		akBuilder = akBuilder.SetClientTemplate(ct)
+	default:
+		return nil, nil, ErrInvalidTemplateKind
 	}
 
 	ak, err := akBuilder.Save(ctx)

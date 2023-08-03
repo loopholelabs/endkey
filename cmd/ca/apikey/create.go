@@ -25,31 +25,38 @@ import (
 	"github.com/loopholelabs/endkey/internal/key"
 	"github.com/loopholelabs/endkey/pkg/client/apikey"
 	"github.com/loopholelabs/endkey/pkg/client/models"
+	"github.com/loopholelabs/endkey/pkg/template"
 	"github.com/spf13/cobra"
 )
 
 // CreateCmd encapsulates the commands for creating API Keys
 func CreateCmd() command.SetupCommand[*config.Config] {
-	var serverTemplate string
-	var clientTemplate string
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		createCmd := &cobra.Command{
-			Use:   "create <authority> <name>",
-			Args:  cobra.ExactArgs(2),
-			Short: "Create an API Key with the given name and authority",
+			Use:   "create <authority> <name> <client|server> <template>",
+			Args:  cobra.ExactArgs(4),
+			Short: "Create an API Key with the given name and authority for the given template",
 			RunE: func(cmd *cobra.Command, args []string) error {
 				ctx := cmd.Context()
 				client := ch.Config.Client()
 
 				authority := args[0]
 				name := args[1]
+				kind := template.Kind(args[2])
+				templ := args[3]
 
-				end := ch.Printer.PrintProgress(fmt.Sprintf("Creating API Key %s for authority %s...", name, authority))
+				switch kind {
+				case template.Client, template.Server:
+				default:
+					return fmt.Errorf("invalid template kind: %s", kind)
+				}
+
+				end := ch.Printer.PrintProgress(fmt.Sprintf("Creating API Key %s for authority %s for template %s...", name, authority, templ))
 				req := &models.ModelsCreateAPIKeyRequest{
-					AuthorityName:      authority,
-					Name:               name,
-					ClientTemplateName: clientTemplate,
-					ServerTemplateName: serverTemplate,
+					AuthorityName: authority,
+					Name:          name,
+					TemplateKind:  string(kind),
+					TemplateName:  templ,
 				}
 				res, err := client.Apikey.PostApikey(apikey.NewPostApikeyParamsWithContext(ctx).WithRequest(req))
 				end()
@@ -65,19 +72,16 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 				}
 
 				return ch.Printer.PrintResource(apiKeyModel{
-					Created:        res.GetPayload().CreatedAt,
-					ID:             res.GetPayload().ID,
-					Name:           res.GetPayload().Name,
-					Authority:      res.GetPayload().AuthorityName,
-					ServerTemplate: res.GetPayload().ServerTemplateName,
-					ClientTemplate: res.GetPayload().ClientTemplateName,
-					Value:          value,
+					Created:      res.GetPayload().CreatedAt,
+					ID:           res.GetPayload().ID,
+					Name:         res.GetPayload().Name,
+					Authority:    res.GetPayload().AuthorityName,
+					TemplateKind: res.GetPayload().TemplateKind,
+					TemplateName: res.GetPayload().TemplateName,
+					Value:        value,
 				})
 			},
 		}
-
-		createCmd.Flags().StringVar(&serverTemplate, "server-template", "", "The server template to use for the API Key")
-		createCmd.Flags().StringVar(&clientTemplate, "client-template", "", "The client template to use for the API Key")
 
 		cmd.AddCommand(createCmd)
 	}

@@ -17,10 +17,10 @@
 package models
 
 type CreateAPIKeyRequest struct {
-	Name               string `json:"name"`
-	AuthorityName      string `json:"authority_name"`
-	ServerTemplateName string `json:"server_template_name"`
-	ClientTemplateName string `json:"client_template_name"`
+	Name          string `json:"name"`
+	AuthorityName string `json:"authority_name"`
+	TemplateName  string `json:"template_name"`
+	TemplateKind  string `json:"template_kind"`
 }
 
 type DeleteAPIKeyRequest struct {
@@ -29,11 +29,11 @@ type DeleteAPIKeyRequest struct {
 }
 
 type APIKeyResponse struct {
-	CreatedAt          string `json:"created_at"`
-	ID                 string `json:"id"`
-	Name               string `json:"name"`
-	AuthorityName      string `json:"authority_name"`
-	ServerTemplateName string `json:"server_template_name"`
-	ClientTemplateName string `json:"client_template_name"`
-	Secret             string `json:"secret"`
+	CreatedAt     string `json:"created_at"`
+	ID            string `json:"id"`
+	Name          string `json:"name"`
+	AuthorityName string `json:"authority_name"`
+	TemplateName  string `json:"template_name"`
+	TemplateKind  string `json:"template_kind"`
+	Secret        string `json:"secret"`
 }

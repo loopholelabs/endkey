@@ -12,10 +12,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ModelsClientCertificateResponse models client certificate response
+// ModelsCertificateResponse models certificate response
 //
-// swagger:model models.ClientCertificateResponse
-type ModelsClientCertificateResponse struct {
+// swagger:model models.CertificateResponse
+type ModelsCertificateResponse struct {
 
 	// additional dns names
 	AdditionalDNSNames []string `json:"additional_dns_names"`
@@ -35,22 +35,25 @@ type ModelsClientCertificateResponse struct {
 	// public certificate
 	PublicCertificate string `json:"public_certificate,omitempty"`
 
+	// template kind
+	TemplateKind string `json:"template_kind,omitempty"`
+
 	// template name
 	TemplateName string `json:"template_name,omitempty"`
 }
 
-// Validate validates this models client certificate response
-func (m *ModelsClientCertificateResponse) Validate(formats strfmt.Registry) error {
+// Validate validates this models certificate response
+func (m *ModelsCertificateResponse) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this models client certificate response based on context it is used
-func (m *ModelsClientCertificateResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this models certificate response based on context it is used
+func (m *ModelsCertificateResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *ModelsClientCertificateResponse) MarshalBinary() ([]byte, error) {
+func (m *ModelsCertificateResponse) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -58,8 +61,8 @@ func (m *ModelsClientCertificateResponse) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ModelsClientCertificateResponse) UnmarshalBinary(b []byte) error {
-	var res ModelsClientCertificateResponse
+func (m *ModelsCertificateResponse) UnmarshalBinary(b []byte) error {
+	var res ModelsCertificateResponse
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

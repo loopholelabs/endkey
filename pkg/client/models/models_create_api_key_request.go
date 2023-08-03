@@ -20,14 +20,14 @@ type ModelsCreateAPIKeyRequest struct {
 	// authority name
 	AuthorityName string `json:"authority_name,omitempty"`
 
-	// client template name
-	ClientTemplateName string `json:"client_template_name,omitempty"`
-
 	// name
 	Name string `json:"name,omitempty"`
 
-	// server template name
-	ServerTemplateName string `json:"server_template_name,omitempty"`
+	// template kind
+	TemplateKind string `json:"template_kind,omitempty"`
+
+	// template name
+	TemplateName string `json:"template_name,omitempty"`
 }
 
 // Validate validates this models create API key request

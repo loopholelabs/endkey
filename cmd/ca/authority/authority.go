@@ -17,15 +17,10 @@
 package authority
 
 import (
-	"errors"
 	"github.com/loopholelabs/cmdutils"
 	"github.com/loopholelabs/cmdutils/pkg/command"
 	"github.com/loopholelabs/endkey/internal/config"
 	"github.com/spf13/cobra"
-)
-
-var (
-	ErrUserKeyRequired = errors.New("userkey is required")
 )
 
 type authorityModel struct {
@@ -38,29 +33,22 @@ type authorityModel struct {
 	CACertificate string `header:"ca_certificate" json:"ca_certificate"`
 }
 
+type authorityRedactedModel struct {
+	Created       string `header:"created_at" json:"created_at"`
+	ID            string `header:"id" json:"id"`
+	Name          string `header:"name" json:"name"`
+	CommonName    string `header:"common_name" json:"common_name"`
+	Tag           string `header:"tag" json:"tag"`
+	Expiry        string `header:"expiry" json:"expiry"`
+	CACertificate string `header:"ca_certificate" json:"ca_certificate"`
+}
+
 // Cmd encapsulates the commands for authority.
 func Cmd() command.SetupCommand[*config.Config] {
-
-	var userkey string
-
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		authorityCmd := &cobra.Command{
 			Use:   "authority",
 			Short: "Create, list, and manage Authorities",
-			PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-				ch.Config.AuthenticationKey = userkey
-
-				err := ch.Config.Validate()
-				if err != nil {
-					return err
-				}
-
-				if ch.Config.AuthenticationKey == "" {
-					return ErrUserKeyRequired
-				}
-
-				return nil
-			},
 		}
 
 		listSetup := ListCmd()
@@ -74,8 +62,6 @@ func Cmd() command.SetupCommand[*config.Config] {
 
 		getSetup := GetCmd()
 		getSetup(authorityCmd, ch)
-
-		authorityCmd.PersistentFlags().StringVar(&userkey, "user-key", "", "The user key for the EndKey API")
 
 		cmd.AddCommand(authorityCmd)
 	}

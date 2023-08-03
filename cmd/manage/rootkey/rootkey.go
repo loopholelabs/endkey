@@ -17,15 +17,10 @@
 package rootkey
 
 import (
-	"errors"
 	"github.com/loopholelabs/cmdutils"
 	"github.com/loopholelabs/cmdutils/pkg/command"
 	"github.com/loopholelabs/endkey/internal/config"
 	"github.com/spf13/cobra"
-)
-
-var (
-	ErrRootKeyRequired = errors.New("rootkey is required")
 )
 
 type rootKeyModel struct {
@@ -43,27 +38,10 @@ type rootKeyRedactedModel struct {
 
 // Cmd encapsulates the commands for rootkey.
 func Cmd() command.SetupCommand[*config.Config] {
-
-	var rootkey string
-
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		rootkeyCmd := &cobra.Command{
 			Use:   "rootkey",
 			Short: "Create, list, and manage Root Keys",
-			PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-				ch.Config.AuthenticationKey = rootkey
-
-				err := ch.Config.Validate()
-				if err != nil {
-					return err
-				}
-
-				if ch.Config.AuthenticationKey == "" {
-					return ErrRootKeyRequired
-				}
-
-				return nil
-			},
 		}
 
 		listSetup := ListCmd()
@@ -77,8 +55,6 @@ func Cmd() command.SetupCommand[*config.Config] {
 
 		rotateSetup := RotateCmd()
 		rotateSetup(rootkeyCmd, ch)
-
-		rootkeyCmd.PersistentFlags().StringVar(&rootkey, "root-key", "", "The root key for the EndKey API")
 
 		cmd.AddCommand(rootkeyCmd)
 	}

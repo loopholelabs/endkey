@@ -17,42 +17,20 @@
 package template
 
 import (
-	"errors"
 	"github.com/loopholelabs/cmdutils"
 	"github.com/loopholelabs/cmdutils/pkg/command"
-	"github.com/loopholelabs/endkey/cmd/manage/template/client"
-	"github.com/loopholelabs/endkey/cmd/manage/template/server"
+	"github.com/loopholelabs/endkey/cmd/ca/template/client"
+	"github.com/loopholelabs/endkey/cmd/ca/template/server"
 	"github.com/loopholelabs/endkey/internal/config"
 	"github.com/spf13/cobra"
 )
 
-var (
-	ErrUserKeyRequired = errors.New("userkey is required")
-)
-
 // Cmd encapsulates the commands for template.
 func Cmd() command.SetupCommand[*config.Config] {
-
-	var userkey string
-
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		templateCmd := &cobra.Command{
 			Use:   "template",
 			Short: "Create, list, and manage Templates",
-			PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-				ch.Config.AuthenticationKey = userkey
-
-				err := ch.Config.Validate()
-				if err != nil {
-					return err
-				}
-
-				if ch.Config.AuthenticationKey == "" {
-					return ErrUserKeyRequired
-				}
-
-				return nil
-			},
 		}
 
 		serverSetup := server.Cmd()
@@ -60,8 +38,6 @@ func Cmd() command.SetupCommand[*config.Config] {
 
 		clientSetup := client.Cmd()
 		clientSetup(templateCmd, ch)
-
-		templateCmd.PersistentFlags().StringVar(&userkey, "user-key", "", "The user key for the EndKey API")
 
 		cmd.AddCommand(templateCmd)
 	}

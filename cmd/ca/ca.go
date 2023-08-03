@@ -14,19 +14,22 @@
 	limitations under the License.
 */
 
-package certificate
+package ca
 
 import (
 	"errors"
 	"github.com/loopholelabs/cmdutils"
 	"github.com/loopholelabs/cmdutils/pkg/command"
+	"github.com/loopholelabs/endkey/cmd/ca/apikey"
+	"github.com/loopholelabs/endkey/cmd/ca/authority"
+	"github.com/loopholelabs/endkey/cmd/ca/template"
 	"github.com/loopholelabs/endkey/internal/config"
 	"github.com/spf13/cobra"
 )
 
 var (
 	ErrEndpointRequired = errors.New("endpoint is required")
-	ErrAPIKeyRequired   = errors.New("apikey is required")
+	ErrUserKeyRequired  = errors.New("userkey is required")
 )
 
 const (
@@ -34,31 +37,22 @@ const (
 	DefaultTLS      = false
 )
 
-type certificateModel struct {
-	Authority     string `header:"authority" json:"authority"`
-	Kind          string `header:"kind" json:"kind"`
-	Template      string `header:"template" json:"template"`
-	AdditionalDNS string `header:"additional_dns_names" json:"additional_dns_names"`
-	AdditionalIP  string `header:"additional_ip_addresses" json:"additional_ip_addresses"`
-	Expiry        string `header:"expiry" json:"expiry"`
-}
-
-// Cmd encapsulates the commands for certificate.
+// Cmd encapsulates the commands for ca.
 func Cmd() command.SetupCommand[*config.Config] {
 	var endpoint string
 	var tls bool
 
-	var apikey string
+	var uk string
 
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
-		certificateCmd := &cobra.Command{
-			Use:   "certificate",
-			Short: "Commands for getting Certificates from the EndKey API",
+		caCmd := &cobra.Command{
+			Use:   "ca",
+			Short: "Commands for the CA of the EndKey API",
 			PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 				ch.Config.Endpoint = endpoint
 				ch.Config.TLS = tls
 
-				ch.Config.AuthenticationKey = apikey
+				ch.Config.AuthenticationKey = uk
 
 				err := ch.Config.Validate()
 				if err != nil {
@@ -70,21 +64,27 @@ func Cmd() command.SetupCommand[*config.Config] {
 				}
 
 				if ch.Config.AuthenticationKey == "" {
-					return ErrAPIKeyRequired
+					return ErrUserKeyRequired
 				}
 
 				return nil
 			},
 		}
 
-		getCmd := GetCmd()
-		getCmd(certificateCmd, ch)
+		apiKeySetup := apikey.Cmd()
+		apiKeySetup(caCmd, ch)
 
-		certificateCmd.PersistentFlags().StringVar(&endpoint, "endpoint", DefaultEndpoint, "The endpoint of the EndKey API")
-		certificateCmd.PersistentFlags().BoolVar(&tls, "tls", DefaultTLS, "Whether or not to use TLS")
+		authoritySetup := authority.Cmd()
+		authoritySetup(caCmd, ch)
 
-		certificateCmd.PersistentFlags().StringVar(&apikey, "api-key", "", "The api key for the EndKey API")
+		templateSetup := template.Cmd()
+		templateSetup(caCmd, ch)
 
-		cmd.AddCommand(certificateCmd)
+		caCmd.PersistentFlags().StringVar(&endpoint, "endpoint", DefaultEndpoint, "The endpoint of the EndKey API")
+		caCmd.PersistentFlags().BoolVar(&tls, "tls", DefaultTLS, "Whether or not to use TLS")
+
+		caCmd.PersistentFlags().StringVar(&uk, "user-key", "", "The user key for the EndKey API")
+
+		cmd.AddCommand(caCmd)
 	}
 }

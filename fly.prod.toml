@@ -1,0 +1,40 @@
+# fly.toml file generated for scale-api on 2023-01-26T16:39:41-05:00
+
+app = "endkey-prod"
+kill_signal = "SIGINT"
+kill_timeout = 5
+
+[experimental]
+auto_rollback = true
+
+[[services]]
+internal_port = 8080
+protocol = "tcp"
+[services.concurrency]
+hard_limit = 100
+soft_limit = 75
+type = "connections"
+
+[[services.ports]]
+handlers = ["http"]
+force_https = true
+port = "80"
+
+[[services.ports]]
+handlers = ["tls", "http"]
+port = "443"
+
+[[services.tcp_checks]]
+interval = "15s"
+grace_period = "60s"
+restart_limit = 3
+timeout = "2s"
+
+[[services.http_checks]]
+interval = "15s"
+grace_period = "60s"
+restart_limit = 3
+timeout = "2s"
+method = "get"
+path = "/v1/health"
+protocol = "http"

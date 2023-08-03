@@ -49,7 +49,7 @@ func ListCmd() command.SetupCommand[*config.Config] {
 				}
 
 				if len(res.GetPayload()) == 0 && ch.Printer.Format() == printer.Human {
-					ch.Printer.Println("No API Keys have been created yet.")
+					ch.Printer.Println("No Server Templates have been created yet.")
 					return nil
 				}
 

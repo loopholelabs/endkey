@@ -18,6 +18,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/loopholelabs/endkey/internal/ent"
 	"github.com/loopholelabs/endkey/internal/ent/rootkey"
@@ -25,7 +26,7 @@ import (
 )
 
 func (d *Database) CreateRootKey(ctx context.Context, name string) (*ent.RootKey, []byte, error) {
-	identifier := uuid.New().String()
+	id := uuid.New().String()
 	secret := []byte(uuid.New().String())
 	salt := []byte(uuid.New().String())
 	hash, err := bcrypt.GenerateFromPassword(append(salt, secret...), bcrypt.DefaultCost)
@@ -33,7 +34,7 @@ func (d *Database) CreateRootKey(ctx context.Context, name string) (*ent.RootKey
 		return nil, nil, err
 	}
 
-	rk, err := d.sql.RootKey.Create().SetIdentifier(identifier).SetName(name).SetHash(hash).SetSalt(salt).Save(ctx)
+	rk, err := d.sql.RootKey.Create().SetID(id).SetName(name).SetHash(hash).SetSalt(salt).Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
 			return nil, nil, ErrAlreadyExists
@@ -44,8 +45,8 @@ func (d *Database) CreateRootKey(ctx context.Context, name string) (*ent.RootKey
 	return rk, secret, nil
 }
 
-func (d *Database) RotateRootKey(ctx context.Context, name string) (*ent.RootKey, []byte, error) {
-	identifier := uuid.New().String()
+func (d *Database) RotateRootKeyByName(ctx context.Context, name string) (*ent.RootKey, []byte, error) {
+	id := uuid.New().String()
 	secret := []byte(uuid.New().String())
 	salt := []byte(uuid.New().String())
 	hash, err := bcrypt.GenerateFromPassword(append(salt, secret...), bcrypt.DefaultCost)
@@ -57,22 +58,43 @@ func (d *Database) RotateRootKey(ctx context.Context, name string) (*ent.RootKey
 	if err != nil {
 		return nil, nil, err
 	}
+
+	oldRk, err := tx.RootKey.Query().Where(rootkey.Name(name)).WithUserKeys().Only(ctx)
+	if err != nil {
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			return nil, nil, fmt.Errorf("failed to rollback transaction during error %w: %w", err, rollbackErr)
+		}
+		return nil, nil, err
+	}
+
+	uks, err := oldRk.Edges.UserKeysOrErr()
+	if err != nil {
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			return nil, nil, fmt.Errorf("failed to rollback transaction during error %w: %w", err, rollbackErr)
+		}
+		return nil, nil, err
+	}
+
 	_, err = tx.RootKey.Delete().Where(rootkey.Name(name)).Exec(ctx)
 	if err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
-			return nil, nil, rollbackErr
+			return nil, nil, fmt.Errorf("failed to rollback transaction during error %w: %w", err, rollbackErr)
 		}
 		return nil, nil, err
 	}
-	rk, err := tx.RootKey.Create().SetIdentifier(identifier).SetName(name).SetHash(hash).SetSalt(salt).Save(ctx)
+
+	rk, err := tx.RootKey.Create().SetID(id).SetName(name).SetHash(hash).SetSalt(salt).AddUserKeys(uks...).Save(ctx)
 	if err != nil {
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
-			return nil, nil, rollbackErr
+			return nil, nil, fmt.Errorf("failed to rollback transaction during error %w: %w", err, rollbackErr)
 		}
 		return nil, nil, err
 	}
+
 	err = tx.Commit()
 	if err != nil {
 		return nil, nil, err
@@ -81,8 +103,8 @@ func (d *Database) RotateRootKey(ctx context.Context, name string) (*ent.RootKey
 	return rk, secret, nil
 }
 
-func (d *Database) GetRootKey(ctx context.Context, identifier string) (*ent.RootKey, error) {
-	rk, err := d.sql.RootKey.Query().Where(rootkey.Identifier(identifier)).Only(ctx)
+func (d *Database) GetRootKeyByID(ctx context.Context, id string) (*ent.RootKey, error) {
+	rk, err := d.sql.RootKey.Query().Where(rootkey.ID(id)).WithUserKeys().Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, ErrNotFound
@@ -105,7 +127,7 @@ func (d *Database) ListRootKeys(ctx context.Context) (ent.RootKeys, error) {
 	return rks, nil
 }
 
-func (d *Database) DeleteRootKey(ctx context.Context, name string) error {
+func (d *Database) DeleteRootKeyByName(ctx context.Context, name string) error {
 	_, err := d.sql.RootKey.Delete().Where(rootkey.Name(name)).Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {

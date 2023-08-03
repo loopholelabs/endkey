@@ -51,7 +51,8 @@ func ListCmd() command.SetupCommand[*config.Config] {
 				for _, auth := range res.GetPayload() {
 					keys = append(keys, authorityModel{
 						Created:    auth.CreatedAt,
-						Identifier: auth.Identifier,
+						ID:         auth.ID,
+						Name:       auth.Name,
 						CommonName: auth.CommonName,
 						Tag:        auth.Tag,
 						Expiry:     auth.Expiry,

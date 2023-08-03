@@ -40,7 +40,7 @@ func (ctd *ClientTemplateDelete) ExecX(ctx context.Context) int {
 }
 
 func (ctd *ClientTemplateDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(clienttemplate.Table, sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewDeleteSpec(clienttemplate.Table, sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString))
 	if ps := ctd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {

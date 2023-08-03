@@ -17,15 +17,15 @@
 package models
 
 type CreateServerCertificateRequest struct {
-	Template              string   `json:"template"`
+	TemplateName          string   `json:"template_name"`
 	AdditionalDNSNames    []string `json:"additional_dns_names"`
 	AdditionalIPAddresses []string `json:"additional_ip_addresses"`
 	CSR                   string   `json:"csr" format:"base64"`
 }
 
 type ServerCertificateResponse struct {
-	Authority             string   `json:"authority"`
-	Template              string   `json:"template"`
+	AuthorityName         string   `json:"authority_name"`
+	TemplateName          string   `json:"template_name"`
 	AdditionalDNSNames    []string `json:"additional_dns_names"`
 	AdditionalIPAddresses []string `json:"additional_ip_addresses"`
 	Expiry                string   `json:"expiry"`
@@ -34,15 +34,15 @@ type ServerCertificateResponse struct {
 }
 
 type CreateClientCertificateRequest struct {
-	Template              string   `json:"template"`
+	TemplateName          string   `json:"template_name"`
 	AdditionalDNSNames    []string `json:"additional_dns_names"`
 	AdditionalIPAddresses []string `json:"additional_ip_addresses"`
 	CSR                   string   `json:"csr" format:"base64"`
 }
 
 type ClientCertificateResponse struct {
-	Authority             string   `json:"authority"`
-	Template              string   `json:"template"`
+	AuthorityName         string   `json:"authority_name"`
+	TemplateName          string   `json:"template_name"`
 	AdditionalDNSNames    []string `json:"additional_dns_names"`
 	AdditionalIPAddresses []string `json:"additional_ip_addresses"`
 	Expiry                string   `json:"expiry"`
@@ -51,6 +51,6 @@ type ClientCertificateResponse struct {
 }
 
 type CAResponse struct {
-	Authority     string `json:"authority"`
+	AuthorityName string `json:"authority_name"`
 	CACertificate string `json:"ca_certificate" format:"base64"`
 }

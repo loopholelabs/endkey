@@ -16,8 +16,8 @@ const (
 	FieldID = "id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
-	// FieldIdentifier holds the string denoting the identifier field in the database.
-	FieldIdentifier = "identifier"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
 	// FieldCommonName holds the string denoting the common_name field in the database.
 	FieldCommonName = "common_name"
 	// FieldTag holds the string denoting the tag field in the database.
@@ -58,7 +58,7 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
-	FieldIdentifier,
+	FieldName,
 	FieldCommonName,
 	FieldTag,
 	FieldValidity,
@@ -92,8 +92,8 @@ func ValidColumn(column string) bool {
 var (
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
-	// IdentifierValidator is a validator for the "identifier" field. It is called by the builders before save.
-	IdentifierValidator func(string) error
+	// NameValidator is a validator for the "name" field. It is called by the builders before save.
+	NameValidator func(string) error
 	// CommonNameValidator is a validator for the "common_name" field. It is called by the builders before save.
 	CommonNameValidator func(string) error
 	// TagValidator is a validator for the "tag" field. It is called by the builders before save.
@@ -104,6 +104,8 @@ var (
 	DefaultAllowAdditionalDNSNames bool
 	// DefaultAllowAdditionalIps holds the default value on creation for the "allow_additional_ips" field.
 	DefaultAllowAdditionalIps bool
+	// IDValidator is a validator for the "id" field. It is called by the builders before save.
+	IDValidator func(string) error
 )
 
 // OrderOption defines the ordering options for the ServerTemplate queries.
@@ -119,9 +121,9 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
 }
 
-// ByIdentifier orders the results by the identifier field.
-func ByIdentifier(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIdentifier, opts...).ToFunc()
+// ByName orders the results by the name field.
+func ByName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
 // ByCommonName orders the results by the common_name field.

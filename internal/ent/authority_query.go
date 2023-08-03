@@ -16,6 +16,7 @@ import (
 	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
 	"github.com/loopholelabs/endkey/internal/ent/predicate"
 	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
 // AuthorityQuery is the builder for querying Authority entities.
@@ -25,9 +26,11 @@ type AuthorityQuery struct {
 	order               []authority.OrderOption
 	inters              []Interceptor
 	predicates          []predicate.Authority
+	withUserKey         *UserKeyQuery
 	withAPIKeys         *APIKeyQuery
 	withServerTemplates *ServerTemplateQuery
 	withClientTemplates *ClientTemplateQuery
+	withFKs             bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -62,6 +65,28 @@ func (aq *AuthorityQuery) Unique(unique bool) *AuthorityQuery {
 func (aq *AuthorityQuery) Order(o ...authority.OrderOption) *AuthorityQuery {
 	aq.order = append(aq.order, o...)
 	return aq
+}
+
+// QueryUserKey chains the current query on the "user_key" edge.
+func (aq *AuthorityQuery) QueryUserKey() *UserKeyQuery {
+	query := (&UserKeyClient{config: aq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := aq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := aq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(authority.Table, authority.FieldID, selector),
+			sqlgraph.To(userkey.Table, userkey.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, authority.UserKeyTable, authority.UserKeyColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // QueryAPIKeys chains the current query on the "api_keys" edge.
@@ -154,8 +179,8 @@ func (aq *AuthorityQuery) FirstX(ctx context.Context) *Authority {
 
 // FirstID returns the first Authority ID from the query.
 // Returns a *NotFoundError when no Authority ID was found.
-func (aq *AuthorityQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (aq *AuthorityQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = aq.Limit(1).IDs(setContextOp(ctx, aq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -167,7 +192,7 @@ func (aq *AuthorityQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (aq *AuthorityQuery) FirstIDX(ctx context.Context) int {
+func (aq *AuthorityQuery) FirstIDX(ctx context.Context) string {
 	id, err := aq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -205,8 +230,8 @@ func (aq *AuthorityQuery) OnlyX(ctx context.Context) *Authority {
 // OnlyID is like Only, but returns the only Authority ID in the query.
 // Returns a *NotSingularError when more than one Authority ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (aq *AuthorityQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (aq *AuthorityQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = aq.Limit(2).IDs(setContextOp(ctx, aq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -222,7 +247,7 @@ func (aq *AuthorityQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (aq *AuthorityQuery) OnlyIDX(ctx context.Context) int {
+func (aq *AuthorityQuery) OnlyIDX(ctx context.Context) string {
 	id, err := aq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -250,7 +275,7 @@ func (aq *AuthorityQuery) AllX(ctx context.Context) []*Authority {
 }
 
 // IDs executes the query and returns a list of Authority IDs.
-func (aq *AuthorityQuery) IDs(ctx context.Context) (ids []int, err error) {
+func (aq *AuthorityQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if aq.ctx.Unique == nil && aq.path != nil {
 		aq.Unique(true)
 	}
@@ -262,7 +287,7 @@ func (aq *AuthorityQuery) IDs(ctx context.Context) (ids []int, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (aq *AuthorityQuery) IDsX(ctx context.Context) []int {
+func (aq *AuthorityQuery) IDsX(ctx context.Context) []string {
 	ids, err := aq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -322,6 +347,7 @@ func (aq *AuthorityQuery) Clone() *AuthorityQuery {
 		order:               append([]authority.OrderOption{}, aq.order...),
 		inters:              append([]Interceptor{}, aq.inters...),
 		predicates:          append([]predicate.Authority{}, aq.predicates...),
+		withUserKey:         aq.withUserKey.Clone(),
 		withAPIKeys:         aq.withAPIKeys.Clone(),
 		withServerTemplates: aq.withServerTemplates.Clone(),
 		withClientTemplates: aq.withClientTemplates.Clone(),
@@ -329,6 +355,17 @@ func (aq *AuthorityQuery) Clone() *AuthorityQuery {
 		sql:  aq.sql.Clone(),
 		path: aq.path,
 	}
+}
+
+// WithUserKey tells the query-builder to eager-load the nodes that are connected to
+// the "user_key" edge. The optional arguments are used to configure the query builder of the edge.
+func (aq *AuthorityQuery) WithUserKey(opts ...func(*UserKeyQuery)) *AuthorityQuery {
+	query := (&UserKeyClient{config: aq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	aq.withUserKey = query
+	return aq
 }
 
 // WithAPIKeys tells the query-builder to eager-load the nodes that are connected to
@@ -441,13 +478,21 @@ func (aq *AuthorityQuery) prepareQuery(ctx context.Context) error {
 func (aq *AuthorityQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Authority, error) {
 	var (
 		nodes       = []*Authority{}
+		withFKs     = aq.withFKs
 		_spec       = aq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
+			aq.withUserKey != nil,
 			aq.withAPIKeys != nil,
 			aq.withServerTemplates != nil,
 			aq.withClientTemplates != nil,
 		}
 	)
+	if aq.withUserKey != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, authority.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Authority).scanValues(nil, columns)
 	}
@@ -465,6 +510,12 @@ func (aq *AuthorityQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Au
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
+	}
+	if query := aq.withUserKey; query != nil {
+		if err := aq.loadUserKey(ctx, query, nodes, nil,
+			func(n *Authority, e *UserKey) { n.Edges.UserKey = e }); err != nil {
+			return nil, err
+		}
 	}
 	if query := aq.withAPIKeys; query != nil {
 		if err := aq.loadAPIKeys(ctx, query, nodes,
@@ -490,9 +541,41 @@ func (aq *AuthorityQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Au
 	return nodes, nil
 }
 
+func (aq *AuthorityQuery) loadUserKey(ctx context.Context, query *UserKeyQuery, nodes []*Authority, init func(*Authority), assign func(*Authority, *UserKey)) error {
+	ids := make([]string, 0, len(nodes))
+	nodeids := make(map[string][]*Authority)
+	for i := range nodes {
+		if nodes[i].user_key_authorities == nil {
+			continue
+		}
+		fk := *nodes[i].user_key_authorities
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(userkey.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "user_key_authorities" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 func (aq *AuthorityQuery) loadAPIKeys(ctx context.Context, query *APIKeyQuery, nodes []*Authority, init func(*Authority), assign func(*Authority, *APIKey)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Authority)
+	nodeids := make(map[string]*Authority)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -523,7 +606,7 @@ func (aq *AuthorityQuery) loadAPIKeys(ctx context.Context, query *APIKeyQuery, n
 }
 func (aq *AuthorityQuery) loadServerTemplates(ctx context.Context, query *ServerTemplateQuery, nodes []*Authority, init func(*Authority), assign func(*Authority, *ServerTemplate)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Authority)
+	nodeids := make(map[string]*Authority)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -554,7 +637,7 @@ func (aq *AuthorityQuery) loadServerTemplates(ctx context.Context, query *Server
 }
 func (aq *AuthorityQuery) loadClientTemplates(ctx context.Context, query *ClientTemplateQuery, nodes []*Authority, init func(*Authority), assign func(*Authority, *ClientTemplate)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*Authority)
+	nodeids := make(map[string]*Authority)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -594,7 +677,7 @@ func (aq *AuthorityQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (aq *AuthorityQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(authority.Table, authority.Columns, sqlgraph.NewFieldSpec(authority.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(authority.Table, authority.Columns, sqlgraph.NewFieldSpec(authority.FieldID, field.TypeString))
 	_spec.From = aq.sql
 	if unique := aq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

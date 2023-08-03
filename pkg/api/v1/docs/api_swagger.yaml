@@ -4,19 +4,19 @@ consumes:
 definitions:
   models.APIKeyResponse:
     properties:
-      authority:
+      authority_name:
         type: string
-      client_template:
+      client_template_name:
         type: string
       created_at:
         type: string
-      identifier:
+      id:
         type: string
       name:
         type: string
       secret:
         type: string
-      server_template:
+      server_template_name:
         type: string
     type: object
   models.AuthorityResponse:
@@ -30,14 +30,16 @@ definitions:
         type: string
       expiry:
         type: string
-      identifier:
+      id:
+        type: string
+      name:
         type: string
       tag:
         type: string
     type: object
   models.CAResponse:
     properties:
-      authority:
+      authority_name:
         type: string
       ca_certificate:
         format: base64
@@ -53,7 +55,7 @@ definitions:
         items:
           type: string
         type: array
-      authority:
+      authority_name:
         type: string
       ca_certificate:
         format: base64
@@ -63,7 +65,7 @@ definitions:
       public_certificate:
         format: base64
         type: string
-      template:
+      template_name:
         type: string
     type: object
   models.ClientTemplateResponse:
@@ -72,7 +74,7 @@ definitions:
         type: boolean
       allow_additional_ips:
         type: boolean
-      authority:
+      authority_name:
         type: string
       common_name:
         type: string
@@ -82,12 +84,14 @@ definitions:
         items:
           type: string
         type: array
-      identifier:
+      id:
         type: string
       ip_addresses:
         items:
           type: string
         type: array
+      name:
+        type: string
       tag:
         type: string
       validity:
@@ -95,20 +99,20 @@ definitions:
     type: object
   models.CreateAPIKeyRequest:
     properties:
-      authority:
+      authority_name:
         type: string
-      client_template:
+      client_template_name:
         type: string
       name:
         type: string
-      server_template:
+      server_template_name:
         type: string
     type: object
   models.CreateAuthorityRequest:
     properties:
       common_name:
         type: string
-      identifier:
+      name:
         type: string
       tag:
         type: string
@@ -128,7 +132,7 @@ definitions:
       csr:
         format: base64
         type: string
-      template:
+      template_name:
         type: string
     type: object
   models.CreateClientTemplateRequest:
@@ -137,7 +141,7 @@ definitions:
         type: boolean
       allow_additional_ips:
         type: boolean
-      authority:
+      authority_name:
         type: string
       common_name:
         type: string
@@ -145,12 +149,12 @@ definitions:
         items:
           type: string
         type: array
-      identifier:
-        type: string
       ip_addresses:
         items:
           type: string
         type: array
+      name:
+        type: string
       tag:
         type: string
       validity:
@@ -169,7 +173,7 @@ definitions:
       csr:
         format: base64
         type: string
-      template:
+      template_name:
         type: string
     type: object
   models.CreateServerTemplateRequest:
@@ -178,7 +182,7 @@ definitions:
         type: boolean
       allow_additional_ips:
         type: boolean
-      authority:
+      authority_name:
         type: string
       common_name:
         type: string
@@ -186,12 +190,12 @@ definitions:
         items:
           type: string
         type: array
-      identifier:
-        type: string
       ip_addresses:
         items:
           type: string
         type: array
+      name:
+        type: string
       tag:
         type: string
       validity:
@@ -199,23 +203,23 @@ definitions:
     type: object
   models.DeleteAPIKeyRequest:
     properties:
-      authority:
+      authority_name:
         type: string
       name:
         type: string
     type: object
   models.DeleteClientTemplateRequest:
     properties:
-      authority:
+      authority_name:
         type: string
-      identifier:
+      name:
         type: string
     type: object
   models.DeleteServerTemplateRequest:
     properties:
-      authority:
+      authority_name:
         type: string
-      identifier:
+      name:
         type: string
     type: object
   models.HealthResponse:
@@ -227,7 +231,7 @@ definitions:
     properties:
       created_at:
         type: string
-      identifier:
+      id:
         type: string
       name:
         type: string
@@ -244,7 +248,7 @@ definitions:
         items:
           type: string
         type: array
-      authority:
+      authority_name:
         type: string
       ca_certificate:
         format: base64
@@ -254,7 +258,7 @@ definitions:
       public_certificate:
         format: base64
         type: string
-      template:
+      template_name:
         type: string
     type: object
   models.ServerTemplateResponse:
@@ -263,7 +267,7 @@ definitions:
         type: boolean
       allow_additional_ips:
         type: boolean
-      authority:
+      authority_name:
         type: string
       common_name:
         type: string
@@ -273,15 +277,28 @@ definitions:
         items:
           type: string
         type: array
-      identifier:
+      id:
         type: string
       ip_addresses:
         items:
           type: string
         type: array
+      name:
+        type: string
       tag:
         type: string
       validity:
+        type: string
+    type: object
+  models.UserKeyResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      secret:
         type: string
     type: object
 host: localhost:8080
@@ -387,15 +404,15 @@ paths:
             type: string
       tags:
       - apikey
-  /apikey/{authority}:
+  /apikey/{authority_name}:
     get:
       consumes:
       - application/json
       description: Lists all the api keys
       parameters:
-      - description: Authority Identifier
+      - description: Authority Name
         in: path
-        name: authority
+        name: authority_name
         required: true
         type: string
       produces:
@@ -517,15 +534,15 @@ paths:
             type: string
       tags:
       - authority
-  /authority/{identifier}:
+  /authority/{name}:
     delete:
       consumes:
       - application/json
       description: Delete an authority
       parameters:
-      - description: Authority Identifier
+      - description: Authority Name
         in: path
-        name: identifier
+        name: name
         required: true
         type: string
       produces:
@@ -566,9 +583,9 @@ paths:
       - application/json
       description: Get an authority
       parameters:
-      - description: Authority Identifier
+      - description: Authority Name
         in: path
-        name: identifier
+        name: name
         required: true
         type: string
       produces:
@@ -928,7 +945,7 @@ paths:
       - application/json
       description: Delete a Client Template
       parameters:
-      - description: Delete Server Client Request
+      - description: Delete Client Template Request
         in: body
         name: request
         required: true
@@ -1011,15 +1028,15 @@ paths:
             type: string
       tags:
       - template
-  /template/client/{authority}:
+  /template/client/{authority_name}:
     get:
       consumes:
       - application/json
       description: List all Client Templates
       parameters:
-      - description: Authority Identifier
+      - description: Authority Name
         in: path
-        name: authority
+        name: authority_name
         required: true
         type: string
       produces:
@@ -1146,15 +1163,15 @@ paths:
             type: string
       tags:
       - template
-  /template/server/{authority}:
+  /template/server/{authority_name}:
     get:
       consumes:
       - application/json
       description: List all Server Templates
       parameters:
-      - description: Authority Identifier
+      - description: Authority Name
         in: path
-        name: authority
+        name: authority_name
         required: true
         type: string
       produces:
@@ -1192,6 +1209,177 @@ paths:
             type: string
       tags:
       - template
+  /userkey:
+    get:
+      consumes:
+      - application/json
+      description: Lists all the User Keys
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.UserKeyResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - userkey
+  /userkey/{name}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a User Key
+      parameters:
+      - description: User Key Name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - userkey
+    post:
+      consumes:
+      - application/json
+      description: Create a new User Key
+      parameters:
+      - description: User Key Name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserKeyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - userkey
+  /userkey/rotate/{name}:
+    post:
+      consumes:
+      - application/json
+      description: Rotates a given User Key
+      parameters:
+      - description: User Key Name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserKeyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "409":
+          description: Conflict
+          schema:
+            type: string
+        "412":
+          description: Precondition Failed
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - userkey
 produces:
 - application/json
 schemes:

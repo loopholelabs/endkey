@@ -32,22 +32,22 @@ import (
 func CreateCmd() command.SetupCommand[*config.Config] {
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		createCmd := &cobra.Command{
-			Use:   "create <identifier> <common-name> <tag> <validity>",
+			Use:   "create <name> <common-name> <tag> <validity>",
 			Args:  cobra.ExactArgs(4),
-			Short: "Create an Authority with the given identifier, common name, tag, and validity period",
+			Short: "Create an Authority with the given name, common name, tag, and validity period",
 			RunE: func(cmd *cobra.Command, args []string) error {
 				ctx := cmd.Context()
 				client := ch.Config.Client()
 
-				identifier := args[0]
+				name := args[0]
 				commonName := args[1]
 				tag := args[2]
 				validity := args[3]
 
-				end := ch.Printer.PrintProgress(fmt.Sprintf("Creating Authority '%s' with Common Name '%s', Tag '%s', and Validity '%s'...", identifier, commonName, tag, validity))
+				end := ch.Printer.PrintProgress(fmt.Sprintf("Creating Authority '%s' with Common Name '%s', Tag '%s', and Validity '%s'...", name, commonName, tag, validity))
 				req := &models.ModelsCreateAuthorityRequest{
 					CommonName: commonName,
-					Identifier: identifier,
+					Name:       name,
 					Tag:        tag,
 					Validity:   validity,
 				}
@@ -58,7 +58,7 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 				}
 
 				if ch.Printer.Format() == printer.Human {
-					ch.Printer.Printf("Created Authority '%s' with Expiry %s\n", printer.Bold(res.GetPayload().Identifier), printer.BoldBlue(res.GetPayload().Expiry))
+					ch.Printer.Printf("Created Authority '%s' with Expiry %s\n", printer.Bold(res.GetPayload().Name), printer.BoldBlue(res.GetPayload().Expiry))
 					return nil
 				}
 
@@ -69,7 +69,8 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 
 				return ch.Printer.PrintResource(authorityModel{
 					Created:       res.GetPayload().CreatedAt,
-					Identifier:    res.GetPayload().Identifier,
+					ID:            res.GetPayload().ID,
+					Name:          res.GetPayload().Name,
 					CommonName:    res.GetPayload().CommonName,
 					Tag:           res.GetPayload().Tag,
 					Expiry:        res.GetPayload().Expiry,

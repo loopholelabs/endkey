@@ -23,8 +23,8 @@ type ModelsClientCertificateResponse struct {
 	// additional ip addresses
 	AdditionalIPAddresses []string `json:"additional_ip_addresses"`
 
-	// authority
-	Authority string `json:"authority,omitempty"`
+	// authority name
+	AuthorityName string `json:"authority_name,omitempty"`
 
 	// ca certificate
 	CaCertificate string `json:"ca_certificate,omitempty"`
@@ -35,8 +35,8 @@ type ModelsClientCertificateResponse struct {
 	// public certificate
 	PublicCertificate string `json:"public_certificate,omitempty"`
 
-	// template
-	Template string `json:"template,omitempty"`
+	// template name
+	TemplateName string `json:"template_name,omitempty"`
 }
 
 // Validate validates this models client certificate response

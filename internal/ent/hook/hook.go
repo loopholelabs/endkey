@@ -69,6 +69,18 @@ func (f ServerTemplateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ServerTemplateMutation", m)
 }
 
+// The UserKeyFunc type is an adapter to allow the use of ordinary
+// function as UserKey mutator.
+type UserKeyFunc func(context.Context, *ent.UserKeyMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserKeyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserKeyMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserKeyMutation", m)
+}
+
 // Condition is a hook condition function.
 type Condition func(context.Context, ent.Mutation) bool
 

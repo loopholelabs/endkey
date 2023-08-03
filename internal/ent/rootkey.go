@@ -16,18 +16,37 @@ import (
 type RootKey struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
-	// Identifier holds the value of the "identifier" field.
-	Identifier string `json:"identifier,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Salt holds the value of the "salt" field.
 	Salt []byte `json:"salt,omitempty"`
 	// Hash holds the value of the "hash" field.
-	Hash         []byte `json:"hash,omitempty"`
+	Hash []byte `json:"hash,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the RootKeyQuery when eager-loading is set.
+	Edges        RootKeyEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// RootKeyEdges holds the relations/edges for other nodes in the graph.
+type RootKeyEdges struct {
+	// UserKeys holds the value of the user_keys edge.
+	UserKeys []*UserKey `json:"user_keys,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// UserKeysOrErr returns the UserKeys value or an error if the edge
+// was not loaded in eager-loading.
+func (e RootKeyEdges) UserKeysOrErr() ([]*UserKey, error) {
+	if e.loadedTypes[0] {
+		return e.UserKeys, nil
+	}
+	return nil, &NotLoadedError{edge: "user_keys"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -37,9 +56,7 @@ func (*RootKey) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case rootkey.FieldSalt, rootkey.FieldHash:
 			values[i] = new([]byte)
-		case rootkey.FieldID:
-			values[i] = new(sql.NullInt64)
-		case rootkey.FieldIdentifier, rootkey.FieldName:
+		case rootkey.FieldID, rootkey.FieldName:
 			values[i] = new(sql.NullString)
 		case rootkey.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
@@ -59,22 +76,16 @@ func (rk *RootKey) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case rootkey.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value.Valid {
+				rk.ID = value.String
 			}
-			rk.ID = int(value.Int64)
 		case rootkey.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				rk.CreatedAt = value.Time
-			}
-		case rootkey.FieldIdentifier:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field identifier", values[i])
-			} else if value.Valid {
-				rk.Identifier = value.String
 			}
 		case rootkey.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -107,6 +118,11 @@ func (rk *RootKey) Value(name string) (ent.Value, error) {
 	return rk.selectValues.Get(name)
 }
 
+// QueryUserKeys queries the "user_keys" edge of the RootKey entity.
+func (rk *RootKey) QueryUserKeys() *UserKeyQuery {
+	return NewRootKeyClient(rk.config).QueryUserKeys(rk)
+}
+
 // Update returns a builder for updating this RootKey.
 // Note that you need to call RootKey.Unwrap() before calling this method if this RootKey
 // was returned from a transaction, and the transaction was committed or rolled back.
@@ -132,9 +148,6 @@ func (rk *RootKey) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", rk.ID))
 	builder.WriteString("created_at=")
 	builder.WriteString(rk.CreatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("identifier=")
-	builder.WriteString(rk.Identifier)
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(rk.Name)

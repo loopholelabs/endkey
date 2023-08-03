@@ -29,14 +29,14 @@ func (stu *ServerTemplateUpdate) Where(ps ...predicate.ServerTemplate) *ServerTe
 }
 
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
-func (stu *ServerTemplateUpdate) AddAPIKeyIDs(ids ...int) *ServerTemplateUpdate {
+func (stu *ServerTemplateUpdate) AddAPIKeyIDs(ids ...string) *ServerTemplateUpdate {
 	stu.mutation.AddAPIKeyIDs(ids...)
 	return stu
 }
 
 // AddAPIKeys adds the "api_keys" edges to the APIKey entity.
 func (stu *ServerTemplateUpdate) AddAPIKeys(a ...*APIKey) *ServerTemplateUpdate {
-	ids := make([]int, len(a))
+	ids := make([]string, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
@@ -55,14 +55,14 @@ func (stu *ServerTemplateUpdate) ClearAPIKeys() *ServerTemplateUpdate {
 }
 
 // RemoveAPIKeyIDs removes the "api_keys" edge to APIKey entities by IDs.
-func (stu *ServerTemplateUpdate) RemoveAPIKeyIDs(ids ...int) *ServerTemplateUpdate {
+func (stu *ServerTemplateUpdate) RemoveAPIKeyIDs(ids ...string) *ServerTemplateUpdate {
 	stu.mutation.RemoveAPIKeyIDs(ids...)
 	return stu
 }
 
 // RemoveAPIKeys removes "api_keys" edges to APIKey entities.
 func (stu *ServerTemplateUpdate) RemoveAPIKeys(a ...*APIKey) *ServerTemplateUpdate {
-	ids := make([]int, len(a))
+	ids := make([]string, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
@@ -108,7 +108,7 @@ func (stu *ServerTemplateUpdate) sqlSave(ctx context.Context) (n int, err error)
 	if err := stu.check(); err != nil {
 		return n, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(servertemplate.Table, servertemplate.Columns, sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(servertemplate.Table, servertemplate.Columns, sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString))
 	if ps := stu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -130,7 +130,7 @@ func (stu *ServerTemplateUpdate) sqlSave(ctx context.Context) (n int, err error)
 			Columns: []string{servertemplate.APIKeysColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -143,7 +143,7 @@ func (stu *ServerTemplateUpdate) sqlSave(ctx context.Context) (n int, err error)
 			Columns: []string{servertemplate.APIKeysColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -159,7 +159,7 @@ func (stu *ServerTemplateUpdate) sqlSave(ctx context.Context) (n int, err error)
 			Columns: []string{servertemplate.APIKeysColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -188,14 +188,14 @@ type ServerTemplateUpdateOne struct {
 }
 
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
-func (stuo *ServerTemplateUpdateOne) AddAPIKeyIDs(ids ...int) *ServerTemplateUpdateOne {
+func (stuo *ServerTemplateUpdateOne) AddAPIKeyIDs(ids ...string) *ServerTemplateUpdateOne {
 	stuo.mutation.AddAPIKeyIDs(ids...)
 	return stuo
 }
 
 // AddAPIKeys adds the "api_keys" edges to the APIKey entity.
 func (stuo *ServerTemplateUpdateOne) AddAPIKeys(a ...*APIKey) *ServerTemplateUpdateOne {
-	ids := make([]int, len(a))
+	ids := make([]string, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
@@ -214,14 +214,14 @@ func (stuo *ServerTemplateUpdateOne) ClearAPIKeys() *ServerTemplateUpdateOne {
 }
 
 // RemoveAPIKeyIDs removes the "api_keys" edge to APIKey entities by IDs.
-func (stuo *ServerTemplateUpdateOne) RemoveAPIKeyIDs(ids ...int) *ServerTemplateUpdateOne {
+func (stuo *ServerTemplateUpdateOne) RemoveAPIKeyIDs(ids ...string) *ServerTemplateUpdateOne {
 	stuo.mutation.RemoveAPIKeyIDs(ids...)
 	return stuo
 }
 
 // RemoveAPIKeys removes "api_keys" edges to APIKey entities.
 func (stuo *ServerTemplateUpdateOne) RemoveAPIKeys(a ...*APIKey) *ServerTemplateUpdateOne {
-	ids := make([]int, len(a))
+	ids := make([]string, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
@@ -280,7 +280,7 @@ func (stuo *ServerTemplateUpdateOne) sqlSave(ctx context.Context) (_node *Server
 	if err := stuo.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(servertemplate.Table, servertemplate.Columns, sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(servertemplate.Table, servertemplate.Columns, sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString))
 	id, ok := stuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "ServerTemplate.id" for update`)}
@@ -319,7 +319,7 @@ func (stuo *ServerTemplateUpdateOne) sqlSave(ctx context.Context) (_node *Server
 			Columns: []string{servertemplate.APIKeysColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -332,7 +332,7 @@ func (stuo *ServerTemplateUpdateOne) sqlSave(ctx context.Context) (_node *Server
 			Columns: []string{servertemplate.APIKeysColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -348,7 +348,7 @@ func (stuo *ServerTemplateUpdateOne) sqlSave(ctx context.Context) (_node *Server
 			Columns: []string{servertemplate.APIKeysColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

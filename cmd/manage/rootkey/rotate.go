@@ -22,6 +22,7 @@ import (
 	"github.com/loopholelabs/cmdutils/pkg/command"
 	"github.com/loopholelabs/cmdutils/pkg/printer"
 	"github.com/loopholelabs/endkey/internal/config"
+	"github.com/loopholelabs/endkey/internal/key"
 	"github.com/loopholelabs/endkey/pkg/client/rootkey"
 	"github.com/spf13/cobra"
 )
@@ -46,7 +47,7 @@ func RotateCmd() command.SetupCommand[*config.Config] {
 					return err
 				}
 
-				value := fmt.Sprintf("RK-%s.%s", res.GetPayload().Identifier, res.GetPayload().Secret)
+				value := fmt.Sprintf("%s-%s.%s", key.RootPrefixString, res.GetPayload().ID, res.GetPayload().Secret)
 
 				if ch.Printer.Format() == printer.Human {
 					ch.Printer.Printf("Rotated Root Key '%s': %s (this will only be displayed once)\n", printer.Bold(res.Payload.Name), printer.BoldGreen(value))
@@ -54,10 +55,10 @@ func RotateCmd() command.SetupCommand[*config.Config] {
 				}
 
 				return ch.Printer.PrintResource(rootKeyModel{
-					Created:    res.GetPayload().CreatedAt,
-					Identifier: res.GetPayload().Identifier,
-					Name:       res.GetPayload().Name,
-					Value:      value,
+					Created: res.GetPayload().CreatedAt,
+					ID:      res.GetPayload().ID,
+					Name:    res.GetPayload().Name,
+					Value:   value,
 				})
 			},
 		}

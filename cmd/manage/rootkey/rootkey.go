@@ -29,16 +29,16 @@ var (
 )
 
 type rootKeyModel struct {
-	Created    string `header:"created_at" json:"created_at"`
-	Identifier string `header:"identifier" json:"identifier"`
-	Name       string `header:"name" json:"name"`
-	Value      string `header:"value" json:"value"`
+	Created string `header:"created_at" json:"created_at"`
+	ID      string `header:"id" json:"id"`
+	Name    string `header:"name" json:"name"`
+	Value   string `header:"value" json:"value"`
 }
 
 type rootKeyRedactedModel struct {
-	Created    string `header:"created_at" json:"created_at"`
-	Identifier string `header:"identifier" json:"identifier"`
-	Name       string `header:"name" json:"name"`
+	Created string `header:"created_at" json:"created_at"`
+	ID      string `header:"id" json:"id"`
+	Name    string `header:"name" json:"name"`
 }
 
 // Cmd encapsulates the commands for rootkey.

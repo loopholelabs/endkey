@@ -8,9 +8,14 @@ var (
 	Delimiter = []byte(DelimiterString)
 )
 
-type Prefix []byte
+const (
+	RootPrefixString = "RK-"
+	UserPrefixString = "UK-"
+	APIPrefixString  = "AK-"
+)
 
 var (
-	RootPrefix = []byte("RK-")
-	APIPrefix  = []byte("AK-")
+	RootPrefix = []byte(RootPrefixString)
+	UserPrefix = []byte(UserPrefixString)
+	APIPrefix  = []byte(APIPrefixString)
 )

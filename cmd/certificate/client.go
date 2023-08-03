@@ -110,11 +110,11 @@ func ClientCmd() command.SetupCommand[*config.Config] {
 						}
 
 						if ch.Printer.Format() == printer.Human {
-							ch.Printer.Printf("Created Client Certificate from Template '%s'\n", printer.Bold(res.Template))
+							ch.Printer.Printf("Created Client Certificate from Template '%s'\n", printer.Bold(res.TemplateName))
 						} else {
 							err := ch.Printer.PrintResource(clientModel{
-								Authority:     res.Authority,
-								Template:      res.Template,
+								Authority:     res.AuthorityName,
+								Template:      res.TemplateName,
 								AdditionalDNS: strings.Join(res.AdditionalDNSNames, ","),
 								AdditionalIP:  strings.Join(res.AdditionalIPAddresses, ","),
 								Expiry:        res.Expiry,
@@ -181,7 +181,7 @@ func GetCertificate(ctx context.Context, client *client.EndKeyAPIV1, template st
 		AdditionalDNSNames:    additionalDNSNames,
 		AdditionalIPAddresses: additionalIPAddresses,
 		Csr:                   base64.StdEncoding.EncodeToString(csrPEM),
-		Template:              template,
+		TemplateName:          template,
 	}
 
 	res, err := client.Certificate.PostCertificateClient(certificate.NewPostCertificateClientParamsWithContext(ctx).WithRequest(req))

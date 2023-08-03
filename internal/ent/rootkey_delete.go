@@ -40,7 +40,7 @@ func (rkd *RootKeyDelete) ExecX(ctx context.Context) int {
 }
 
 func (rkd *RootKeyDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(rootkey.Table, sqlgraph.NewFieldSpec(rootkey.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewDeleteSpec(rootkey.Table, sqlgraph.NewFieldSpec(rootkey.FieldID, field.TypeString))
 	if ps := rkd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {

@@ -131,8 +131,8 @@ func (ctq *ClientTemplateQuery) FirstX(ctx context.Context) *ClientTemplate {
 
 // FirstID returns the first ClientTemplate ID from the query.
 // Returns a *NotFoundError when no ClientTemplate ID was found.
-func (ctq *ClientTemplateQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (ctq *ClientTemplateQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = ctq.Limit(1).IDs(setContextOp(ctx, ctq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -144,7 +144,7 @@ func (ctq *ClientTemplateQuery) FirstID(ctx context.Context) (id int, err error)
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (ctq *ClientTemplateQuery) FirstIDX(ctx context.Context) int {
+func (ctq *ClientTemplateQuery) FirstIDX(ctx context.Context) string {
 	id, err := ctq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -182,8 +182,8 @@ func (ctq *ClientTemplateQuery) OnlyX(ctx context.Context) *ClientTemplate {
 // OnlyID is like Only, but returns the only ClientTemplate ID in the query.
 // Returns a *NotSingularError when more than one ClientTemplate ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (ctq *ClientTemplateQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (ctq *ClientTemplateQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = ctq.Limit(2).IDs(setContextOp(ctx, ctq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -199,7 +199,7 @@ func (ctq *ClientTemplateQuery) OnlyID(ctx context.Context) (id int, err error) 
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (ctq *ClientTemplateQuery) OnlyIDX(ctx context.Context) int {
+func (ctq *ClientTemplateQuery) OnlyIDX(ctx context.Context) string {
 	id, err := ctq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -227,7 +227,7 @@ func (ctq *ClientTemplateQuery) AllX(ctx context.Context) []*ClientTemplate {
 }
 
 // IDs executes the query and returns a list of ClientTemplate IDs.
-func (ctq *ClientTemplateQuery) IDs(ctx context.Context) (ids []int, err error) {
+func (ctq *ClientTemplateQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if ctq.ctx.Unique == nil && ctq.path != nil {
 		ctq.Unique(true)
 	}
@@ -239,7 +239,7 @@ func (ctq *ClientTemplateQuery) IDs(ctx context.Context) (ids []int, err error) 
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (ctq *ClientTemplateQuery) IDsX(ctx context.Context) []int {
+func (ctq *ClientTemplateQuery) IDsX(ctx context.Context) []string {
 	ids, err := ctq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -454,8 +454,8 @@ func (ctq *ClientTemplateQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 }
 
 func (ctq *ClientTemplateQuery) loadAuthority(ctx context.Context, query *AuthorityQuery, nodes []*ClientTemplate, init func(*ClientTemplate), assign func(*ClientTemplate, *Authority)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*ClientTemplate)
+	ids := make([]string, 0, len(nodes))
+	nodeids := make(map[string][]*ClientTemplate)
 	for i := range nodes {
 		if nodes[i].authority_client_templates == nil {
 			continue
@@ -487,7 +487,7 @@ func (ctq *ClientTemplateQuery) loadAuthority(ctx context.Context, query *Author
 }
 func (ctq *ClientTemplateQuery) loadAPIKeys(ctx context.Context, query *APIKeyQuery, nodes []*ClientTemplate, init func(*ClientTemplate), assign func(*ClientTemplate, *APIKey)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*ClientTemplate)
+	nodeids := make(map[string]*ClientTemplate)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -527,7 +527,7 @@ func (ctq *ClientTemplateQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (ctq *ClientTemplateQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(clienttemplate.Table, clienttemplate.Columns, sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(clienttemplate.Table, clienttemplate.Columns, sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString))
 	_spec.From = ctq.sql
 	if unique := ctq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

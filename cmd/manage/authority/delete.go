@@ -30,28 +30,28 @@ import (
 func DeleteCmd() command.SetupCommand[*config.Config] {
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		deleteCmd := &cobra.Command{
-			Use:   "delete <identifier>",
+			Use:   "delete <name>",
 			Args:  cobra.ExactArgs(1),
 			Short: "delete an Authority with the given name",
 			RunE: func(cmd *cobra.Command, args []string) error {
 				ctx := cmd.Context()
 				client := ch.Config.Client()
-				identifier := args[0]
+				name := args[0]
 
-				end := ch.Printer.PrintProgress(fmt.Sprintf("Deleting Authority %s...", identifier))
-				_, err := client.Authority.DeleteAuthorityIdentifier(authority.NewDeleteAuthorityIdentifierParamsWithContext(ctx).WithIdentifier(identifier))
+				end := ch.Printer.PrintProgress(fmt.Sprintf("Deleting Authority %s...", name))
+				_, err := client.Authority.DeleteAuthorityName(authority.NewDeleteAuthorityNameParamsWithContext(ctx).WithName(name))
 				end()
 				if err != nil {
 					return err
 				}
 
 				if ch.Printer.Format() == printer.Human {
-					ch.Printer.Printf("%s %s %s\n", printer.BoldRed("Authority"), printer.BoldGreen(identifier), printer.BoldRed("deleted"))
+					ch.Printer.Printf("%s %s %s\n", printer.BoldRed("Authority"), printer.BoldGreen(name), printer.BoldRed("deleted"))
 					return nil
 				}
 
 				return ch.Printer.PrintResource(map[string]string{
-					"deleted": identifier,
+					"deleted": name,
 				})
 			},
 		}

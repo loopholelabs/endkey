@@ -93,7 +93,7 @@ func New(options *Options, logger *zerolog.Logger) (*Database, error) {
 
 		d.logger.Info().Msg("found existing bootstrap root key")
 	} else {
-		d.logger.Info().Msgf("created bootstrap root key with identifier %s and secret %s (this will not be shown again)", rk.Identifier, string(secret))
+		d.logger.Info().Msgf("created bootstrap root key with id %s and secret %s (this will not be shown again)", rk.ID, string(secret))
 	}
 
 	return d, nil

@@ -37,12 +37,6 @@ func (akc *APIKeyCreate) SetNillableCreatedAt(t *time.Time) *APIKeyCreate {
 	return akc
 }
 
-// SetIdentifier sets the "identifier" field.
-func (akc *APIKeyCreate) SetIdentifier(s string) *APIKeyCreate {
-	akc.mutation.SetIdentifier(s)
-	return akc
-}
-
 // SetName sets the "name" field.
 func (akc *APIKeyCreate) SetName(s string) *APIKeyCreate {
 	akc.mutation.SetName(s)
@@ -61,8 +55,14 @@ func (akc *APIKeyCreate) SetHash(b []byte) *APIKeyCreate {
 	return akc
 }
 
+// SetID sets the "id" field.
+func (akc *APIKeyCreate) SetID(s string) *APIKeyCreate {
+	akc.mutation.SetID(s)
+	return akc
+}
+
 // SetAuthorityID sets the "authority" edge to the Authority entity by ID.
-func (akc *APIKeyCreate) SetAuthorityID(id int) *APIKeyCreate {
+func (akc *APIKeyCreate) SetAuthorityID(id string) *APIKeyCreate {
 	akc.mutation.SetAuthorityID(id)
 	return akc
 }
@@ -73,13 +73,13 @@ func (akc *APIKeyCreate) SetAuthority(a *Authority) *APIKeyCreate {
 }
 
 // SetServerTemplateID sets the "server_template" edge to the ServerTemplate entity by ID.
-func (akc *APIKeyCreate) SetServerTemplateID(id int) *APIKeyCreate {
+func (akc *APIKeyCreate) SetServerTemplateID(id string) *APIKeyCreate {
 	akc.mutation.SetServerTemplateID(id)
 	return akc
 }
 
 // SetNillableServerTemplateID sets the "server_template" edge to the ServerTemplate entity by ID if the given value is not nil.
-func (akc *APIKeyCreate) SetNillableServerTemplateID(id *int) *APIKeyCreate {
+func (akc *APIKeyCreate) SetNillableServerTemplateID(id *string) *APIKeyCreate {
 	if id != nil {
 		akc = akc.SetServerTemplateID(*id)
 	}
@@ -92,13 +92,13 @@ func (akc *APIKeyCreate) SetServerTemplate(s *ServerTemplate) *APIKeyCreate {
 }
 
 // SetClientTemplateID sets the "client_template" edge to the ClientTemplate entity by ID.
-func (akc *APIKeyCreate) SetClientTemplateID(id int) *APIKeyCreate {
+func (akc *APIKeyCreate) SetClientTemplateID(id string) *APIKeyCreate {
 	akc.mutation.SetClientTemplateID(id)
 	return akc
 }
 
 // SetNillableClientTemplateID sets the "client_template" edge to the ClientTemplate entity by ID if the given value is not nil.
-func (akc *APIKeyCreate) SetNillableClientTemplateID(id *int) *APIKeyCreate {
+func (akc *APIKeyCreate) SetNillableClientTemplateID(id *string) *APIKeyCreate {
 	if id != nil {
 		akc = akc.SetClientTemplateID(*id)
 	}
@@ -156,14 +156,6 @@ func (akc *APIKeyCreate) check() error {
 	if _, ok := akc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "APIKey.created_at"`)}
 	}
-	if _, ok := akc.mutation.Identifier(); !ok {
-		return &ValidationError{Name: "identifier", err: errors.New(`ent: missing required field "APIKey.identifier"`)}
-	}
-	if v, ok := akc.mutation.Identifier(); ok {
-		if err := apikey.IdentifierValidator(v); err != nil {
-			return &ValidationError{Name: "identifier", err: fmt.Errorf(`ent: validator failed for field "APIKey.identifier": %w`, err)}
-		}
-	}
 	if _, ok := akc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "APIKey.name"`)}
 	}
@@ -188,6 +180,11 @@ func (akc *APIKeyCreate) check() error {
 			return &ValidationError{Name: "hash", err: fmt.Errorf(`ent: validator failed for field "APIKey.hash": %w`, err)}
 		}
 	}
+	if v, ok := akc.mutation.ID(); ok {
+		if err := apikey.IDValidator(v); err != nil {
+			return &ValidationError{Name: "id", err: fmt.Errorf(`ent: validator failed for field "APIKey.id": %w`, err)}
+		}
+	}
 	if _, ok := akc.mutation.AuthorityID(); !ok {
 		return &ValidationError{Name: "authority", err: errors.New(`ent: missing required edge "APIKey.authority"`)}
 	}
@@ -205,8 +202,13 @@ func (akc *APIKeyCreate) sqlSave(ctx context.Context) (*APIKey, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected APIKey.ID type: %T", _spec.ID.Value)
+		}
+	}
 	akc.mutation.id = &_node.ID
 	akc.mutation.done = true
 	return _node, nil
@@ -215,15 +217,15 @@ func (akc *APIKeyCreate) sqlSave(ctx context.Context) (*APIKey, error) {
 func (akc *APIKeyCreate) createSpec() (*APIKey, *sqlgraph.CreateSpec) {
 	var (
 		_node = &APIKey{config: akc.config}
-		_spec = sqlgraph.NewCreateSpec(apikey.Table, sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(apikey.Table, sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeString))
 	)
+	if id, ok := akc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
+	}
 	if value, ok := akc.mutation.CreatedAt(); ok {
 		_spec.SetField(apikey.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
-	}
-	if value, ok := akc.mutation.Identifier(); ok {
-		_spec.SetField(apikey.FieldIdentifier, field.TypeString, value)
-		_node.Identifier = value
 	}
 	if value, ok := akc.mutation.Name(); ok {
 		_spec.SetField(apikey.FieldName, field.TypeString, value)
@@ -245,7 +247,7 @@ func (akc *APIKeyCreate) createSpec() (*APIKey, *sqlgraph.CreateSpec) {
 			Columns: []string{apikey.AuthorityColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(authority.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(authority.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -262,7 +264,7 @@ func (akc *APIKeyCreate) createSpec() (*APIKey, *sqlgraph.CreateSpec) {
 			Columns: []string{apikey.ServerTemplateColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -279,7 +281,7 @@ func (akc *APIKeyCreate) createSpec() (*APIKey, *sqlgraph.CreateSpec) {
 			Columns: []string{apikey.ClientTemplateColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -332,10 +334,6 @@ func (akcb *APIKeyCreateBulk) Save(ctx context.Context) ([]*APIKey, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})

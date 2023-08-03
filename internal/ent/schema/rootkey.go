@@ -18,6 +18,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"time"
 )
@@ -37,7 +38,7 @@ func (RootKey) Fields() []ent.Field {
 		field.Time("created_at").Immutable().Default(time.Now),
 
 		// A unique identifier for the Root Key, immutable, globally unique
-		field.String("identifier").NotEmpty().Unique().Immutable(),
+		field.String("id").NotEmpty().Immutable().Unique().StorageKey("id"),
 
 		// An easily recognizable name for the Root Key, immutable
 		//
@@ -49,7 +50,7 @@ func (RootKey) Fields() []ent.Field {
 		// A randomly generated salt for the Root Key, immutable
 		field.Bytes("salt").NotEmpty().Immutable(),
 
-		// The hashed RootKey secret and salt
+		// The hashed RootKey secret and salt, generated from the Root Key's secret and salt
 		//
 		// The secret is never stored, and the salt is immutable
 		field.Bytes("hash").NotEmpty().Immutable(),
@@ -58,5 +59,11 @@ func (RootKey) Fields() []ent.Field {
 
 // Edges of the RootKey.
 func (RootKey) Edges() []ent.Edge {
-	return []ent.Edge{}
+	return []ent.Edge{
+		// The User Keys that were created using this Root Key
+		//
+		// This is a one-to-many relationship, as a Root Key can create many User
+		// Keys, but a User Key can only be created by one Root Key.
+		edge.To("user_keys", UserKey.Type),
+	}
 }

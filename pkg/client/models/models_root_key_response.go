@@ -20,8 +20,8 @@ type ModelsRootKeyResponse struct {
 	// created at
 	CreatedAt string `json:"created_at,omitempty"`
 
-	// identifier
-	Identifier string `json:"identifier,omitempty"`
+	// id
+	ID string `json:"id,omitempty"`
 
 	// name
 	Name string `json:"name,omitempty"`

@@ -17,11 +17,11 @@ import (
 // swagger:model models.DeleteServerTemplateRequest
 type ModelsDeleteServerTemplateRequest struct {
 
-	// authority
-	Authority string `json:"authority,omitempty"`
+	// authority name
+	AuthorityName string `json:"authority_name,omitempty"`
 
-	// identifier
-	Identifier string `json:"identifier,omitempty"`
+	// name
+	Name string `json:"name,omitempty"`
 }
 
 // Validate validates this models delete server template request

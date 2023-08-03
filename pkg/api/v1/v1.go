@@ -28,6 +28,7 @@ import (
 	"github.com/loopholelabs/endkey/pkg/api/v1/options"
 	"github.com/loopholelabs/endkey/pkg/api/v1/rootkey"
 	"github.com/loopholelabs/endkey/pkg/api/v1/template"
+	"github.com/loopholelabs/endkey/pkg/api/v1/userkey"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
@@ -75,6 +76,7 @@ func (v *V1) init() {
 
 	v.app.Mount("/authority", authority.New(v.options, v.logger).App())
 	v.app.Mount("/rootkey", rootkey.New(v.options, v.logger).App())
+	v.app.Mount("/userkey", userkey.New(v.options, v.logger).App())
 	v.app.Mount("/apikey", apikey.New(v.options, v.logger).App())
 	v.app.Mount("/template", template.New(v.options, v.logger).App())
 	v.app.Mount("/certificate", certificate.New(v.options, v.logger).App())

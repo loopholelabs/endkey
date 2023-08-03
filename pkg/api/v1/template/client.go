@@ -45,10 +45,10 @@ import (
 func (a *Template) CreateClient(ctx *fiber.Ctx) error {
 	a.logger.Debug().Msgf("received CreateClient request from %s", ctx.IP())
 
-	rk, err := authorization.GetRootKey(ctx)
+	uk, err := authorization.GetUserKey(ctx)
 	if err != nil {
-		a.logger.Error().Err(err).Msg("failed to get root key from context")
-		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")
+		a.logger.Error().Err(err).Msg("failed to get user key from context")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get user key from request context")
 	}
 
 	body := new(models.CreateClientTemplateRequest)
@@ -58,20 +58,20 @@ func (a *Template) CreateClient(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "failed to parse body")
 	}
 
-	if body.Identifier == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "identifier is required")
+	if body.Name == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "name is required")
 	}
 
-	if !utils.ValidString(body.Identifier) {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid identifier")
+	if !utils.ValidString(body.Name) {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid name")
 	}
 
-	if body.Authority == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "authority is required")
+	if body.AuthorityName == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "authority name is required")
 	}
 
-	if !utils.ValidString(body.Authority) {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid authority")
+	if !utils.ValidString(body.AuthorityName) {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid authority name")
 	}
 
 	if body.CommonName == "" {
@@ -111,9 +111,9 @@ func (a *Template) CreateClient(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid validity")
 	}
 
-	a.logger.Info().Msgf("creating client template '%s' with authority '%s', common name '%s', DNS names '%v', and a validity of %s for root key with ID %s", body.Identifier, body.Authority, body.CommonName, body.DNSNames, validity.String(), rk.Identifier)
+	a.logger.Info().Msgf("creating client template '%s' with authority '%s', common name '%s', dns names '%v', and a validity of %s for user key %s", body.Name, body.AuthorityName, body.CommonName, body.DNSNames, validity.String(), uk.Name)
 
-	templ, err := a.options.Database().CreateClientTemplate(ctx.Context(), body.Identifier, body.Authority, body.CommonName, body.Tag, body.DNSNames, body.AllowAdditionalDNSNames, body.IPAddresses, body.AllowAdditionalIPs, validity.String())
+	templ, err := a.options.Database().CreateClientTemplate(ctx.Context(), body.Name, body.AuthorityName, uk, body.CommonName, body.Tag, body.DNSNames, body.AllowAdditionalDNSNames, body.IPAddresses, body.AllowAdditionalIPs, validity.String())
 	if err != nil {
 		if errors.Is(err, database.ErrAlreadyExists) {
 			return fiber.NewError(fiber.StatusConflict, "client template already exists")
@@ -125,8 +125,9 @@ func (a *Template) CreateClient(ctx *fiber.Ctx) error {
 
 	return ctx.JSON(&models.ClientTemplateResponse{
 		CreatedAt:               templ.CreatedAt.Format(time.RFC3339),
-		Identifier:              templ.Identifier,
-		Authority:               body.Authority,
+		ID:                      templ.ID,
+		Name:                    templ.Name,
+		AuthorityName:           body.AuthorityName,
 		CommonName:              templ.CommonName,
 		Tag:                     templ.Tag,
 		DNSNames:                templ.DNSNames,
@@ -142,7 +143,7 @@ func (a *Template) CreateClient(ctx *fiber.Ctx) error {
 // @Tags         template
 // @Accept       json
 // @Produce      json
-// @Param 	     authority  path  string  true  "Authority Identifier"
+// @Param 	     authority_name  path  string  true  "Authority Name"
 // @Success      200  {array} models.ClientTemplateResponse
 // @Failure      400  {string} string
 // @Failure      401  {string} string
@@ -150,29 +151,29 @@ func (a *Template) CreateClient(ctx *fiber.Ctx) error {
 // @Failure      409  {string} string
 // @Failure      412  {string} string
 // @Failure      500  {string} string
-// @Router       /template/client/{authority} [get]
+// @Router       /template/client/{authority_name} [get]
 func (a *Template) ListClient(ctx *fiber.Ctx) error {
 	a.logger.Debug().Msgf("received ListClient request from %s", ctx.IP())
 
-	rk, err := authorization.GetRootKey(ctx)
+	uk, err := authorization.GetUserKey(ctx)
 	if err != nil {
-		a.logger.Error().Err(err).Msg("failed to get root key from context")
-		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")
+		a.logger.Error().Err(err).Msg("failed to get user key from context")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get user key from request context")
 	}
 
-	authority := ctx.Params("authority")
+	authorityName := ctx.Params("authority_name")
 
-	if authority == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "authority is required")
+	if authorityName == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "authority name is required")
 	}
 
-	if !utils.ValidString(authority) {
-		return fiber.NewError(fiber.StatusBadRequest, "authority is invalid")
+	if !utils.ValidString(authorityName) {
+		return fiber.NewError(fiber.StatusBadRequest, "authority name is invalid")
 	}
 
-	a.logger.Info().Msgf("listing Client Templates for Authority '%s' for root key with ID %s", authority, rk.Identifier)
+	a.logger.Info().Msgf("listing client templates for authority '%s' for user key %s", authorityName, uk.Name)
 
-	templs, err := a.options.Database().ListClientTemplates(ctx.Context(), authority)
+	templs, err := a.options.Database().ListClientTemplates(ctx.Context(), authorityName, uk)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return fiber.NewError(fiber.StatusNotFound, "no client templates found")
@@ -186,8 +187,9 @@ func (a *Template) ListClient(ctx *fiber.Ctx) error {
 	for _, templ := range templs {
 		ret = append(ret, &models.ClientTemplateResponse{
 			CreatedAt:               templ.CreatedAt.Format(time.RFC3339),
-			Identifier:              templ.Identifier,
-			Authority:               authority,
+			ID:                      templ.ID,
+			Name:                    templ.Name,
+			AuthorityName:           authorityName,
 			CommonName:              templ.CommonName,
 			Tag:                     templ.Tag,
 			DNSNames:                templ.DNSNames,
@@ -206,7 +208,7 @@ func (a *Template) ListClient(ctx *fiber.Ctx) error {
 // @Tags         template
 // @Accept       json
 // @Produce      json
-// @Param        request  body models.DeleteClientTemplateRequest  true  "Delete Server Client Request"
+// @Param        request  body models.DeleteClientTemplateRequest  true  "Delete Client Template Request"
 // @Success      200  {string} string
 // @Failure      400  {string} string
 // @Failure      401  {string} string
@@ -218,10 +220,10 @@ func (a *Template) ListClient(ctx *fiber.Ctx) error {
 func (a *Template) DeleteClient(ctx *fiber.Ctx) error {
 	a.logger.Debug().Msgf("received DeleteClient request from %s", ctx.IP())
 
-	rk, err := authorization.GetRootKey(ctx)
+	uk, err := authorization.GetUserKey(ctx)
 	if err != nil {
-		a.logger.Error().Err(err).Msg("failed to get root key from context")
-		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")
+		a.logger.Error().Err(err).Msg("failed to get user key from context")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get user key from request context")
 	}
 
 	body := new(models.DeleteClientTemplateRequest)
@@ -231,25 +233,25 @@ func (a *Template) DeleteClient(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "failed to parse body")
 	}
 
-	if body.Identifier == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "identifier is required")
+	if body.Name == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "name is required")
 	}
 
-	if !utils.ValidString(body.Identifier) {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid identifier")
+	if !utils.ValidString(body.Name) {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid name")
 	}
 
-	if body.Authority == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "authority is required")
+	if body.AuthorityName == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "authority name is required")
 	}
 
-	if !utils.ValidString(body.Authority) {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid authority")
+	if !utils.ValidString(body.AuthorityName) {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid authority name")
 	}
 
-	a.logger.Info().Msgf("deleting client template '%s' with authority '%s' for root key with ID %s", body.Identifier, body.Authority, rk.Identifier)
+	a.logger.Info().Msgf("deleting client template '%s' with authority '%s' for user key %s", body.Name, body.AuthorityName, uk.Name)
 
-	err = a.options.Database().DeleteClientTemplate(ctx.Context(), body.Identifier, body.Authority)
+	err = a.options.Database().DeleteClientTemplateByName(ctx.Context(), body.Name, body.AuthorityName, uk)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return fiber.NewError(fiber.StatusNotFound, "client template not found")
@@ -263,5 +265,5 @@ func (a *Template) DeleteClient(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed to delete client template")
 	}
 
-	return ctx.SendString(fmt.Sprintf("client template '%s' for authority '%s' deleted", body.Identifier, body.Authority))
+	return ctx.SendString(fmt.Sprintf("client template '%s' for authority '%s' deleted", body.Name, body.AuthorityName))
 }

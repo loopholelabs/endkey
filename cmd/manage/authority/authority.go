@@ -25,12 +25,13 @@ import (
 )
 
 var (
-	ErrRootKeyRequired = errors.New("rootkey is required")
+	ErrUserKeyRequired = errors.New("userkey is required")
 )
 
 type authorityModel struct {
 	Created       string `header:"created_at" json:"created_at"`
-	Identifier    string `header:"identifier" json:"identifier"`
+	ID            string `header:"id" json:"id"`
+	Name          string `header:"name" json:"name"`
 	CommonName    string `header:"common_name" json:"common_name"`
 	Tag           string `header:"tag" json:"tag"`
 	Expiry        string `header:"expiry" json:"expiry"`
@@ -40,14 +41,14 @@ type authorityModel struct {
 // Cmd encapsulates the commands for authority.
 func Cmd() command.SetupCommand[*config.Config] {
 
-	var rootkey string
+	var userkey string
 
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		authorityCmd := &cobra.Command{
 			Use:   "authority",
 			Short: "Create, list, and manage Authorities",
 			PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-				ch.Config.AuthenticationKey = rootkey
+				ch.Config.AuthenticationKey = userkey
 
 				err := ch.Config.Validate()
 				if err != nil {
@@ -55,7 +56,7 @@ func Cmd() command.SetupCommand[*config.Config] {
 				}
 
 				if ch.Config.AuthenticationKey == "" {
-					return ErrRootKeyRequired
+					return ErrUserKeyRequired
 				}
 
 				return nil
@@ -74,7 +75,7 @@ func Cmd() command.SetupCommand[*config.Config] {
 		getSetup := GetCmd()
 		getSetup(authorityCmd, ch)
 
-		authorityCmd.PersistentFlags().StringVar(&rootkey, "root-key", "", "The root key for the EndKey API")
+		authorityCmd.PersistentFlags().StringVar(&userkey, "user-key", "", "The user key for the EndKey API")
 
 		cmd.AddCommand(authorityCmd)
 	}

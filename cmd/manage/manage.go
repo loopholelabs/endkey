@@ -24,6 +24,7 @@ import (
 	"github.com/loopholelabs/endkey/cmd/manage/authority"
 	"github.com/loopholelabs/endkey/cmd/manage/rootkey"
 	"github.com/loopholelabs/endkey/cmd/manage/template"
+	"github.com/loopholelabs/endkey/cmd/manage/userkey"
 	"github.com/loopholelabs/endkey/internal/config"
 	"github.com/spf13/cobra"
 )
@@ -65,6 +66,9 @@ func Cmd() command.SetupCommand[*config.Config] {
 
 		rootKeySetup := rootkey.Cmd()
 		rootKeySetup(manageCmd, ch)
+
+		userKeySetup := userkey.Cmd()
+		userKeySetup(manageCmd, ch)
 
 		apiKeySetup := apikey.Cmd()
 		apiKeySetup(manageCmd, ch)

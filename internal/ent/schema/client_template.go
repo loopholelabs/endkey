@@ -20,6 +20,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 	"time"
 )
 
@@ -33,11 +34,16 @@ type ClientTemplate struct {
 // Fields of the ClientTemplate.
 func (ClientTemplate) Fields() []ent.Field {
 	return []ent.Field{
-		// When the Client Template Key created, immutable
+		// When the Client Template was created, immutable
 		field.Time("created_at").Immutable().Default(time.Now),
 
 		// A unique identifier for the Client Template, immutable, globally unique
-		field.String("identifier").NotEmpty().Unique().Immutable(),
+		field.String("id").NotEmpty().Unique().Immutable().StorageKey("id"),
+
+		// An easily recognizable name for the Client Template, immutable
+		//
+		// Its uniqueness is guaranteed within the Authority that it is scoped to
+		field.String("name").NotEmpty().Immutable(),
 
 		// The Common Name for the Client Template, immutable
 		field.String("common_name").NotEmpty().Immutable(),
@@ -69,6 +75,8 @@ func (ClientTemplate) Edges() []ent.Edge {
 		//
 		// This edge is a many-to-one relationship, as an Authority can have many Client Templates scoped to it
 		// but a Client Template can only be scoped to one Client Template at a time
+		//
+		// This edge is unique, required, and immutable
 		edge.From("authority", Authority.Type).Ref("client_templates").Unique().Required().Immutable(),
 
 		// The API Keys that are scoped to this Client Template
@@ -76,5 +84,13 @@ func (ClientTemplate) Edges() []ent.Edge {
 		// This is a one-to-many relationship, as an API Key can only be scoped to one Client Template
 		// but a Client Template can have multiple API Keys scoped to it
 		edge.To("api_keys", APIKey.Type),
+	}
+}
+
+// Indexes of the ClientTemplate.
+func (ClientTemplate) Indexes() []ent.Index {
+	return []ent.Index{
+		// Guarantee uniqueness of the Client Template's name per Authority
+		index.Fields("name").Edges("authority").Unique(),
 	}
 }

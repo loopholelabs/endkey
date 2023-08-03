@@ -17,17 +17,17 @@ import (
 // swagger:model models.CreateAPIKeyRequest
 type ModelsCreateAPIKeyRequest struct {
 
-	// authority
-	Authority string `json:"authority,omitempty"`
+	// authority name
+	AuthorityName string `json:"authority_name,omitempty"`
 
-	// client template
-	ClientTemplate string `json:"client_template,omitempty"`
+	// client template name
+	ClientTemplateName string `json:"client_template_name,omitempty"`
 
 	// name
 	Name string `json:"name,omitempty"`
 
-	// server template
-	ServerTemplate string `json:"server_template,omitempty"`
+	// server template name
+	ServerTemplateName string `json:"server_template_name,omitempty"`
 }
 
 // Validate validates this models create API key request

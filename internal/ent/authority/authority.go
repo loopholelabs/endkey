@@ -16,12 +16,14 @@ const (
 	FieldID = "id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
-	// FieldIdentifier holds the string denoting the identifier field in the database.
-	FieldIdentifier = "identifier"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
 	// FieldCaCertificatePem holds the string denoting the ca_certificate_pem field in the database.
 	FieldCaCertificatePem = "ca_certificate_pem"
 	// FieldEncryptedPrivateKey holds the string denoting the encrypted_private_key field in the database.
 	FieldEncryptedPrivateKey = "encrypted_private_key"
+	// EdgeUserKey holds the string denoting the user_key edge name in mutations.
+	EdgeUserKey = "user_key"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
 	EdgeAPIKeys = "api_keys"
 	// EdgeServerTemplates holds the string denoting the server_templates edge name in mutations.
@@ -30,6 +32,13 @@ const (
 	EdgeClientTemplates = "client_templates"
 	// Table holds the table name of the authority in the database.
 	Table = "authorities"
+	// UserKeyTable is the table that holds the user_key relation/edge.
+	UserKeyTable = "authorities"
+	// UserKeyInverseTable is the table name for the UserKey entity.
+	// It exists in this package in order to avoid circular dependency with the "userkey" package.
+	UserKeyInverseTable = "user_keys"
+	// UserKeyColumn is the table column denoting the user_key relation/edge.
+	UserKeyColumn = "user_key_authorities"
 	// APIKeysTable is the table that holds the api_keys relation/edge.
 	APIKeysTable = "api_keys"
 	// APIKeysInverseTable is the table name for the APIKey entity.
@@ -57,9 +66,15 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
-	FieldIdentifier,
+	FieldName,
 	FieldCaCertificatePem,
 	FieldEncryptedPrivateKey,
+}
+
+// ForeignKeys holds the SQL foreign-keys that are owned by the "authorities"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"user_key_authorities",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -69,18 +84,25 @@ func ValidColumn(column string) bool {
 			return true
 		}
 	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
+			return true
+		}
+	}
 	return false
 }
 
 var (
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
-	// IdentifierValidator is a validator for the "identifier" field. It is called by the builders before save.
-	IdentifierValidator func(string) error
+	// NameValidator is a validator for the "name" field. It is called by the builders before save.
+	NameValidator func(string) error
 	// CaCertificatePemValidator is a validator for the "ca_certificate_pem" field. It is called by the builders before save.
 	CaCertificatePemValidator func([]byte) error
 	// EncryptedPrivateKeyValidator is a validator for the "encrypted_private_key" field. It is called by the builders before save.
 	EncryptedPrivateKeyValidator func(string) error
+	// IDValidator is a validator for the "id" field. It is called by the builders before save.
+	IDValidator func(string) error
 )
 
 // OrderOption defines the ordering options for the Authority queries.
@@ -96,14 +118,21 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
 }
 
-// ByIdentifier orders the results by the identifier field.
-func ByIdentifier(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIdentifier, opts...).ToFunc()
+// ByName orders the results by the name field.
+func ByName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
 // ByEncryptedPrivateKey orders the results by the encrypted_private_key field.
 func ByEncryptedPrivateKey(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEncryptedPrivateKey, opts...).ToFunc()
+}
+
+// ByUserKeyField orders the results by user_key field.
+func ByUserKeyField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserKeyStep(), sql.OrderByField(field, opts...))
+	}
 }
 
 // ByAPIKeysCount orders the results by api_keys count.
@@ -146,6 +175,13 @@ func ByClientTemplates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newClientTemplatesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
+}
+func newUserKeyStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserKeyInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, UserKeyTable, UserKeyColumn),
+	)
 }
 func newAPIKeysStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(

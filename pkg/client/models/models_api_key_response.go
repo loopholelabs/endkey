@@ -17,17 +17,17 @@ import (
 // swagger:model models.APIKeyResponse
 type ModelsAPIKeyResponse struct {
 
-	// authority
-	Authority string `json:"authority,omitempty"`
+	// authority name
+	AuthorityName string `json:"authority_name,omitempty"`
 
-	// client template
-	ClientTemplate string `json:"client_template,omitempty"`
+	// client template name
+	ClientTemplateName string `json:"client_template_name,omitempty"`
 
 	// created at
 	CreatedAt string `json:"created_at,omitempty"`
 
-	// identifier
-	Identifier string `json:"identifier,omitempty"`
+	// id
+	ID string `json:"id,omitempty"`
 
 	// name
 	Name string `json:"name,omitempty"`
@@ -35,8 +35,8 @@ type ModelsAPIKeyResponse struct {
 	// secret
 	Secret string `json:"secret,omitempty"`
 
-	// server template
-	ServerTemplate string `json:"server_template,omitempty"`
+	// server template name
+	ServerTemplateName string `json:"server_template_name,omitempty"`
 }
 
 // Validate validates this models API key response

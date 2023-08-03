@@ -36,9 +36,9 @@ func (stc *ServerTemplateCreate) SetNillableCreatedAt(t *time.Time) *ServerTempl
 	return stc
 }
 
-// SetIdentifier sets the "identifier" field.
-func (stc *ServerTemplateCreate) SetIdentifier(s string) *ServerTemplateCreate {
-	stc.mutation.SetIdentifier(s)
+// SetName sets the "name" field.
+func (stc *ServerTemplateCreate) SetName(s string) *ServerTemplateCreate {
+	stc.mutation.SetName(s)
 	return stc
 }
 
@@ -100,8 +100,14 @@ func (stc *ServerTemplateCreate) SetNillableAllowAdditionalIps(b *bool) *ServerT
 	return stc
 }
 
+// SetID sets the "id" field.
+func (stc *ServerTemplateCreate) SetID(s string) *ServerTemplateCreate {
+	stc.mutation.SetID(s)
+	return stc
+}
+
 // SetAuthorityID sets the "authority" edge to the Authority entity by ID.
-func (stc *ServerTemplateCreate) SetAuthorityID(id int) *ServerTemplateCreate {
+func (stc *ServerTemplateCreate) SetAuthorityID(id string) *ServerTemplateCreate {
 	stc.mutation.SetAuthorityID(id)
 	return stc
 }
@@ -112,14 +118,14 @@ func (stc *ServerTemplateCreate) SetAuthority(a *Authority) *ServerTemplateCreat
 }
 
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
-func (stc *ServerTemplateCreate) AddAPIKeyIDs(ids ...int) *ServerTemplateCreate {
+func (stc *ServerTemplateCreate) AddAPIKeyIDs(ids ...string) *ServerTemplateCreate {
 	stc.mutation.AddAPIKeyIDs(ids...)
 	return stc
 }
 
 // AddAPIKeys adds the "api_keys" edges to the APIKey entity.
 func (stc *ServerTemplateCreate) AddAPIKeys(a ...*APIKey) *ServerTemplateCreate {
-	ids := make([]int, len(a))
+	ids := make([]string, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
@@ -180,12 +186,12 @@ func (stc *ServerTemplateCreate) check() error {
 	if _, ok := stc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ServerTemplate.created_at"`)}
 	}
-	if _, ok := stc.mutation.Identifier(); !ok {
-		return &ValidationError{Name: "identifier", err: errors.New(`ent: missing required field "ServerTemplate.identifier"`)}
+	if _, ok := stc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "ServerTemplate.name"`)}
 	}
-	if v, ok := stc.mutation.Identifier(); ok {
-		if err := servertemplate.IdentifierValidator(v); err != nil {
-			return &ValidationError{Name: "identifier", err: fmt.Errorf(`ent: validator failed for field "ServerTemplate.identifier": %w`, err)}
+	if v, ok := stc.mutation.Name(); ok {
+		if err := servertemplate.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ServerTemplate.name": %w`, err)}
 		}
 	}
 	if _, ok := stc.mutation.CommonName(); !ok {
@@ -218,6 +224,11 @@ func (stc *ServerTemplateCreate) check() error {
 	if _, ok := stc.mutation.AllowAdditionalIps(); !ok {
 		return &ValidationError{Name: "allow_additional_ips", err: errors.New(`ent: missing required field "ServerTemplate.allow_additional_ips"`)}
 	}
+	if v, ok := stc.mutation.ID(); ok {
+		if err := servertemplate.IDValidator(v); err != nil {
+			return &ValidationError{Name: "id", err: fmt.Errorf(`ent: validator failed for field "ServerTemplate.id": %w`, err)}
+		}
+	}
 	if _, ok := stc.mutation.AuthorityID(); !ok {
 		return &ValidationError{Name: "authority", err: errors.New(`ent: missing required edge "ServerTemplate.authority"`)}
 	}
@@ -235,8 +246,13 @@ func (stc *ServerTemplateCreate) sqlSave(ctx context.Context) (*ServerTemplate, 
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected ServerTemplate.ID type: %T", _spec.ID.Value)
+		}
+	}
 	stc.mutation.id = &_node.ID
 	stc.mutation.done = true
 	return _node, nil
@@ -245,15 +261,19 @@ func (stc *ServerTemplateCreate) sqlSave(ctx context.Context) (*ServerTemplate, 
 func (stc *ServerTemplateCreate) createSpec() (*ServerTemplate, *sqlgraph.CreateSpec) {
 	var (
 		_node = &ServerTemplate{config: stc.config}
-		_spec = sqlgraph.NewCreateSpec(servertemplate.Table, sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(servertemplate.Table, sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString))
 	)
+	if id, ok := stc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
+	}
 	if value, ok := stc.mutation.CreatedAt(); ok {
 		_spec.SetField(servertemplate.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := stc.mutation.Identifier(); ok {
-		_spec.SetField(servertemplate.FieldIdentifier, field.TypeString, value)
-		_node.Identifier = value
+	if value, ok := stc.mutation.Name(); ok {
+		_spec.SetField(servertemplate.FieldName, field.TypeString, value)
+		_node.Name = value
 	}
 	if value, ok := stc.mutation.CommonName(); ok {
 		_spec.SetField(servertemplate.FieldCommonName, field.TypeString, value)
@@ -291,7 +311,7 @@ func (stc *ServerTemplateCreate) createSpec() (*ServerTemplate, *sqlgraph.Create
 			Columns: []string{servertemplate.AuthorityColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(authority.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(authority.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -308,7 +328,7 @@ func (stc *ServerTemplateCreate) createSpec() (*ServerTemplate, *sqlgraph.Create
 			Columns: []string{servertemplate.APIKeysColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -360,10 +380,6 @@ func (stcb *ServerTemplateCreateBulk) Save(ctx context.Context) ([]*ServerTempla
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})

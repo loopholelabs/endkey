@@ -17,7 +17,7 @@
 package models
 
 type CreateAuthorityRequest struct {
-	Identifier string `json:"identifier"`
+	Name       string `json:"name"`
 	CommonName string `json:"common_name"`
 	Tag        string `json:"tag"`
 	Validity   string `json:"validity"`
@@ -25,7 +25,8 @@ type CreateAuthorityRequest struct {
 
 type AuthorityResponse struct {
 	CreatedAt     string `json:"created_at"`
-	Identifier    string `json:"identifier"`
+	ID            string `json:"id"`
+	Name          string `json:"name"`
 	CommonName    string `json:"common_name"`
 	Tag           string `json:"tag"`
 	Expiry        string `json:"expiry"`

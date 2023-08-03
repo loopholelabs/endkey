@@ -20,8 +20,8 @@ type ModelsCreateAuthorityRequest struct {
 	// common name
 	CommonName string `json:"common_name,omitempty"`
 
-	// identifier
-	Identifier string `json:"identifier,omitempty"`
+	// name
+	Name string `json:"name,omitempty"`
 
 	// tag
 	Tag string `json:"tag,omitempty"`

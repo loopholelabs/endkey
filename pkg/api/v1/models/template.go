@@ -17,8 +17,8 @@
 package models
 
 type CreateServerTemplateRequest struct {
-	Identifier              string   `json:"identifier"`
-	Authority               string   `json:"authority"`
+	Name                    string   `json:"name"`
+	AuthorityName           string   `json:"authority_name"`
 	CommonName              string   `json:"common_name"`
 	Tag                     string   `json:"tag"`
 	DNSNames                []string `json:"dns_names"`
@@ -29,14 +29,15 @@ type CreateServerTemplateRequest struct {
 }
 
 type DeleteServerTemplateRequest struct {
-	Identifier string `json:"identifier"`
-	Authority  string `json:"authority"`
+	Name          string `json:"name"`
+	AuthorityName string `json:"authority_name"`
 }
 
 type ServerTemplateResponse struct {
 	CreatedAt               string   `json:"created_at"`
-	Identifier              string   `json:"identifier"`
-	Authority               string   `json:"authority"`
+	ID                      string   `json:"id"`
+	Name                    string   `json:"name"`
+	AuthorityName           string   `json:"authority_name"`
 	CommonName              string   `json:"common_name"`
 	Tag                     string   `json:"tag"`
 	DNSNames                []string `json:"dns_names"`
@@ -47,8 +48,8 @@ type ServerTemplateResponse struct {
 }
 
 type CreateClientTemplateRequest struct {
-	Identifier              string   `json:"identifier"`
-	Authority               string   `json:"authority"`
+	Name                    string   `json:"name"`
+	AuthorityName           string   `json:"authority_name"`
 	CommonName              string   `json:"common_name"`
 	Tag                     string   `json:"tag"`
 	DNSNames                []string `json:"dns_names"`
@@ -59,14 +60,15 @@ type CreateClientTemplateRequest struct {
 }
 
 type DeleteClientTemplateRequest struct {
-	Identifier string `json:"identifier"`
-	Authority  string `json:"authority"`
+	Name          string `json:"name"`
+	AuthorityName string `json:"authority_name"`
 }
 
 type ClientTemplateResponse struct {
 	CreatedAt               string   `json:"created_at"`
-	Identifier              string   `json:"identifier"`
-	Authority               string   `json:"authority"`
+	ID                      string   `json:"id"`
+	Name                    string   `json:"name"`
+	AuthorityName           string   `json:"authority_name"`
 	CommonName              string   `json:"common_name"`
 	Tag                     string   `json:"tag"`
 	DNSNames                []string `json:"dns_names"`

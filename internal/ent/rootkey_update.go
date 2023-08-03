@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/loopholelabs/endkey/internal/ent/predicate"
 	"github.com/loopholelabs/endkey/internal/ent/rootkey"
+	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
 // RootKeyUpdate is the builder for updating RootKey entities.
@@ -27,9 +28,45 @@ func (rku *RootKeyUpdate) Where(ps ...predicate.RootKey) *RootKeyUpdate {
 	return rku
 }
 
+// AddUserKeyIDs adds the "user_keys" edge to the UserKey entity by IDs.
+func (rku *RootKeyUpdate) AddUserKeyIDs(ids ...string) *RootKeyUpdate {
+	rku.mutation.AddUserKeyIDs(ids...)
+	return rku
+}
+
+// AddUserKeys adds the "user_keys" edges to the UserKey entity.
+func (rku *RootKeyUpdate) AddUserKeys(u ...*UserKey) *RootKeyUpdate {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return rku.AddUserKeyIDs(ids...)
+}
+
 // Mutation returns the RootKeyMutation object of the builder.
 func (rku *RootKeyUpdate) Mutation() *RootKeyMutation {
 	return rku.mutation
+}
+
+// ClearUserKeys clears all "user_keys" edges to the UserKey entity.
+func (rku *RootKeyUpdate) ClearUserKeys() *RootKeyUpdate {
+	rku.mutation.ClearUserKeys()
+	return rku
+}
+
+// RemoveUserKeyIDs removes the "user_keys" edge to UserKey entities by IDs.
+func (rku *RootKeyUpdate) RemoveUserKeyIDs(ids ...string) *RootKeyUpdate {
+	rku.mutation.RemoveUserKeyIDs(ids...)
+	return rku
+}
+
+// RemoveUserKeys removes "user_keys" edges to UserKey entities.
+func (rku *RootKeyUpdate) RemoveUserKeys(u ...*UserKey) *RootKeyUpdate {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return rku.RemoveUserKeyIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -60,13 +97,58 @@ func (rku *RootKeyUpdate) ExecX(ctx context.Context) {
 }
 
 func (rku *RootKeyUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(rootkey.Table, rootkey.Columns, sqlgraph.NewFieldSpec(rootkey.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(rootkey.Table, rootkey.Columns, sqlgraph.NewFieldSpec(rootkey.FieldID, field.TypeString))
 	if ps := rku.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
+	}
+	if rku.mutation.UserKeysCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   rootkey.UserKeysTable,
+			Columns: []string{rootkey.UserKeysColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userkey.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := rku.mutation.RemovedUserKeysIDs(); len(nodes) > 0 && !rku.mutation.UserKeysCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   rootkey.UserKeysTable,
+			Columns: []string{rootkey.UserKeysColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userkey.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := rku.mutation.UserKeysIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   rootkey.UserKeysTable,
+			Columns: []string{rootkey.UserKeysColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userkey.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, rku.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -88,9 +170,45 @@ type RootKeyUpdateOne struct {
 	mutation *RootKeyMutation
 }
 
+// AddUserKeyIDs adds the "user_keys" edge to the UserKey entity by IDs.
+func (rkuo *RootKeyUpdateOne) AddUserKeyIDs(ids ...string) *RootKeyUpdateOne {
+	rkuo.mutation.AddUserKeyIDs(ids...)
+	return rkuo
+}
+
+// AddUserKeys adds the "user_keys" edges to the UserKey entity.
+func (rkuo *RootKeyUpdateOne) AddUserKeys(u ...*UserKey) *RootKeyUpdateOne {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return rkuo.AddUserKeyIDs(ids...)
+}
+
 // Mutation returns the RootKeyMutation object of the builder.
 func (rkuo *RootKeyUpdateOne) Mutation() *RootKeyMutation {
 	return rkuo.mutation
+}
+
+// ClearUserKeys clears all "user_keys" edges to the UserKey entity.
+func (rkuo *RootKeyUpdateOne) ClearUserKeys() *RootKeyUpdateOne {
+	rkuo.mutation.ClearUserKeys()
+	return rkuo
+}
+
+// RemoveUserKeyIDs removes the "user_keys" edge to UserKey entities by IDs.
+func (rkuo *RootKeyUpdateOne) RemoveUserKeyIDs(ids ...string) *RootKeyUpdateOne {
+	rkuo.mutation.RemoveUserKeyIDs(ids...)
+	return rkuo
+}
+
+// RemoveUserKeys removes "user_keys" edges to UserKey entities.
+func (rkuo *RootKeyUpdateOne) RemoveUserKeys(u ...*UserKey) *RootKeyUpdateOne {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return rkuo.RemoveUserKeyIDs(ids...)
 }
 
 // Where appends a list predicates to the RootKeyUpdate builder.
@@ -134,7 +252,7 @@ func (rkuo *RootKeyUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (rkuo *RootKeyUpdateOne) sqlSave(ctx context.Context) (_node *RootKey, err error) {
-	_spec := sqlgraph.NewUpdateSpec(rootkey.Table, rootkey.Columns, sqlgraph.NewFieldSpec(rootkey.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(rootkey.Table, rootkey.Columns, sqlgraph.NewFieldSpec(rootkey.FieldID, field.TypeString))
 	id, ok := rkuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "RootKey.id" for update`)}
@@ -158,6 +276,51 @@ func (rkuo *RootKeyUpdateOne) sqlSave(ctx context.Context) (_node *RootKey, err 
 				ps[i](selector)
 			}
 		}
+	}
+	if rkuo.mutation.UserKeysCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   rootkey.UserKeysTable,
+			Columns: []string{rootkey.UserKeysColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userkey.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := rkuo.mutation.RemovedUserKeysIDs(); len(nodes) > 0 && !rkuo.mutation.UserKeysCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   rootkey.UserKeysTable,
+			Columns: []string{rootkey.UserKeysColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userkey.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := rkuo.mutation.UserKeysIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   rootkey.UserKeysTable,
+			Columns: []string{rootkey.UserKeysColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userkey.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &RootKey{config: rkuo.config}
 	_spec.Assign = _node.assignValues

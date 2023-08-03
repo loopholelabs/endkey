@@ -66,11 +66,11 @@ func New(options *options.Options, logger *zerolog.Logger) *Authority {
 func (a *Authority) init() {
 	a.logger.Debug().Msg("initializing")
 
-	a.app.Use(a.options.Auth().RootKeyValidate)
+	a.app.Use(a.options.Auth().UserKeyValidate)
 	a.app.Post("/", createMetric.Middleware(), a.CreateAuthority)
 	a.app.Get("/", listMetric.Middleware(), a.ListAuthorities)
-	a.app.Get("/:identifier", getMetric.Middleware(), a.GetAuthority)
-	a.app.Delete("/:identifier", deleteMetric.Middleware(), a.DeleteAuthority)
+	a.app.Get("/:name", getMetric.Middleware(), a.GetAuthority)
+	a.app.Delete("/:name", deleteMetric.Middleware(), a.DeleteAuthority)
 }
 
 // CreateAuthority godoc
@@ -90,10 +90,10 @@ func (a *Authority) init() {
 func (a *Authority) CreateAuthority(ctx *fiber.Ctx) error {
 	a.logger.Debug().Msgf("received CreateAuthority request from %s", ctx.IP())
 
-	rk, err := authorization.GetRootKey(ctx)
+	uk, err := authorization.GetUserKey(ctx)
 	if err != nil {
-		a.logger.Error().Err(err).Msg("failed to get root key from context")
-		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")
+		a.logger.Error().Err(err).Msg("failed to get user key from context")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get user key from request context")
 	}
 
 	body := new(models.CreateAuthorityRequest)
@@ -103,12 +103,12 @@ func (a *Authority) CreateAuthority(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "failed to parse body")
 	}
 
-	if body.Identifier == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "identifier is required")
+	if body.Name == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "name is required")
 	}
 
-	if !utils.ValidString(body.Identifier) {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid identifier")
+	if !utils.ValidString(body.Name) {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid name")
 	}
 
 	if body.CommonName == "" {
@@ -175,9 +175,9 @@ func (a *Authority) CreateAuthority(ctx *fiber.Ctx) error {
 
 	privateKeyPEM := utils.EncodeECDSAPrivateKey(privateKey)
 
-	a.logger.Info().Msgf("creating authority '%s' with common name '%s' for root key with ID %s", body.Identifier, body.CommonName, rk.Identifier)
+	a.logger.Info().Msgf("creating authority '%s' with common name '%s' for user key %s", body.Name, body.CommonName, uk.Name)
 
-	authority, err := a.options.Database().CreateAuthority(ctx.Context(), body.Identifier, caPEM, privateKeyPEM)
+	authority, err := a.options.Database().CreateAuthority(ctx.Context(), body.Name, uk, caPEM, privateKeyPEM)
 	if err != nil {
 		if errors.Is(err, database.ErrAlreadyExists) {
 			return fiber.NewError(fiber.StatusConflict, "authority already exists")
@@ -189,7 +189,8 @@ func (a *Authority) CreateAuthority(ctx *fiber.Ctx) error {
 
 	return ctx.JSON(&models.AuthorityResponse{
 		CreatedAt:     authority.CreatedAt.Format(time.RFC3339),
-		Identifier:    authority.Identifier,
+		ID:            authority.ID,
+		Name:          authority.Name,
 		CommonName:    body.CommonName,
 		Tag:           body.Tag,
 		Expiry:        ca.NotAfter.Format(time.RFC3339),
@@ -202,7 +203,7 @@ func (a *Authority) CreateAuthority(ctx *fiber.Ctx) error {
 // @Tags         authority
 // @Accept       json
 // @Produce      json
-// @Param        identifier path string true "Authority Identifier"
+// @Param        name path string true "Authority Name"
 // @Success      200  {object} models.AuthorityResponse
 // @Failure      400  {string} string
 // @Failure      401  {string} string
@@ -210,28 +211,28 @@ func (a *Authority) CreateAuthority(ctx *fiber.Ctx) error {
 // @Failure      409  {string} string
 // @Failure      412  {string} string
 // @Failure      500  {string} string
-// @Router       /authority/{identifier} [get]
+// @Router       /authority/{name} [get]
 func (a *Authority) GetAuthority(ctx *fiber.Ctx) error {
 	a.logger.Debug().Msgf("received GetAuthority request from %s", ctx.IP())
 
-	rk, err := authorization.GetRootKey(ctx)
+	uk, err := authorization.GetUserKey(ctx)
 	if err != nil {
-		a.logger.Error().Err(err).Msg("failed to get root key from context")
-		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")
+		a.logger.Error().Err(err).Msg("failed to get user key from context")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get user key from request context")
 	}
 
-	identifier := ctx.Params("identifier")
-	if identifier == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "identifier is required")
+	name := ctx.Params("name")
+	if name == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "name is required")
 	}
 
-	if !utils.ValidString(identifier) {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid identifier")
+	if !utils.ValidString(name) {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid name")
 	}
 
-	a.logger.Info().Msgf("getting authority '%s' for root key with ID %s", identifier, rk.Identifier)
+	a.logger.Info().Msgf("getting authority '%s' for user key %s", name, uk.Name)
 
-	authority, err := a.options.Database().GetAuthority(ctx.Context(), identifier)
+	authority, err := a.options.Database().GetAuthorityByName(ctx.Context(), name, uk)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return fiber.NewError(fiber.StatusNotFound, "authority not found")
@@ -249,7 +250,8 @@ func (a *Authority) GetAuthority(ctx *fiber.Ctx) error {
 
 	return ctx.JSON(&models.AuthorityResponse{
 		CreatedAt:     authority.CreatedAt.Format(time.RFC3339),
-		Identifier:    authority.Identifier,
+		ID:            authority.ID,
+		Name:          authority.Name,
 		CommonName:    ca.Subject.CommonName,
 		Tag:           ca.Subject.OrganizationalUnit[0],
 		Expiry:        ca.NotAfter.Format(time.RFC3339),
@@ -273,15 +275,15 @@ func (a *Authority) GetAuthority(ctx *fiber.Ctx) error {
 func (a *Authority) ListAuthorities(ctx *fiber.Ctx) error {
 	a.logger.Debug().Msgf("received ListAuthorities request from %s", ctx.IP())
 
-	rk, err := authorization.GetRootKey(ctx)
+	uk, err := authorization.GetUserKey(ctx)
 	if err != nil {
-		a.logger.Error().Err(err).Msg("failed to get root key from context")
-		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")
+		a.logger.Error().Err(err).Msg("failed to get user key from context")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get user key from request context")
 	}
 
-	a.logger.Info().Msgf("listing authorities for root key with ID %s", rk.Identifier)
+	a.logger.Info().Msgf("listing authorities for user key %s", uk.Name)
 
-	authorities, err := a.options.Database().ListAuthorities(ctx.Context())
+	authorities, err := a.options.Database().ListAuthorities(ctx.Context(), uk)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return fiber.NewError(fiber.StatusNotFound, "no authorities found")
@@ -301,7 +303,8 @@ func (a *Authority) ListAuthorities(ctx *fiber.Ctx) error {
 
 		ret = append(ret, &models.AuthorityResponse{
 			CreatedAt:  authority.CreatedAt.Format(time.RFC3339),
-			Identifier: authority.Identifier,
+			ID:         authority.ID,
+			Name:       authority.Name,
 			CommonName: ca.Subject.CommonName,
 			Tag:        ca.Subject.OrganizationalUnit[0],
 			Expiry:     ca.NotAfter.Format(time.RFC3339),
@@ -316,7 +319,7 @@ func (a *Authority) ListAuthorities(ctx *fiber.Ctx) error {
 // @Tags         authority
 // @Accept       json
 // @Produce      json
-// @Param 	     identifier path string true "Authority Identifier"
+// @Param 	     name path string true "Authority Name"
 // @Success      200  {string} string
 // @Failure      400  {string} string
 // @Failure      401  {string} string
@@ -324,28 +327,28 @@ func (a *Authority) ListAuthorities(ctx *fiber.Ctx) error {
 // @Failure      409  {string} string
 // @Failure      412  {string} string
 // @Failure      500  {string} string
-// @Router       /authority/{identifier} [delete]
+// @Router       /authority/{name} [delete]
 func (a *Authority) DeleteAuthority(ctx *fiber.Ctx) error {
 	a.logger.Debug().Msgf("received DeleteAuthority request from %s", ctx.IP())
 
-	rk, err := authorization.GetRootKey(ctx)
+	uk, err := authorization.GetUserKey(ctx)
 	if err != nil {
-		a.logger.Error().Err(err).Msg("failed to get root key from context")
-		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")
+		a.logger.Error().Err(err).Msg("failed to get user key from context")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get user key from request context")
 	}
 
-	identifier := ctx.Params("identifier")
-	if identifier == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "identifier is required")
+	name := ctx.Params("name")
+	if name == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "name is required")
 	}
 
-	if !utils.ValidString(identifier) {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid identifier")
+	if !utils.ValidString(name) {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid name")
 	}
 
-	a.logger.Info().Msgf("deleting authority '%s' for root key with ID %s", identifier, rk.Identifier)
+	a.logger.Info().Msgf("deleting authority '%s' for user key %s", name, uk.Name)
 
-	err = a.options.Database().DeleteAuthority(ctx.Context(), identifier)
+	err = a.options.Database().DeleteAuthorityByName(ctx.Context(), name, uk)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return fiber.NewError(fiber.StatusNotFound, "authority not found")
@@ -359,7 +362,7 @@ func (a *Authority) DeleteAuthority(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed to delete authority")
 	}
 
-	return ctx.SendString(fmt.Sprintf("authority '%s' deleted", identifier))
+	return ctx.SendString(fmt.Sprintf("authority '%s' deleted", name))
 
 }
 

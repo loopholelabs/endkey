@@ -65,7 +65,7 @@ type DeleteTemplateClientParams struct {
 
 	/* Request.
 
-	   Delete Server Client Request
+	   Delete Client Template Request
 	*/
 	Request *models.ModelsDeleteClientTemplateRequest
 

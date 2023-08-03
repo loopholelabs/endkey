@@ -35,7 +35,7 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 	var ipAddresses []string
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		createCmd := &cobra.Command{
-			Use:   "create <authority> <identifier> <common-name> <tag> <validity>",
+			Use:   "create <authority> <name> <common-name> <tag> <validity>",
 			Args:  cobra.ExactArgs(5),
 			Short: "Create a Client Template with the given name ",
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -43,19 +43,19 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 				client := ch.Config.Client()
 
 				authority := args[0]
-				identifier := args[1]
+				name := args[1]
 				commonName := args[2]
 				tag := args[3]
 				validity := args[4]
 
-				end := ch.Printer.PrintProgress(fmt.Sprintf("Creating Client Template %s for authority %s...", identifier, authority))
+				end := ch.Printer.PrintProgress(fmt.Sprintf("Creating Client Template %s for authority %s...", name, authority))
 				req := &models.ModelsCreateClientTemplateRequest{
 					AllowAdditionalDNSNames: allowAdditionalDNSNames,
 					AllowAdditionalIps:      allowAdditionalIPs,
-					Authority:               authority,
+					AuthorityName:           authority,
 					CommonName:              commonName,
 					DNSNames:                dnsNames,
-					Identifier:              identifier,
+					Name:                    name,
 					IPAddresses:             ipAddresses,
 					Tag:                     tag,
 					Validity:                validity,
@@ -69,8 +69,9 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 
 				return ch.Printer.PrintResource(clientTemplateModel{
 					Created:       res.GetPayload().CreatedAt,
-					Identifier:    res.GetPayload().Identifier,
-					Authority:     res.GetPayload().Authority,
+					ID:            res.GetPayload().ID,
+					Name:          res.GetPayload().Name,
+					Authority:     res.GetPayload().AuthorityName,
 					CommonName:    res.GetPayload().CommonName,
 					Tag:           res.GetPayload().Tag,
 					DNSNames:      strings.Join(res.GetPayload().DNSNames, ","),

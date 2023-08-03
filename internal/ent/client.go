@@ -19,6 +19,7 @@ import (
 	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
 	"github.com/loopholelabs/endkey/internal/ent/rootkey"
 	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
 // Client is the client that holds all ent builders.
@@ -36,6 +37,8 @@ type Client struct {
 	RootKey *RootKeyClient
 	// ServerTemplate is the client for interacting with the ServerTemplate builders.
 	ServerTemplate *ServerTemplateClient
+	// UserKey is the client for interacting with the UserKey builders.
+	UserKey *UserKeyClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -54,6 +57,7 @@ func (c *Client) init() {
 	c.ClientTemplate = NewClientTemplateClient(c.config)
 	c.RootKey = NewRootKeyClient(c.config)
 	c.ServerTemplate = NewServerTemplateClient(c.config)
+	c.UserKey = NewUserKeyClient(c.config)
 }
 
 type (
@@ -141,6 +145,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ClientTemplate: NewClientTemplateClient(cfg),
 		RootKey:        NewRootKeyClient(cfg),
 		ServerTemplate: NewServerTemplateClient(cfg),
+		UserKey:        NewUserKeyClient(cfg),
 	}, nil
 }
 
@@ -165,6 +170,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ClientTemplate: NewClientTemplateClient(cfg),
 		RootKey:        NewRootKeyClient(cfg),
 		ServerTemplate: NewServerTemplateClient(cfg),
+		UserKey:        NewUserKeyClient(cfg),
 	}, nil
 }
 
@@ -193,21 +199,21 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.APIKey.Use(hooks...)
-	c.Authority.Use(hooks...)
-	c.ClientTemplate.Use(hooks...)
-	c.RootKey.Use(hooks...)
-	c.ServerTemplate.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.APIKey, c.Authority, c.ClientTemplate, c.RootKey, c.ServerTemplate, c.UserKey,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.APIKey.Intercept(interceptors...)
-	c.Authority.Intercept(interceptors...)
-	c.ClientTemplate.Intercept(interceptors...)
-	c.RootKey.Intercept(interceptors...)
-	c.ServerTemplate.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.APIKey, c.Authority, c.ClientTemplate, c.RootKey, c.ServerTemplate, c.UserKey,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -223,6 +229,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.RootKey.mutate(ctx, m)
 	case *ServerTemplateMutation:
 		return c.ServerTemplate.mutate(ctx, m)
+	case *UserKeyMutation:
+		return c.UserKey.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -274,7 +282,7 @@ func (c *APIKeyClient) UpdateOne(ak *APIKey) *APIKeyUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *APIKeyClient) UpdateOneID(id int) *APIKeyUpdateOne {
+func (c *APIKeyClient) UpdateOneID(id string) *APIKeyUpdateOne {
 	mutation := newAPIKeyMutation(c.config, OpUpdateOne, withAPIKeyID(id))
 	return &APIKeyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -291,7 +299,7 @@ func (c *APIKeyClient) DeleteOne(ak *APIKey) *APIKeyDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *APIKeyClient) DeleteOneID(id int) *APIKeyDeleteOne {
+func (c *APIKeyClient) DeleteOneID(id string) *APIKeyDeleteOne {
 	builder := c.Delete().Where(apikey.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -308,12 +316,12 @@ func (c *APIKeyClient) Query() *APIKeyQuery {
 }
 
 // Get returns a APIKey entity by its id.
-func (c *APIKeyClient) Get(ctx context.Context, id int) (*APIKey, error) {
+func (c *APIKeyClient) Get(ctx context.Context, id string) (*APIKey, error) {
 	return c.Query().Where(apikey.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *APIKeyClient) GetX(ctx context.Context, id int) *APIKey {
+func (c *APIKeyClient) GetX(ctx context.Context, id string) *APIKey {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -440,7 +448,7 @@ func (c *AuthorityClient) UpdateOne(a *Authority) *AuthorityUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *AuthorityClient) UpdateOneID(id int) *AuthorityUpdateOne {
+func (c *AuthorityClient) UpdateOneID(id string) *AuthorityUpdateOne {
 	mutation := newAuthorityMutation(c.config, OpUpdateOne, withAuthorityID(id))
 	return &AuthorityUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -457,7 +465,7 @@ func (c *AuthorityClient) DeleteOne(a *Authority) *AuthorityDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *AuthorityClient) DeleteOneID(id int) *AuthorityDeleteOne {
+func (c *AuthorityClient) DeleteOneID(id string) *AuthorityDeleteOne {
 	builder := c.Delete().Where(authority.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -474,17 +482,33 @@ func (c *AuthorityClient) Query() *AuthorityQuery {
 }
 
 // Get returns a Authority entity by its id.
-func (c *AuthorityClient) Get(ctx context.Context, id int) (*Authority, error) {
+func (c *AuthorityClient) Get(ctx context.Context, id string) (*Authority, error) {
 	return c.Query().Where(authority.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *AuthorityClient) GetX(ctx context.Context, id int) *Authority {
+func (c *AuthorityClient) GetX(ctx context.Context, id string) *Authority {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryUserKey queries the user_key edge of a Authority.
+func (c *AuthorityClient) QueryUserKey(a *Authority) *UserKeyQuery {
+	query := (&UserKeyClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(authority.Table, authority.FieldID, id),
+			sqlgraph.To(userkey.Table, userkey.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, authority.UserKeyTable, authority.UserKeyColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // QueryAPIKeys queries the api_keys edge of a Authority.
@@ -606,7 +630,7 @@ func (c *ClientTemplateClient) UpdateOne(ct *ClientTemplate) *ClientTemplateUpda
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *ClientTemplateClient) UpdateOneID(id int) *ClientTemplateUpdateOne {
+func (c *ClientTemplateClient) UpdateOneID(id string) *ClientTemplateUpdateOne {
 	mutation := newClientTemplateMutation(c.config, OpUpdateOne, withClientTemplateID(id))
 	return &ClientTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -623,7 +647,7 @@ func (c *ClientTemplateClient) DeleteOne(ct *ClientTemplate) *ClientTemplateDele
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *ClientTemplateClient) DeleteOneID(id int) *ClientTemplateDeleteOne {
+func (c *ClientTemplateClient) DeleteOneID(id string) *ClientTemplateDeleteOne {
 	builder := c.Delete().Where(clienttemplate.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -640,12 +664,12 @@ func (c *ClientTemplateClient) Query() *ClientTemplateQuery {
 }
 
 // Get returns a ClientTemplate entity by its id.
-func (c *ClientTemplateClient) Get(ctx context.Context, id int) (*ClientTemplate, error) {
+func (c *ClientTemplateClient) Get(ctx context.Context, id string) (*ClientTemplate, error) {
 	return c.Query().Where(clienttemplate.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *ClientTemplateClient) GetX(ctx context.Context, id int) *ClientTemplate {
+func (c *ClientTemplateClient) GetX(ctx context.Context, id string) *ClientTemplate {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -756,7 +780,7 @@ func (c *RootKeyClient) UpdateOne(rk *RootKey) *RootKeyUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *RootKeyClient) UpdateOneID(id int) *RootKeyUpdateOne {
+func (c *RootKeyClient) UpdateOneID(id string) *RootKeyUpdateOne {
 	mutation := newRootKeyMutation(c.config, OpUpdateOne, withRootKeyID(id))
 	return &RootKeyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -773,7 +797,7 @@ func (c *RootKeyClient) DeleteOne(rk *RootKey) *RootKeyDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *RootKeyClient) DeleteOneID(id int) *RootKeyDeleteOne {
+func (c *RootKeyClient) DeleteOneID(id string) *RootKeyDeleteOne {
 	builder := c.Delete().Where(rootkey.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -790,17 +814,33 @@ func (c *RootKeyClient) Query() *RootKeyQuery {
 }
 
 // Get returns a RootKey entity by its id.
-func (c *RootKeyClient) Get(ctx context.Context, id int) (*RootKey, error) {
+func (c *RootKeyClient) Get(ctx context.Context, id string) (*RootKey, error) {
 	return c.Query().Where(rootkey.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *RootKeyClient) GetX(ctx context.Context, id int) *RootKey {
+func (c *RootKeyClient) GetX(ctx context.Context, id string) *RootKey {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryUserKeys queries the user_keys edge of a RootKey.
+func (c *RootKeyClient) QueryUserKeys(rk *RootKey) *UserKeyQuery {
+	query := (&UserKeyClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := rk.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(rootkey.Table, rootkey.FieldID, id),
+			sqlgraph.To(userkey.Table, userkey.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, rootkey.UserKeysTable, rootkey.UserKeysColumn),
+		)
+		fromV = sqlgraph.Neighbors(rk.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.
@@ -874,7 +914,7 @@ func (c *ServerTemplateClient) UpdateOne(st *ServerTemplate) *ServerTemplateUpda
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *ServerTemplateClient) UpdateOneID(id int) *ServerTemplateUpdateOne {
+func (c *ServerTemplateClient) UpdateOneID(id string) *ServerTemplateUpdateOne {
 	mutation := newServerTemplateMutation(c.config, OpUpdateOne, withServerTemplateID(id))
 	return &ServerTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -891,7 +931,7 @@ func (c *ServerTemplateClient) DeleteOne(st *ServerTemplate) *ServerTemplateDele
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *ServerTemplateClient) DeleteOneID(id int) *ServerTemplateDeleteOne {
+func (c *ServerTemplateClient) DeleteOneID(id string) *ServerTemplateDeleteOne {
 	builder := c.Delete().Where(servertemplate.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -908,12 +948,12 @@ func (c *ServerTemplateClient) Query() *ServerTemplateQuery {
 }
 
 // Get returns a ServerTemplate entity by its id.
-func (c *ServerTemplateClient) Get(ctx context.Context, id int) (*ServerTemplate, error) {
+func (c *ServerTemplateClient) Get(ctx context.Context, id string) (*ServerTemplate, error) {
 	return c.Query().Where(servertemplate.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *ServerTemplateClient) GetX(ctx context.Context, id int) *ServerTemplate {
+func (c *ServerTemplateClient) GetX(ctx context.Context, id string) *ServerTemplate {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -978,12 +1018,163 @@ func (c *ServerTemplateClient) mutate(ctx context.Context, m *ServerTemplateMuta
 	}
 }
 
+// UserKeyClient is a client for the UserKey schema.
+type UserKeyClient struct {
+	config
+}
+
+// NewUserKeyClient returns a client for the UserKey from the given config.
+func NewUserKeyClient(c config) *UserKeyClient {
+	return &UserKeyClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `userkey.Hooks(f(g(h())))`.
+func (c *UserKeyClient) Use(hooks ...Hook) {
+	c.hooks.UserKey = append(c.hooks.UserKey, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `userkey.Intercept(f(g(h())))`.
+func (c *UserKeyClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserKey = append(c.inters.UserKey, interceptors...)
+}
+
+// Create returns a builder for creating a UserKey entity.
+func (c *UserKeyClient) Create() *UserKeyCreate {
+	mutation := newUserKeyMutation(c.config, OpCreate)
+	return &UserKeyCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserKey entities.
+func (c *UserKeyClient) CreateBulk(builders ...*UserKeyCreate) *UserKeyCreateBulk {
+	return &UserKeyCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserKey.
+func (c *UserKeyClient) Update() *UserKeyUpdate {
+	mutation := newUserKeyMutation(c.config, OpUpdate)
+	return &UserKeyUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserKeyClient) UpdateOne(uk *UserKey) *UserKeyUpdateOne {
+	mutation := newUserKeyMutation(c.config, OpUpdateOne, withUserKey(uk))
+	return &UserKeyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserKeyClient) UpdateOneID(id string) *UserKeyUpdateOne {
+	mutation := newUserKeyMutation(c.config, OpUpdateOne, withUserKeyID(id))
+	return &UserKeyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserKey.
+func (c *UserKeyClient) Delete() *UserKeyDelete {
+	mutation := newUserKeyMutation(c.config, OpDelete)
+	return &UserKeyDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserKeyClient) DeleteOne(uk *UserKey) *UserKeyDeleteOne {
+	return c.DeleteOneID(uk.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserKeyClient) DeleteOneID(id string) *UserKeyDeleteOne {
+	builder := c.Delete().Where(userkey.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserKeyDeleteOne{builder}
+}
+
+// Query returns a query builder for UserKey.
+func (c *UserKeyClient) Query() *UserKeyQuery {
+	return &UserKeyQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserKey},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserKey entity by its id.
+func (c *UserKeyClient) Get(ctx context.Context, id string) (*UserKey, error) {
+	return c.Query().Where(userkey.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserKeyClient) GetX(ctx context.Context, id string) *UserKey {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRootKey queries the root_key edge of a UserKey.
+func (c *UserKeyClient) QueryRootKey(uk *UserKey) *RootKeyQuery {
+	query := (&RootKeyClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := uk.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userkey.Table, userkey.FieldID, id),
+			sqlgraph.To(rootkey.Table, rootkey.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, userkey.RootKeyTable, userkey.RootKeyColumn),
+		)
+		fromV = sqlgraph.Neighbors(uk.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAuthorities queries the authorities edge of a UserKey.
+func (c *UserKeyClient) QueryAuthorities(uk *UserKey) *AuthorityQuery {
+	query := (&AuthorityClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := uk.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userkey.Table, userkey.FieldID, id),
+			sqlgraph.To(authority.Table, authority.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, userkey.AuthoritiesTable, userkey.AuthoritiesColumn),
+		)
+		fromV = sqlgraph.Neighbors(uk.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserKeyClient) Hooks() []Hook {
+	return c.hooks.UserKey
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserKeyClient) Interceptors() []Interceptor {
+	return c.inters.UserKey
+}
+
+func (c *UserKeyClient) mutate(ctx context.Context, m *UserKeyMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserKeyCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserKeyUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserKeyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserKeyDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserKey mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		APIKey, Authority, ClientTemplate, RootKey, ServerTemplate []ent.Hook
+		APIKey, Authority, ClientTemplate, RootKey, ServerTemplate, UserKey []ent.Hook
 	}
 	inters struct {
-		APIKey, Authority, ClientTemplate, RootKey, ServerTemplate []ent.Interceptor
+		APIKey, Authority, ClientTemplate, RootKey, ServerTemplate,
+		UserKey []ent.Interceptor
 	}
 )

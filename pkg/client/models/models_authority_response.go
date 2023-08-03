@@ -29,8 +29,11 @@ type ModelsAuthorityResponse struct {
 	// expiry
 	Expiry string `json:"expiry,omitempty"`
 
-	// identifier
-	Identifier string `json:"identifier,omitempty"`
+	// id
+	ID string `json:"id,omitempty"`
+
+	// name
+	Name string `json:"name,omitempty"`
 
 	// tag
 	Tag string `json:"tag,omitempty"`

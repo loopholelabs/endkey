@@ -50,9 +50,9 @@ func ListCmd() command.SetupCommand[*config.Config] {
 				keys := make([]rootKeyRedactedModel, 0, len(res.GetPayload()))
 				for _, key := range res.GetPayload() {
 					keys = append(keys, rootKeyRedactedModel{
-						Created:    key.CreatedAt,
-						Identifier: key.Identifier,
-						Name:       key.Name,
+						Created: key.CreatedAt,
+						ID:      key.ID,
+						Name:    key.Name,
 					})
 				}
 

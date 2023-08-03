@@ -58,9 +58,9 @@ func New(options *options.Options, logger *zerolog.Logger) *APIKey {
 func (a *APIKey) init() {
 	a.logger.Debug().Msg("initializing")
 
-	a.app.Use(a.options.Auth().RootKeyValidate)
+	a.app.Use(a.options.Auth().UserKeyValidate)
 	a.app.Post("/", createMetric.Middleware(), a.CreateAPIKey)
-	a.app.Get("/:authority", listMetric.Middleware(), a.ListAPIKeys)
+	a.app.Get("/:authority_name", listMetric.Middleware(), a.ListAPIKeys)
 	a.app.Delete("/", deleteMetric.Middleware(), a.DeleteAPIKey)
 }
 
@@ -79,12 +79,12 @@ func (a *APIKey) init() {
 // @Failure      500  {string} string
 // @Router       /apikey [post]
 func (a *APIKey) CreateAPIKey(ctx *fiber.Ctx) error {
-	a.logger.Debug().Msgf("received CreateRootKey request from %s", ctx.IP())
+	a.logger.Debug().Msgf("received CreateAPIKey request from %s", ctx.IP())
 
-	rk, err := authorization.GetRootKey(ctx)
+	uk, err := authorization.GetUserKey(ctx)
 	if err != nil {
-		a.logger.Error().Err(err).Msg("failed to get root key from context")
-		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")
+		a.logger.Error().Err(err).Msg("failed to get user key from context")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get user key from request context")
 	}
 
 	body := new(models.CreateAPIKeyRequest)
@@ -102,25 +102,29 @@ func (a *APIKey) CreateAPIKey(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "name is invalid")
 	}
 
-	if body.Authority == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "authority is required")
+	if body.AuthorityName == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "authority name is required")
 	}
 
-	if !utils.ValidString(body.Authority) {
-		return fiber.NewError(fiber.StatusBadRequest, "authority is invalid")
+	if !utils.ValidString(body.AuthorityName) {
+		return fiber.NewError(fiber.StatusBadRequest, "authority name is invalid")
 	}
 
-	if body.ServerTemplate != "" && !utils.ValidString(body.ServerTemplate) {
-		return fiber.NewError(fiber.StatusBadRequest, "server template is invalid")
+	if body.ServerTemplateName != "" && !utils.ValidString(body.ServerTemplateName) {
+		return fiber.NewError(fiber.StatusBadRequest, "server template name is invalid")
 	}
 
-	if body.ClientTemplate != "" && !utils.ValidString(body.ClientTemplate) {
-		return fiber.NewError(fiber.StatusBadRequest, "client template is invalid")
+	if body.ClientTemplateName != "" && !utils.ValidString(body.ClientTemplateName) {
+		return fiber.NewError(fiber.StatusBadRequest, "client template is name invalid")
 	}
 
-	a.logger.Info().Msgf("creating API Key '%s' for Authority '%s' (with Server Template '%s' and Client Template '%s') for root key with ID %s", body.Name, body.Authority, body.ServerTemplate, body.ClientTemplate, rk.Identifier)
+	if body.ServerTemplateName == "" && body.ClientTemplateName == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "server template name or client template name is required")
+	}
 
-	ak, secret, err := a.options.Database().CreateAPIKey(ctx.Context(), body.Name, body.Authority, body.ServerTemplate, body.ClientTemplate)
+	a.logger.Info().Msgf("creating api key '%s' for authority '%s' (with server template '%s' and client template '%s') for user key %s", body.Name, body.AuthorityName, body.ServerTemplateName, body.ClientTemplateName, uk.Name)
+
+	ak, secret, err := a.options.Database().CreateAPIKey(ctx.Context(), body.Name, body.AuthorityName, uk, body.ServerTemplateName, body.ClientTemplateName)
 	if err != nil {
 		if errors.Is(err, database.ErrAlreadyExists) {
 			return fiber.NewError(fiber.StatusConflict, "api key already exists for this authority")
@@ -131,12 +135,12 @@ func (a *APIKey) CreateAPIKey(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(&models.APIKeyResponse{
-		Identifier:     ak.Identifier,
-		Name:           ak.Name,
-		Authority:      body.Authority,
-		ServerTemplate: body.ServerTemplate,
-		ClientTemplate: body.ClientTemplate,
-		Secret:         string(secret),
+		ID:                 ak.ID,
+		Name:               ak.Name,
+		AuthorityName:      body.AuthorityName,
+		ServerTemplateName: body.ServerTemplateName,
+		ClientTemplateName: body.ClientTemplateName,
+		Secret:             string(secret),
 	})
 }
 
@@ -145,7 +149,7 @@ func (a *APIKey) CreateAPIKey(ctx *fiber.Ctx) error {
 // @Tags         apikey
 // @Accept       json
 // @Produce      json
-// @Param 	     authority  path  string  true  "Authority Identifier"
+// @Param 	     authority_name  path  string  true  "Authority Name"
 // @Success      200  {array} models.APIKeyResponse
 // @Failure      400  {string} string
 // @Failure      401  {string} string
@@ -153,29 +157,29 @@ func (a *APIKey) CreateAPIKey(ctx *fiber.Ctx) error {
 // @Failure      409  {string} string
 // @Failure      412  {string} string
 // @Failure      500  {string} string
-// @Router       /apikey/{authority} [get]
+// @Router       /apikey/{authority_name} [get]
 func (a *APIKey) ListAPIKeys(ctx *fiber.Ctx) error {
 	a.logger.Debug().Msgf("received ListAPIKeys request from %s", ctx.IP())
 
-	rk, err := authorization.GetRootKey(ctx)
+	uk, err := authorization.GetUserKey(ctx)
 	if err != nil {
-		a.logger.Error().Err(err).Msg("failed to get root key from context")
-		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")
+		a.logger.Error().Err(err).Msg("failed to get user key from context")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get user key from request context")
 	}
 
-	authority := ctx.Params("authority")
+	authorityName := ctx.Params("authority_name")
 
-	if authority == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "authority is required")
+	if authorityName == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "authority name is required")
 	}
 
-	if !utils.ValidString(authority) {
-		return fiber.NewError(fiber.StatusBadRequest, "authority is invalid")
+	if !utils.ValidString(authorityName) {
+		return fiber.NewError(fiber.StatusBadRequest, "authority name is invalid")
 	}
 
-	a.logger.Info().Msgf("listing API Keys for Authority '%s' for root key with ID %s", authority, rk.Identifier)
+	a.logger.Info().Msgf("listing api keys for authority '%s' for user key %s", authorityName, uk.Name)
 
-	aks, err := a.options.Database().ListAPIKeys(ctx.Context(), authority)
+	aks, err := a.options.Database().ListAPIKeys(ctx.Context(), authorityName, uk)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return fiber.NewError(fiber.StatusNotFound, "no api keys found")
@@ -188,19 +192,19 @@ func (a *APIKey) ListAPIKeys(ctx *fiber.Ctx) error {
 	ret := make([]*models.APIKeyResponse, 0, len(aks))
 	for _, ak := range aks {
 		r := &models.APIKeyResponse{
-			CreatedAt:  ak.CreatedAt.Format(time.RFC3339),
-			Identifier: ak.Identifier,
-			Name:       ak.Name,
-			Authority:  authority,
+			CreatedAt:     ak.CreatedAt.Format(time.RFC3339),
+			ID:            ak.ID,
+			Name:          ak.Name,
+			AuthorityName: authorityName,
 		}
 		serverTempl, err := ak.Edges.ServerTemplateOrErr()
 		if err == nil {
-			r.ServerTemplate = serverTempl.Identifier
+			r.ServerTemplateName = serverTempl.Name
 		}
 
 		clientTempl, err := ak.Edges.ClientTemplateOrErr()
 		if err == nil {
-			r.ClientTemplate = clientTempl.Identifier
+			r.ClientTemplateName = clientTempl.Name
 		}
 
 		ret = append(ret, r)
@@ -226,10 +230,10 @@ func (a *APIKey) ListAPIKeys(ctx *fiber.Ctx) error {
 func (a *APIKey) DeleteAPIKey(ctx *fiber.Ctx) error {
 	a.logger.Debug().Msgf("received DeleteAPIKey request from %s", ctx.IP())
 
-	rk, err := authorization.GetRootKey(ctx)
+	uk, err := authorization.GetUserKey(ctx)
 	if err != nil {
-		a.logger.Error().Err(err).Msg("failed to get root key from context")
-		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")
+		a.logger.Error().Err(err).Msg("failed to get user key from context")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to get user key from request context")
 	}
 
 	body := new(models.DeleteAPIKeyRequest)
@@ -247,17 +251,17 @@ func (a *APIKey) DeleteAPIKey(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "name is invalid")
 	}
 
-	if body.Authority == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "authority is required")
+	if body.AuthorityName == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "authority name is required")
 	}
 
-	if !utils.ValidString(body.Authority) {
-		return fiber.NewError(fiber.StatusBadRequest, "authority is invalid")
+	if !utils.ValidString(body.AuthorityName) {
+		return fiber.NewError(fiber.StatusBadRequest, "authority name is invalid")
 	}
 
-	a.logger.Info().Msgf("deleting api key '%s' for authority '%s' for root key with ID %s", body.Name, body.Authority, rk.Identifier)
+	a.logger.Info().Msgf("deleting api key '%s' for authority '%s' for user key %s", body.Name, body.AuthorityName, uk.Name)
 
-	err = a.options.Database().DeleteAPIKey(ctx.Context(), body.Name, body.Authority)
+	err = a.options.Database().DeleteAPIKeyByName(ctx.Context(), body.Name, body.AuthorityName, uk)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return fiber.NewError(fiber.StatusNotFound, "api key not found")
@@ -267,11 +271,11 @@ func (a *APIKey) DeleteAPIKey(ctx *fiber.Ctx) error {
 			return fiber.NewError(fiber.StatusConflict, "cannot delete api key because resources are still associated with it")
 		}
 
-		a.logger.Error().Err(err).Msg("failed to api root key")
-		return fiber.NewError(fiber.StatusInternalServerError, "failed to api root key")
+		a.logger.Error().Err(err).Msg("failed to delete api key")
+		return fiber.NewError(fiber.StatusInternalServerError, "failed to delete api key")
 	}
 
-	return ctx.SendString(fmt.Sprintf("api key '%s' for authority '%s' deleted", body.Name, body.Authority))
+	return ctx.SendString(fmt.Sprintf("api key '%s' for authority '%s' deleted", body.Name, body.AuthorityName))
 }
 
 func (a *APIKey) App() *fiber.App {

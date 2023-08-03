@@ -11,6 +11,7 @@ import (
 	"github.com/loopholelabs/endkey/internal/ent/rootkey"
 	"github.com/loopholelabs/endkey/internal/ent/schema"
 	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -23,10 +24,6 @@ func init() {
 	apikeyDescCreatedAt := apikeyFields[0].Descriptor()
 	// apikey.DefaultCreatedAt holds the default value on creation for the created_at field.
 	apikey.DefaultCreatedAt = apikeyDescCreatedAt.Default.(func() time.Time)
-	// apikeyDescIdentifier is the schema descriptor for identifier field.
-	apikeyDescIdentifier := apikeyFields[1].Descriptor()
-	// apikey.IdentifierValidator is a validator for the "identifier" field. It is called by the builders before save.
-	apikey.IdentifierValidator = apikeyDescIdentifier.Validators[0].(func(string) error)
 	// apikeyDescName is the schema descriptor for name field.
 	apikeyDescName := apikeyFields[2].Descriptor()
 	// apikey.NameValidator is a validator for the "name" field. It is called by the builders before save.
@@ -39,64 +36,72 @@ func init() {
 	apikeyDescHash := apikeyFields[4].Descriptor()
 	// apikey.HashValidator is a validator for the "hash" field. It is called by the builders before save.
 	apikey.HashValidator = apikeyDescHash.Validators[0].(func([]byte) error)
+	// apikeyDescID is the schema descriptor for id field.
+	apikeyDescID := apikeyFields[1].Descriptor()
+	// apikey.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	apikey.IDValidator = apikeyDescID.Validators[0].(func(string) error)
 	authorityFields := schema.Authority{}.Fields()
 	_ = authorityFields
 	// authorityDescCreatedAt is the schema descriptor for created_at field.
 	authorityDescCreatedAt := authorityFields[0].Descriptor()
 	// authority.DefaultCreatedAt holds the default value on creation for the created_at field.
 	authority.DefaultCreatedAt = authorityDescCreatedAt.Default.(func() time.Time)
-	// authorityDescIdentifier is the schema descriptor for identifier field.
-	authorityDescIdentifier := authorityFields[1].Descriptor()
-	// authority.IdentifierValidator is a validator for the "identifier" field. It is called by the builders before save.
-	authority.IdentifierValidator = authorityDescIdentifier.Validators[0].(func(string) error)
+	// authorityDescName is the schema descriptor for name field.
+	authorityDescName := authorityFields[2].Descriptor()
+	// authority.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	authority.NameValidator = authorityDescName.Validators[0].(func(string) error)
 	// authorityDescCaCertificatePem is the schema descriptor for ca_certificate_pem field.
-	authorityDescCaCertificatePem := authorityFields[2].Descriptor()
+	authorityDescCaCertificatePem := authorityFields[3].Descriptor()
 	// authority.CaCertificatePemValidator is a validator for the "ca_certificate_pem" field. It is called by the builders before save.
 	authority.CaCertificatePemValidator = authorityDescCaCertificatePem.Validators[0].(func([]byte) error)
 	// authorityDescEncryptedPrivateKey is the schema descriptor for encrypted_private_key field.
-	authorityDescEncryptedPrivateKey := authorityFields[3].Descriptor()
+	authorityDescEncryptedPrivateKey := authorityFields[4].Descriptor()
 	// authority.EncryptedPrivateKeyValidator is a validator for the "encrypted_private_key" field. It is called by the builders before save.
 	authority.EncryptedPrivateKeyValidator = authorityDescEncryptedPrivateKey.Validators[0].(func(string) error)
+	// authorityDescID is the schema descriptor for id field.
+	authorityDescID := authorityFields[1].Descriptor()
+	// authority.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	authority.IDValidator = authorityDescID.Validators[0].(func(string) error)
 	clienttemplateFields := schema.ClientTemplate{}.Fields()
 	_ = clienttemplateFields
 	// clienttemplateDescCreatedAt is the schema descriptor for created_at field.
 	clienttemplateDescCreatedAt := clienttemplateFields[0].Descriptor()
 	// clienttemplate.DefaultCreatedAt holds the default value on creation for the created_at field.
 	clienttemplate.DefaultCreatedAt = clienttemplateDescCreatedAt.Default.(func() time.Time)
-	// clienttemplateDescIdentifier is the schema descriptor for identifier field.
-	clienttemplateDescIdentifier := clienttemplateFields[1].Descriptor()
-	// clienttemplate.IdentifierValidator is a validator for the "identifier" field. It is called by the builders before save.
-	clienttemplate.IdentifierValidator = clienttemplateDescIdentifier.Validators[0].(func(string) error)
+	// clienttemplateDescName is the schema descriptor for name field.
+	clienttemplateDescName := clienttemplateFields[2].Descriptor()
+	// clienttemplate.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	clienttemplate.NameValidator = clienttemplateDescName.Validators[0].(func(string) error)
 	// clienttemplateDescCommonName is the schema descriptor for common_name field.
-	clienttemplateDescCommonName := clienttemplateFields[2].Descriptor()
+	clienttemplateDescCommonName := clienttemplateFields[3].Descriptor()
 	// clienttemplate.CommonNameValidator is a validator for the "common_name" field. It is called by the builders before save.
 	clienttemplate.CommonNameValidator = clienttemplateDescCommonName.Validators[0].(func(string) error)
 	// clienttemplateDescTag is the schema descriptor for tag field.
-	clienttemplateDescTag := clienttemplateFields[3].Descriptor()
+	clienttemplateDescTag := clienttemplateFields[4].Descriptor()
 	// clienttemplate.TagValidator is a validator for the "tag" field. It is called by the builders before save.
 	clienttemplate.TagValidator = clienttemplateDescTag.Validators[0].(func(string) error)
 	// clienttemplateDescValidity is the schema descriptor for validity field.
-	clienttemplateDescValidity := clienttemplateFields[4].Descriptor()
+	clienttemplateDescValidity := clienttemplateFields[5].Descriptor()
 	// clienttemplate.ValidityValidator is a validator for the "validity" field. It is called by the builders before save.
 	clienttemplate.ValidityValidator = clienttemplateDescValidity.Validators[0].(func(string) error)
 	// clienttemplateDescAllowAdditionalDNSNames is the schema descriptor for allow_additional_dns_names field.
-	clienttemplateDescAllowAdditionalDNSNames := clienttemplateFields[6].Descriptor()
+	clienttemplateDescAllowAdditionalDNSNames := clienttemplateFields[7].Descriptor()
 	// clienttemplate.DefaultAllowAdditionalDNSNames holds the default value on creation for the allow_additional_dns_names field.
 	clienttemplate.DefaultAllowAdditionalDNSNames = clienttemplateDescAllowAdditionalDNSNames.Default.(bool)
 	// clienttemplateDescAllowAdditionalIps is the schema descriptor for allow_additional_ips field.
-	clienttemplateDescAllowAdditionalIps := clienttemplateFields[8].Descriptor()
+	clienttemplateDescAllowAdditionalIps := clienttemplateFields[9].Descriptor()
 	// clienttemplate.DefaultAllowAdditionalIps holds the default value on creation for the allow_additional_ips field.
 	clienttemplate.DefaultAllowAdditionalIps = clienttemplateDescAllowAdditionalIps.Default.(bool)
+	// clienttemplateDescID is the schema descriptor for id field.
+	clienttemplateDescID := clienttemplateFields[1].Descriptor()
+	// clienttemplate.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	clienttemplate.IDValidator = clienttemplateDescID.Validators[0].(func(string) error)
 	rootkeyFields := schema.RootKey{}.Fields()
 	_ = rootkeyFields
 	// rootkeyDescCreatedAt is the schema descriptor for created_at field.
 	rootkeyDescCreatedAt := rootkeyFields[0].Descriptor()
 	// rootkey.DefaultCreatedAt holds the default value on creation for the created_at field.
 	rootkey.DefaultCreatedAt = rootkeyDescCreatedAt.Default.(func() time.Time)
-	// rootkeyDescIdentifier is the schema descriptor for identifier field.
-	rootkeyDescIdentifier := rootkeyFields[1].Descriptor()
-	// rootkey.IdentifierValidator is a validator for the "identifier" field. It is called by the builders before save.
-	rootkey.IdentifierValidator = rootkeyDescIdentifier.Validators[0].(func(string) error)
 	// rootkeyDescName is the schema descriptor for name field.
 	rootkeyDescName := rootkeyFields[2].Descriptor()
 	// rootkey.NameValidator is a validator for the "name" field. It is called by the builders before save.
@@ -109,34 +114,64 @@ func init() {
 	rootkeyDescHash := rootkeyFields[4].Descriptor()
 	// rootkey.HashValidator is a validator for the "hash" field. It is called by the builders before save.
 	rootkey.HashValidator = rootkeyDescHash.Validators[0].(func([]byte) error)
+	// rootkeyDescID is the schema descriptor for id field.
+	rootkeyDescID := rootkeyFields[1].Descriptor()
+	// rootkey.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	rootkey.IDValidator = rootkeyDescID.Validators[0].(func(string) error)
 	servertemplateFields := schema.ServerTemplate{}.Fields()
 	_ = servertemplateFields
 	// servertemplateDescCreatedAt is the schema descriptor for created_at field.
 	servertemplateDescCreatedAt := servertemplateFields[0].Descriptor()
 	// servertemplate.DefaultCreatedAt holds the default value on creation for the created_at field.
 	servertemplate.DefaultCreatedAt = servertemplateDescCreatedAt.Default.(func() time.Time)
-	// servertemplateDescIdentifier is the schema descriptor for identifier field.
-	servertemplateDescIdentifier := servertemplateFields[1].Descriptor()
-	// servertemplate.IdentifierValidator is a validator for the "identifier" field. It is called by the builders before save.
-	servertemplate.IdentifierValidator = servertemplateDescIdentifier.Validators[0].(func(string) error)
+	// servertemplateDescName is the schema descriptor for name field.
+	servertemplateDescName := servertemplateFields[2].Descriptor()
+	// servertemplate.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	servertemplate.NameValidator = servertemplateDescName.Validators[0].(func(string) error)
 	// servertemplateDescCommonName is the schema descriptor for common_name field.
-	servertemplateDescCommonName := servertemplateFields[2].Descriptor()
+	servertemplateDescCommonName := servertemplateFields[3].Descriptor()
 	// servertemplate.CommonNameValidator is a validator for the "common_name" field. It is called by the builders before save.
 	servertemplate.CommonNameValidator = servertemplateDescCommonName.Validators[0].(func(string) error)
 	// servertemplateDescTag is the schema descriptor for tag field.
-	servertemplateDescTag := servertemplateFields[3].Descriptor()
+	servertemplateDescTag := servertemplateFields[4].Descriptor()
 	// servertemplate.TagValidator is a validator for the "tag" field. It is called by the builders before save.
 	servertemplate.TagValidator = servertemplateDescTag.Validators[0].(func(string) error)
 	// servertemplateDescValidity is the schema descriptor for validity field.
-	servertemplateDescValidity := servertemplateFields[4].Descriptor()
+	servertemplateDescValidity := servertemplateFields[5].Descriptor()
 	// servertemplate.ValidityValidator is a validator for the "validity" field. It is called by the builders before save.
 	servertemplate.ValidityValidator = servertemplateDescValidity.Validators[0].(func(string) error)
 	// servertemplateDescAllowAdditionalDNSNames is the schema descriptor for allow_additional_dns_names field.
-	servertemplateDescAllowAdditionalDNSNames := servertemplateFields[6].Descriptor()
+	servertemplateDescAllowAdditionalDNSNames := servertemplateFields[7].Descriptor()
 	// servertemplate.DefaultAllowAdditionalDNSNames holds the default value on creation for the allow_additional_dns_names field.
 	servertemplate.DefaultAllowAdditionalDNSNames = servertemplateDescAllowAdditionalDNSNames.Default.(bool)
 	// servertemplateDescAllowAdditionalIps is the schema descriptor for allow_additional_ips field.
-	servertemplateDescAllowAdditionalIps := servertemplateFields[8].Descriptor()
+	servertemplateDescAllowAdditionalIps := servertemplateFields[9].Descriptor()
 	// servertemplate.DefaultAllowAdditionalIps holds the default value on creation for the allow_additional_ips field.
 	servertemplate.DefaultAllowAdditionalIps = servertemplateDescAllowAdditionalIps.Default.(bool)
+	// servertemplateDescID is the schema descriptor for id field.
+	servertemplateDescID := servertemplateFields[1].Descriptor()
+	// servertemplate.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	servertemplate.IDValidator = servertemplateDescID.Validators[0].(func(string) error)
+	userkeyFields := schema.UserKey{}.Fields()
+	_ = userkeyFields
+	// userkeyDescCreatedAt is the schema descriptor for created_at field.
+	userkeyDescCreatedAt := userkeyFields[0].Descriptor()
+	// userkey.DefaultCreatedAt holds the default value on creation for the created_at field.
+	userkey.DefaultCreatedAt = userkeyDescCreatedAt.Default.(func() time.Time)
+	// userkeyDescName is the schema descriptor for name field.
+	userkeyDescName := userkeyFields[2].Descriptor()
+	// userkey.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	userkey.NameValidator = userkeyDescName.Validators[0].(func(string) error)
+	// userkeyDescSalt is the schema descriptor for salt field.
+	userkeyDescSalt := userkeyFields[3].Descriptor()
+	// userkey.SaltValidator is a validator for the "salt" field. It is called by the builders before save.
+	userkey.SaltValidator = userkeyDescSalt.Validators[0].(func([]byte) error)
+	// userkeyDescHash is the schema descriptor for hash field.
+	userkeyDescHash := userkeyFields[4].Descriptor()
+	// userkey.HashValidator is a validator for the "hash" field. It is called by the builders before save.
+	userkey.HashValidator = userkeyDescHash.Validators[0].(func([]byte) error)
+	// userkeyDescID is the schema descriptor for id field.
+	userkeyDescID := userkeyFields[1].Descriptor()
+	// userkey.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	userkey.IDValidator = userkeyDescID.Validators[0].(func(string) error)
 }

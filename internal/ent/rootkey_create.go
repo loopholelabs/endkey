@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/loopholelabs/endkey/internal/ent/rootkey"
+	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
 // RootKeyCreate is the builder for creating a RootKey entity.
@@ -34,12 +35,6 @@ func (rkc *RootKeyCreate) SetNillableCreatedAt(t *time.Time) *RootKeyCreate {
 	return rkc
 }
 
-// SetIdentifier sets the "identifier" field.
-func (rkc *RootKeyCreate) SetIdentifier(s string) *RootKeyCreate {
-	rkc.mutation.SetIdentifier(s)
-	return rkc
-}
-
 // SetName sets the "name" field.
 func (rkc *RootKeyCreate) SetName(s string) *RootKeyCreate {
 	rkc.mutation.SetName(s)
@@ -56,6 +51,27 @@ func (rkc *RootKeyCreate) SetSalt(b []byte) *RootKeyCreate {
 func (rkc *RootKeyCreate) SetHash(b []byte) *RootKeyCreate {
 	rkc.mutation.SetHash(b)
 	return rkc
+}
+
+// SetID sets the "id" field.
+func (rkc *RootKeyCreate) SetID(s string) *RootKeyCreate {
+	rkc.mutation.SetID(s)
+	return rkc
+}
+
+// AddUserKeyIDs adds the "user_keys" edge to the UserKey entity by IDs.
+func (rkc *RootKeyCreate) AddUserKeyIDs(ids ...string) *RootKeyCreate {
+	rkc.mutation.AddUserKeyIDs(ids...)
+	return rkc
+}
+
+// AddUserKeys adds the "user_keys" edges to the UserKey entity.
+func (rkc *RootKeyCreate) AddUserKeys(u ...*UserKey) *RootKeyCreate {
+	ids := make([]string, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return rkc.AddUserKeyIDs(ids...)
 }
 
 // Mutation returns the RootKeyMutation object of the builder.
@@ -104,14 +120,6 @@ func (rkc *RootKeyCreate) check() error {
 	if _, ok := rkc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "RootKey.created_at"`)}
 	}
-	if _, ok := rkc.mutation.Identifier(); !ok {
-		return &ValidationError{Name: "identifier", err: errors.New(`ent: missing required field "RootKey.identifier"`)}
-	}
-	if v, ok := rkc.mutation.Identifier(); ok {
-		if err := rootkey.IdentifierValidator(v); err != nil {
-			return &ValidationError{Name: "identifier", err: fmt.Errorf(`ent: validator failed for field "RootKey.identifier": %w`, err)}
-		}
-	}
 	if _, ok := rkc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "RootKey.name"`)}
 	}
@@ -136,6 +144,11 @@ func (rkc *RootKeyCreate) check() error {
 			return &ValidationError{Name: "hash", err: fmt.Errorf(`ent: validator failed for field "RootKey.hash": %w`, err)}
 		}
 	}
+	if v, ok := rkc.mutation.ID(); ok {
+		if err := rootkey.IDValidator(v); err != nil {
+			return &ValidationError{Name: "id", err: fmt.Errorf(`ent: validator failed for field "RootKey.id": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -150,8 +163,13 @@ func (rkc *RootKeyCreate) sqlSave(ctx context.Context) (*RootKey, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected RootKey.ID type: %T", _spec.ID.Value)
+		}
+	}
 	rkc.mutation.id = &_node.ID
 	rkc.mutation.done = true
 	return _node, nil
@@ -160,15 +178,15 @@ func (rkc *RootKeyCreate) sqlSave(ctx context.Context) (*RootKey, error) {
 func (rkc *RootKeyCreate) createSpec() (*RootKey, *sqlgraph.CreateSpec) {
 	var (
 		_node = &RootKey{config: rkc.config}
-		_spec = sqlgraph.NewCreateSpec(rootkey.Table, sqlgraph.NewFieldSpec(rootkey.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(rootkey.Table, sqlgraph.NewFieldSpec(rootkey.FieldID, field.TypeString))
 	)
+	if id, ok := rkc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
+	}
 	if value, ok := rkc.mutation.CreatedAt(); ok {
 		_spec.SetField(rootkey.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
-	}
-	if value, ok := rkc.mutation.Identifier(); ok {
-		_spec.SetField(rootkey.FieldIdentifier, field.TypeString, value)
-		_node.Identifier = value
 	}
 	if value, ok := rkc.mutation.Name(); ok {
 		_spec.SetField(rootkey.FieldName, field.TypeString, value)
@@ -181,6 +199,22 @@ func (rkc *RootKeyCreate) createSpec() (*RootKey, *sqlgraph.CreateSpec) {
 	if value, ok := rkc.mutation.Hash(); ok {
 		_spec.SetField(rootkey.FieldHash, field.TypeBytes, value)
 		_node.Hash = value
+	}
+	if nodes := rkc.mutation.UserKeysIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   rootkey.UserKeysTable,
+			Columns: []string{rootkey.UserKeysColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userkey.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }
@@ -226,10 +260,6 @@ func (rkcb *RootKeyCreateBulk) Save(ctx context.Context) ([]*RootKey, error) {
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})

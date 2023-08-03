@@ -36,9 +36,9 @@ func (ctc *ClientTemplateCreate) SetNillableCreatedAt(t *time.Time) *ClientTempl
 	return ctc
 }
 
-// SetIdentifier sets the "identifier" field.
-func (ctc *ClientTemplateCreate) SetIdentifier(s string) *ClientTemplateCreate {
-	ctc.mutation.SetIdentifier(s)
+// SetName sets the "name" field.
+func (ctc *ClientTemplateCreate) SetName(s string) *ClientTemplateCreate {
+	ctc.mutation.SetName(s)
 	return ctc
 }
 
@@ -100,8 +100,14 @@ func (ctc *ClientTemplateCreate) SetNillableAllowAdditionalIps(b *bool) *ClientT
 	return ctc
 }
 
+// SetID sets the "id" field.
+func (ctc *ClientTemplateCreate) SetID(s string) *ClientTemplateCreate {
+	ctc.mutation.SetID(s)
+	return ctc
+}
+
 // SetAuthorityID sets the "authority" edge to the Authority entity by ID.
-func (ctc *ClientTemplateCreate) SetAuthorityID(id int) *ClientTemplateCreate {
+func (ctc *ClientTemplateCreate) SetAuthorityID(id string) *ClientTemplateCreate {
 	ctc.mutation.SetAuthorityID(id)
 	return ctc
 }
@@ -112,14 +118,14 @@ func (ctc *ClientTemplateCreate) SetAuthority(a *Authority) *ClientTemplateCreat
 }
 
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
-func (ctc *ClientTemplateCreate) AddAPIKeyIDs(ids ...int) *ClientTemplateCreate {
+func (ctc *ClientTemplateCreate) AddAPIKeyIDs(ids ...string) *ClientTemplateCreate {
 	ctc.mutation.AddAPIKeyIDs(ids...)
 	return ctc
 }
 
 // AddAPIKeys adds the "api_keys" edges to the APIKey entity.
 func (ctc *ClientTemplateCreate) AddAPIKeys(a ...*APIKey) *ClientTemplateCreate {
-	ids := make([]int, len(a))
+	ids := make([]string, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
@@ -180,12 +186,12 @@ func (ctc *ClientTemplateCreate) check() error {
 	if _, ok := ctc.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ClientTemplate.created_at"`)}
 	}
-	if _, ok := ctc.mutation.Identifier(); !ok {
-		return &ValidationError{Name: "identifier", err: errors.New(`ent: missing required field "ClientTemplate.identifier"`)}
+	if _, ok := ctc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "ClientTemplate.name"`)}
 	}
-	if v, ok := ctc.mutation.Identifier(); ok {
-		if err := clienttemplate.IdentifierValidator(v); err != nil {
-			return &ValidationError{Name: "identifier", err: fmt.Errorf(`ent: validator failed for field "ClientTemplate.identifier": %w`, err)}
+	if v, ok := ctc.mutation.Name(); ok {
+		if err := clienttemplate.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ClientTemplate.name": %w`, err)}
 		}
 	}
 	if _, ok := ctc.mutation.CommonName(); !ok {
@@ -218,6 +224,11 @@ func (ctc *ClientTemplateCreate) check() error {
 	if _, ok := ctc.mutation.AllowAdditionalIps(); !ok {
 		return &ValidationError{Name: "allow_additional_ips", err: errors.New(`ent: missing required field "ClientTemplate.allow_additional_ips"`)}
 	}
+	if v, ok := ctc.mutation.ID(); ok {
+		if err := clienttemplate.IDValidator(v); err != nil {
+			return &ValidationError{Name: "id", err: fmt.Errorf(`ent: validator failed for field "ClientTemplate.id": %w`, err)}
+		}
+	}
 	if _, ok := ctc.mutation.AuthorityID(); !ok {
 		return &ValidationError{Name: "authority", err: errors.New(`ent: missing required edge "ClientTemplate.authority"`)}
 	}
@@ -235,8 +246,13 @@ func (ctc *ClientTemplateCreate) sqlSave(ctx context.Context) (*ClientTemplate, 
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected ClientTemplate.ID type: %T", _spec.ID.Value)
+		}
+	}
 	ctc.mutation.id = &_node.ID
 	ctc.mutation.done = true
 	return _node, nil
@@ -245,15 +261,19 @@ func (ctc *ClientTemplateCreate) sqlSave(ctx context.Context) (*ClientTemplate, 
 func (ctc *ClientTemplateCreate) createSpec() (*ClientTemplate, *sqlgraph.CreateSpec) {
 	var (
 		_node = &ClientTemplate{config: ctc.config}
-		_spec = sqlgraph.NewCreateSpec(clienttemplate.Table, sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(clienttemplate.Table, sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString))
 	)
+	if id, ok := ctc.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
+	}
 	if value, ok := ctc.mutation.CreatedAt(); ok {
 		_spec.SetField(clienttemplate.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := ctc.mutation.Identifier(); ok {
-		_spec.SetField(clienttemplate.FieldIdentifier, field.TypeString, value)
-		_node.Identifier = value
+	if value, ok := ctc.mutation.Name(); ok {
+		_spec.SetField(clienttemplate.FieldName, field.TypeString, value)
+		_node.Name = value
 	}
 	if value, ok := ctc.mutation.CommonName(); ok {
 		_spec.SetField(clienttemplate.FieldCommonName, field.TypeString, value)
@@ -291,7 +311,7 @@ func (ctc *ClientTemplateCreate) createSpec() (*ClientTemplate, *sqlgraph.Create
 			Columns: []string{clienttemplate.AuthorityColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(authority.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(authority.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -308,7 +328,7 @@ func (ctc *ClientTemplateCreate) createSpec() (*ClientTemplate, *sqlgraph.Create
 			Columns: []string{clienttemplate.APIKeysColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -360,10 +380,6 @@ func (ctcb *ClientTemplateCreateBulk) Save(ctx context.Context) ([]*ClientTempla
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})

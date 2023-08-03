@@ -17,8 +17,8 @@ import (
 // swagger:model models.CAResponse
 type ModelsCAResponse struct {
 
-	// authority
-	Authority string `json:"authority,omitempty"`
+	// authority name
+	AuthorityName string `json:"authority_name,omitempty"`
 
 	// ca certificate
 	CaCertificate string `json:"ca_certificate,omitempty"`

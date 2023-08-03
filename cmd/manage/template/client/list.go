@@ -42,7 +42,7 @@ func ListCmd() command.SetupCommand[*config.Config] {
 
 				end := ch.Printer.PrintProgress(fmt.Sprintf("Retrieving Client Templates for authority %s...", authority))
 
-				res, err := client.Template.GetTemplateClientAuthority(template.NewGetTemplateClientAuthorityParamsWithContext(ctx).WithAuthority(authority))
+				res, err := client.Template.GetTemplateClientAuthorityName(template.NewGetTemplateClientAuthorityNameParamsWithContext(ctx).WithAuthorityName(authority))
 				end()
 				if err != nil {
 					return err
@@ -57,8 +57,9 @@ func ListCmd() command.SetupCommand[*config.Config] {
 				for _, templ := range res.GetPayload() {
 					templs = append(templs, clientTemplateModel{
 						Created:       templ.CreatedAt,
-						Identifier:    templ.Identifier,
-						Authority:     templ.Authority,
+						ID:            templ.ID,
+						Name:          templ.Name,
+						Authority:     templ.AuthorityName,
 						CommonName:    templ.CommonName,
 						Tag:           templ.Tag,
 						DNSNames:      strings.Join(templ.DNSNames, ","),

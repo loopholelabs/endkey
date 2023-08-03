@@ -40,7 +40,7 @@ func (std *ServerTemplateDelete) ExecX(ctx context.Context) int {
 }
 
 func (std *ServerTemplateDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(servertemplate.Table, sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewDeleteSpec(servertemplate.Table, sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString))
 	if ps := std.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {

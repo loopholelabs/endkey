@@ -31,21 +31,21 @@ import (
 func DeleteCmd() command.SetupCommand[*config.Config] {
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		deleteCmd := &cobra.Command{
-			Use:   "delete <authority> <identifier>",
+			Use:   "delete <authority> <name>",
 			Args:  cobra.ExactArgs(2),
-			Short: "delete a Client Template with the given identifier and authority",
+			Short: "delete a Client Template with the given name and authority",
 			RunE: func(cmd *cobra.Command, args []string) error {
 				ctx := cmd.Context()
 				client := ch.Config.Client()
 
 				authority := args[0]
-				identifier := args[1]
+				name := args[1]
 
-				end := ch.Printer.PrintProgress(fmt.Sprintf("Deleting Client Template %s for authority %s...", identifier, authority))
+				end := ch.Printer.PrintProgress(fmt.Sprintf("Deleting Client Template %s for authority %s...", name, authority))
 
 				req := &models.ModelsDeleteClientTemplateRequest{
-					Authority:  authority,
-					Identifier: identifier,
+					AuthorityName: authority,
+					Name:          name,
 				}
 
 				_, err := client.Template.DeleteTemplateClient(template.NewDeleteTemplateClientParamsWithContext(ctx).WithRequest(req))
@@ -55,12 +55,12 @@ func DeleteCmd() command.SetupCommand[*config.Config] {
 				}
 
 				if ch.Printer.Format() == printer.Human {
-					ch.Printer.Printf("%s %s %s\n", printer.BoldRed("Client Template"), printer.BoldGreen(identifier), printer.BoldRed("deleted"))
+					ch.Printer.Printf("%s %s %s\n", printer.BoldRed("Client Template"), printer.BoldGreen(name), printer.BoldRed("deleted"))
 					return nil
 				}
 
 				return ch.Printer.PrintResource(map[string]string{
-					"deleted": identifier,
+					"deleted": name,
 				})
 			},
 		}

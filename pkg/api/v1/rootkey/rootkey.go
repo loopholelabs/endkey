@@ -100,7 +100,7 @@ func (a *RootKey) CreateRootKey(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "name is invalid")
 	}
 
-	a.logger.Info().Msgf("creating root key '%s' for root key with ID %s", name, rk.Identifier)
+	a.logger.Info().Msgf("creating root key '%s' for root key %s", name, rk.Name)
 
 	rk, secret, err := a.options.Database().CreateRootKey(ctx.Context(), name)
 	if err != nil {
@@ -113,10 +113,10 @@ func (a *RootKey) CreateRootKey(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(&models.RootKeyResponse{
-		CreatedAt:  rk.CreatedAt.Format(time.RFC3339),
-		Identifier: rk.Identifier,
-		Name:       rk.Name,
-		Secret:     string(secret),
+		CreatedAt: rk.CreatedAt.Format(time.RFC3339),
+		ID:        rk.ID,
+		Name:      rk.Name,
+		Secret:    string(secret),
 	})
 }
 
@@ -153,9 +153,9 @@ func (a *RootKey) RotateRootKey(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "name is invalid")
 	}
 
-	a.logger.Info().Msgf("rotating root key '%s' for root key with ID %s", name, rk.Identifier)
+	a.logger.Info().Msgf("rotating root key '%s' for root key %s", name, rk.Name)
 
-	rk, secret, err := a.options.Database().RotateRootKey(ctx.Context(), name)
+	rk, secret, err := a.options.Database().RotateRootKeyByName(ctx.Context(), name)
 	if err != nil {
 		if errors.Is(err, database.ErrAlreadyExists) {
 			return fiber.NewError(fiber.StatusConflict, "root key already exists")
@@ -166,10 +166,10 @@ func (a *RootKey) RotateRootKey(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(&models.RootKeyResponse{
-		CreatedAt:  rk.CreatedAt.Format(time.RFC3339),
-		Identifier: rk.Identifier,
-		Name:       rk.Name,
-		Secret:     string(secret),
+		CreatedAt: rk.CreatedAt.Format(time.RFC3339),
+		ID:        rk.ID,
+		Name:      rk.Name,
+		Secret:    string(secret),
 	})
 }
 
@@ -195,7 +195,7 @@ func (a *RootKey) ListRootKeys(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")
 	}
 
-	a.logger.Info().Msgf("listing root keys for root key with ID %s", rk.Identifier)
+	a.logger.Info().Msgf("listing root keys for root key %s", rk.Name)
 
 	rks, err := a.options.Database().ListRootKeys(ctx.Context())
 	if err != nil {
@@ -210,9 +210,9 @@ func (a *RootKey) ListRootKeys(ctx *fiber.Ctx) error {
 	ret := make([]*models.RootKeyResponse, 0, len(rks))
 	for _, rk := range rks {
 		ret = append(ret, &models.RootKeyResponse{
-			CreatedAt:  rk.CreatedAt.Format(time.RFC3339),
-			Identifier: rk.Identifier,
-			Name:       rk.Name,
+			CreatedAt: rk.CreatedAt.Format(time.RFC3339),
+			ID:        rk.ID,
+			Name:      rk.Name,
 		})
 	}
 
@@ -252,9 +252,9 @@ func (a *RootKey) DeleteRootKey(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "name is invalid")
 	}
 
-	a.logger.Info().Msgf("deleting root key '%s' for root key with ID %s", name, rk.Identifier)
+	a.logger.Info().Msgf("deleting root key '%s' for root key %s", name, rk.Name)
 
-	err = a.options.Database().DeleteRootKey(ctx.Context(), name)
+	err = a.options.Database().DeleteRootKeyByName(ctx.Context(), name)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return fiber.NewError(fiber.StatusNotFound, "root key not found")

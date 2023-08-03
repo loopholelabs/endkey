@@ -25,7 +25,8 @@ import (
 
 type serverTemplateModel struct {
 	Created       string `header:"created_at" json:"created_at"`
-	Identifier    string `header:"identifier" json:"identifier"`
+	ID            string `header:"id" json:"id"`
+	Name          string `header:"name" json:"name"`
 	Authority     string `header:"authority" json:"authority"`
 	CommonName    string `header:"common_name" json:"common_name"`
 	Tag           string `header:"tag" json:"tag"`

@@ -17,8 +17,8 @@
 package models
 
 type RootKeyResponse struct {
-	CreatedAt  string `json:"created_at"`
-	Identifier string `json:"identifier"`
-	Name       string `json:"name"`
-	Secret     string `json:"secret"`
+	CreatedAt string `json:"created_at"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Secret    string `json:"secret"`
 }

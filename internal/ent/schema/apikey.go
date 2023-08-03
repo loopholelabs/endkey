@@ -39,7 +39,7 @@ func (APIKey) Fields() []ent.Field {
 		field.Time("created_at").Immutable().Default(time.Now),
 
 		// A unique identifier for the API Key, immutable, globally unique
-		field.String("identifier").NotEmpty().Unique().Immutable(),
+		field.String("id").NotEmpty().Unique().Immutable().StorageKey("id"),
 
 		// An easily recognizable name for the API Key, immutable
 		//
@@ -63,18 +63,24 @@ func (APIKey) Edges() []ent.Edge {
 		//
 		// This is a many-to-one relationship, as an Authority can have multiple API Keys scoped to it
 		// but an API Key can only be scoped to one Authority
+		//
+		// This edge is unique, required and immutable
 		edge.From("authority", Authority.Type).Ref("api_keys").Unique().Required().Immutable(),
 
 		// An optional Server Template that this API Key is scoped to
 		//
 		// This is a many-to-one relationship, as a Server Template can have multiple API Keys scoped to it
 		// but an API Key can only be scoped to one Server Template at a time
+		//
+		// This edge is unique and immutable
 		edge.From("server_template", ServerTemplate.Type).Ref("api_keys").Unique().Immutable(),
 
 		// An optional Client Template that this API Key is scoped to
 		//
 		// This is a many-to-one relationship, as a Client Template can have multiple API Keys scoped to it
 		// but an API Key can only be scoped to one Client Template at a time
+		//
+		// This edge is unique and immutable
 		edge.From("client_template", ClientTemplate.Type).Ref("api_keys").Unique().Immutable(),
 	}
 }
@@ -82,7 +88,7 @@ func (APIKey) Edges() []ent.Edge {
 // Indexes of the APIKey.
 func (APIKey) Indexes() []ent.Index {
 	return []ent.Index{
-		// Guarantee uniqueness of the API Key's name per authority
+		// Guarantee uniqueness of the API Key's name per Authority
 		index.Fields("name").Edges("authority").Unique(),
 	}
 }

@@ -32,7 +32,7 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 	DeleteApikey(params *DeleteApikeyParams, opts ...ClientOption) (*DeleteApikeyOK, error)
 
-	GetApikeyAuthority(params *GetApikeyAuthorityParams, opts ...ClientOption) (*GetApikeyAuthorityOK, error)
+	GetApikeyAuthorityName(params *GetApikeyAuthorityNameParams, opts ...ClientOption) (*GetApikeyAuthorityNameOK, error)
 
 	PostApikey(params *PostApikeyParams, opts ...ClientOption) (*PostApikeyOK, error)
 
@@ -78,22 +78,22 @@ func (a *Client) DeleteApikey(params *DeleteApikeyParams, opts ...ClientOption) 
 }
 
 /*
-GetApikeyAuthority Lists all the api keys
+GetApikeyAuthorityName Lists all the api keys
 */
-func (a *Client) GetApikeyAuthority(params *GetApikeyAuthorityParams, opts ...ClientOption) (*GetApikeyAuthorityOK, error) {
+func (a *Client) GetApikeyAuthorityName(params *GetApikeyAuthorityNameParams, opts ...ClientOption) (*GetApikeyAuthorityNameOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetApikeyAuthorityParams()
+		params = NewGetApikeyAuthorityNameParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "GetApikeyAuthority",
+		ID:                 "GetApikeyAuthorityName",
 		Method:             "GET",
-		PathPattern:        "/apikey/{authority}",
+		PathPattern:        "/apikey/{authority_name}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"https"},
 		Params:             params,
-		Reader:             &GetApikeyAuthorityReader{formats: a.formats},
+		Reader:             &GetApikeyAuthorityNameReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -105,13 +105,13 @@ func (a *Client) GetApikeyAuthority(params *GetApikeyAuthorityParams, opts ...Cl
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetApikeyAuthorityOK)
+	success, ok := result.(*GetApikeyAuthorityNameOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetApikeyAuthority: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for GetApikeyAuthorityName: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

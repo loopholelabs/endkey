@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -15,23 +16,29 @@ const (
 	FieldID = "id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
-	// FieldIdentifier holds the string denoting the identifier field in the database.
-	FieldIdentifier = "identifier"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldSalt holds the string denoting the salt field in the database.
 	FieldSalt = "salt"
 	// FieldHash holds the string denoting the hash field in the database.
 	FieldHash = "hash"
+	// EdgeUserKeys holds the string denoting the user_keys edge name in mutations.
+	EdgeUserKeys = "user_keys"
 	// Table holds the table name of the rootkey in the database.
 	Table = "root_keys"
+	// UserKeysTable is the table that holds the user_keys relation/edge.
+	UserKeysTable = "user_keys"
+	// UserKeysInverseTable is the table name for the UserKey entity.
+	// It exists in this package in order to avoid circular dependency with the "userkey" package.
+	UserKeysInverseTable = "user_keys"
+	// UserKeysColumn is the table column denoting the user_keys relation/edge.
+	UserKeysColumn = "root_key_user_keys"
 )
 
 // Columns holds all SQL columns for rootkey fields.
 var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
-	FieldIdentifier,
 	FieldName,
 	FieldSalt,
 	FieldHash,
@@ -50,14 +57,14 @@ func ValidColumn(column string) bool {
 var (
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
-	// IdentifierValidator is a validator for the "identifier" field. It is called by the builders before save.
-	IdentifierValidator func(string) error
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
 	// SaltValidator is a validator for the "salt" field. It is called by the builders before save.
 	SaltValidator func([]byte) error
 	// HashValidator is a validator for the "hash" field. It is called by the builders before save.
 	HashValidator func([]byte) error
+	// IDValidator is a validator for the "id" field. It is called by the builders before save.
+	IDValidator func(string) error
 )
 
 // OrderOption defines the ordering options for the RootKey queries.
@@ -73,12 +80,28 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
 }
 
-// ByIdentifier orders the results by the identifier field.
-func ByIdentifier(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIdentifier, opts...).ToFunc()
-}
-
 // ByName orders the results by the name field.
 func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
+}
+
+// ByUserKeysCount orders the results by user_keys count.
+func ByUserKeysCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUserKeysStep(), opts...)
+	}
+}
+
+// ByUserKeys orders the results by user_keys terms.
+func ByUserKeys(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserKeysStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newUserKeysStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserKeysInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UserKeysTable, UserKeysColumn),
+	)
 }

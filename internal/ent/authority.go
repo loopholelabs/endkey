@@ -10,29 +10,33 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/loopholelabs/endkey/internal/ent/authority"
+	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
 // Authority is the model entity for the Authority schema.
 type Authority struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
-	// Identifier holds the value of the "identifier" field.
-	Identifier string `json:"identifier,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
 	// CaCertificatePem holds the value of the "ca_certificate_pem" field.
 	CaCertificatePem []byte `json:"ca_certificate_pem,omitempty"`
 	// EncryptedPrivateKey holds the value of the "encrypted_private_key" field.
 	EncryptedPrivateKey string `json:"encrypted_private_key,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AuthorityQuery when eager-loading is set.
-	Edges        AuthorityEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                AuthorityEdges `json:"edges"`
+	user_key_authorities *string
+	selectValues         sql.SelectValues
 }
 
 // AuthorityEdges holds the relations/edges for other nodes in the graph.
 type AuthorityEdges struct {
+	// UserKey holds the value of the user_key edge.
+	UserKey *UserKey `json:"user_key,omitempty"`
 	// APIKeys holds the value of the api_keys edge.
 	APIKeys []*APIKey `json:"api_keys,omitempty"`
 	// ServerTemplates holds the value of the server_templates edge.
@@ -41,13 +45,26 @@ type AuthorityEdges struct {
 	ClientTemplates []*ClientTemplate `json:"client_templates,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
+}
+
+// UserKeyOrErr returns the UserKey value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e AuthorityEdges) UserKeyOrErr() (*UserKey, error) {
+	if e.loadedTypes[0] {
+		if e.UserKey == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: userkey.Label}
+		}
+		return e.UserKey, nil
+	}
+	return nil, &NotLoadedError{edge: "user_key"}
 }
 
 // APIKeysOrErr returns the APIKeys value or an error if the edge
 // was not loaded in eager-loading.
 func (e AuthorityEdges) APIKeysOrErr() ([]*APIKey, error) {
-	if e.loadedTypes[0] {
+	if e.loadedTypes[1] {
 		return e.APIKeys, nil
 	}
 	return nil, &NotLoadedError{edge: "api_keys"}
@@ -56,7 +73,7 @@ func (e AuthorityEdges) APIKeysOrErr() ([]*APIKey, error) {
 // ServerTemplatesOrErr returns the ServerTemplates value or an error if the edge
 // was not loaded in eager-loading.
 func (e AuthorityEdges) ServerTemplatesOrErr() ([]*ServerTemplate, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		return e.ServerTemplates, nil
 	}
 	return nil, &NotLoadedError{edge: "server_templates"}
@@ -65,7 +82,7 @@ func (e AuthorityEdges) ServerTemplatesOrErr() ([]*ServerTemplate, error) {
 // ClientTemplatesOrErr returns the ClientTemplates value or an error if the edge
 // was not loaded in eager-loading.
 func (e AuthorityEdges) ClientTemplatesOrErr() ([]*ClientTemplate, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.ClientTemplates, nil
 	}
 	return nil, &NotLoadedError{edge: "client_templates"}
@@ -78,12 +95,12 @@ func (*Authority) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case authority.FieldCaCertificatePem:
 			values[i] = new([]byte)
-		case authority.FieldID:
-			values[i] = new(sql.NullInt64)
-		case authority.FieldIdentifier, authority.FieldEncryptedPrivateKey:
+		case authority.FieldID, authority.FieldName, authority.FieldEncryptedPrivateKey:
 			values[i] = new(sql.NullString)
 		case authority.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
+		case authority.ForeignKeys[0]: // user_key_authorities
+			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -100,22 +117,22 @@ func (a *Authority) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case authority.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value.Valid {
+				a.ID = value.String
 			}
-			a.ID = int(value.Int64)
 		case authority.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				a.CreatedAt = value.Time
 			}
-		case authority.FieldIdentifier:
+		case authority.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field identifier", values[i])
+				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				a.Identifier = value.String
+				a.Name = value.String
 			}
 		case authority.FieldCaCertificatePem:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -129,6 +146,13 @@ func (a *Authority) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				a.EncryptedPrivateKey = value.String
 			}
+		case authority.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field user_key_authorities", values[i])
+			} else if value.Valid {
+				a.user_key_authorities = new(string)
+				*a.user_key_authorities = value.String
+			}
 		default:
 			a.selectValues.Set(columns[i], values[i])
 		}
@@ -140,6 +164,11 @@ func (a *Authority) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (a *Authority) Value(name string) (ent.Value, error) {
 	return a.selectValues.Get(name)
+}
+
+// QueryUserKey queries the "user_key" edge of the Authority entity.
+func (a *Authority) QueryUserKey() *UserKeyQuery {
+	return NewAuthorityClient(a.config).QueryUserKey(a)
 }
 
 // QueryAPIKeys queries the "api_keys" edge of the Authority entity.
@@ -183,8 +212,8 @@ func (a *Authority) String() string {
 	builder.WriteString("created_at=")
 	builder.WriteString(a.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("identifier=")
-	builder.WriteString(a.Identifier)
+	builder.WriteString("name=")
+	builder.WriteString(a.Name)
 	builder.WriteString(", ")
 	builder.WriteString("ca_certificate_pem=")
 	builder.WriteString(fmt.Sprintf("%v", a.CaCertificatePem))

@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -12,15 +13,17 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/loopholelabs/endkey/internal/ent/predicate"
 	"github.com/loopholelabs/endkey/internal/ent/rootkey"
+	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
 // RootKeyQuery is the builder for querying RootKey entities.
 type RootKeyQuery struct {
 	config
-	ctx        *QueryContext
-	order      []rootkey.OrderOption
-	inters     []Interceptor
-	predicates []predicate.RootKey
+	ctx          *QueryContext
+	order        []rootkey.OrderOption
+	inters       []Interceptor
+	predicates   []predicate.RootKey
+	withUserKeys *UserKeyQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -57,6 +60,28 @@ func (rkq *RootKeyQuery) Order(o ...rootkey.OrderOption) *RootKeyQuery {
 	return rkq
 }
 
+// QueryUserKeys chains the current query on the "user_keys" edge.
+func (rkq *RootKeyQuery) QueryUserKeys() *UserKeyQuery {
+	query := (&UserKeyClient{config: rkq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rkq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rkq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(rootkey.Table, rootkey.FieldID, selector),
+			sqlgraph.To(userkey.Table, userkey.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, rootkey.UserKeysTable, rootkey.UserKeysColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(rkq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // First returns the first RootKey entity from the query.
 // Returns a *NotFoundError when no RootKey was found.
 func (rkq *RootKeyQuery) First(ctx context.Context) (*RootKey, error) {
@@ -81,8 +106,8 @@ func (rkq *RootKeyQuery) FirstX(ctx context.Context) *RootKey {
 
 // FirstID returns the first RootKey ID from the query.
 // Returns a *NotFoundError when no RootKey ID was found.
-func (rkq *RootKeyQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (rkq *RootKeyQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = rkq.Limit(1).IDs(setContextOp(ctx, rkq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -94,7 +119,7 @@ func (rkq *RootKeyQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (rkq *RootKeyQuery) FirstIDX(ctx context.Context) int {
+func (rkq *RootKeyQuery) FirstIDX(ctx context.Context) string {
 	id, err := rkq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -132,8 +157,8 @@ func (rkq *RootKeyQuery) OnlyX(ctx context.Context) *RootKey {
 // OnlyID is like Only, but returns the only RootKey ID in the query.
 // Returns a *NotSingularError when more than one RootKey ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (rkq *RootKeyQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (rkq *RootKeyQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = rkq.Limit(2).IDs(setContextOp(ctx, rkq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -149,7 +174,7 @@ func (rkq *RootKeyQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (rkq *RootKeyQuery) OnlyIDX(ctx context.Context) int {
+func (rkq *RootKeyQuery) OnlyIDX(ctx context.Context) string {
 	id, err := rkq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -177,7 +202,7 @@ func (rkq *RootKeyQuery) AllX(ctx context.Context) []*RootKey {
 }
 
 // IDs executes the query and returns a list of RootKey IDs.
-func (rkq *RootKeyQuery) IDs(ctx context.Context) (ids []int, err error) {
+func (rkq *RootKeyQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if rkq.ctx.Unique == nil && rkq.path != nil {
 		rkq.Unique(true)
 	}
@@ -189,7 +214,7 @@ func (rkq *RootKeyQuery) IDs(ctx context.Context) (ids []int, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (rkq *RootKeyQuery) IDsX(ctx context.Context) []int {
+func (rkq *RootKeyQuery) IDsX(ctx context.Context) []string {
 	ids, err := rkq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -244,15 +269,27 @@ func (rkq *RootKeyQuery) Clone() *RootKeyQuery {
 		return nil
 	}
 	return &RootKeyQuery{
-		config:     rkq.config,
-		ctx:        rkq.ctx.Clone(),
-		order:      append([]rootkey.OrderOption{}, rkq.order...),
-		inters:     append([]Interceptor{}, rkq.inters...),
-		predicates: append([]predicate.RootKey{}, rkq.predicates...),
+		config:       rkq.config,
+		ctx:          rkq.ctx.Clone(),
+		order:        append([]rootkey.OrderOption{}, rkq.order...),
+		inters:       append([]Interceptor{}, rkq.inters...),
+		predicates:   append([]predicate.RootKey{}, rkq.predicates...),
+		withUserKeys: rkq.withUserKeys.Clone(),
 		// clone intermediate query.
 		sql:  rkq.sql.Clone(),
 		path: rkq.path,
 	}
+}
+
+// WithUserKeys tells the query-builder to eager-load the nodes that are connected to
+// the "user_keys" edge. The optional arguments are used to configure the query builder of the edge.
+func (rkq *RootKeyQuery) WithUserKeys(opts ...func(*UserKeyQuery)) *RootKeyQuery {
+	query := (&UserKeyClient{config: rkq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	rkq.withUserKeys = query
+	return rkq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -331,8 +368,11 @@ func (rkq *RootKeyQuery) prepareQuery(ctx context.Context) error {
 
 func (rkq *RootKeyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*RootKey, error) {
 	var (
-		nodes = []*RootKey{}
-		_spec = rkq.querySpec()
+		nodes       = []*RootKey{}
+		_spec       = rkq.querySpec()
+		loadedTypes = [1]bool{
+			rkq.withUserKeys != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*RootKey).scanValues(nil, columns)
@@ -340,6 +380,7 @@ func (rkq *RootKeyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Roo
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &RootKey{config: rkq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -351,7 +392,46 @@ func (rkq *RootKeyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Roo
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := rkq.withUserKeys; query != nil {
+		if err := rkq.loadUserKeys(ctx, query, nodes,
+			func(n *RootKey) { n.Edges.UserKeys = []*UserKey{} },
+			func(n *RootKey, e *UserKey) { n.Edges.UserKeys = append(n.Edges.UserKeys, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (rkq *RootKeyQuery) loadUserKeys(ctx context.Context, query *UserKeyQuery, nodes []*RootKey, init func(*RootKey), assign func(*RootKey, *UserKey)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[string]*RootKey)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.UserKey(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(rootkey.UserKeysColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.root_key_user_keys
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "root_key_user_keys" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "root_key_user_keys" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (rkq *RootKeyQuery) sqlCount(ctx context.Context) (int, error) {
@@ -364,7 +444,7 @@ func (rkq *RootKeyQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (rkq *RootKeyQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(rootkey.Table, rootkey.Columns, sqlgraph.NewFieldSpec(rootkey.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(rootkey.Table, rootkey.Columns, sqlgraph.NewFieldSpec(rootkey.FieldID, field.TypeString))
 	_spec.From = rkq.sql
 	if unique := rkq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

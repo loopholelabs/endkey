@@ -30,17 +30,17 @@ var (
 
 type apiKeyModel struct {
 	Created        string `header:"created_at" json:"created_at"`
-	Identifier     string `header:"identifier" json:"identifier"`
+	ID             string `header:"id" json:"id"`
 	Name           string `header:"name" json:"name"`
-	Authority      string `header:"authority" json:"authority"`
-	ServerTemplate string `header:"server_template" json:"server_template"`
-	ClientTemplate string `header:"client_template" json:"client_template"`
+	Authority      string `header:"authority_id" json:"authority"`
+	ServerTemplate string `header:"server_template_id" json:"server_template"`
+	ClientTemplate string `header:"client_template_id" json:"client_template_id"`
 	Value          string `header:"value" json:"value"`
 }
 
 type apiKeyRedactedModel struct {
 	Created        string `header:"created_at" json:"created_at"`
-	Identifier     string `header:"identifier" json:"identifier"`
+	ID             string `header:"id" json:"id"`
 	Name           string `header:"name" json:"name"`
 	Authority      string `header:"authority" json:"authority"`
 	ServerTemplate string `header:"server_template" json:"server_template"`

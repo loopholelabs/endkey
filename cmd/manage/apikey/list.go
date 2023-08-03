@@ -41,7 +41,7 @@ func ListCmd() command.SetupCommand[*config.Config] {
 
 				end := ch.Printer.PrintProgress(fmt.Sprintf("Retrieving API Keys for authority %s...", authority))
 
-				res, err := client.Apikey.GetApikeyAuthority(apikey.NewGetApikeyAuthorityParamsWithContext(ctx).WithAuthority(authority))
+				res, err := client.Apikey.GetApikeyAuthorityName(apikey.NewGetApikeyAuthorityNameParamsWithContext(ctx).WithAuthorityName(authority))
 				end()
 				if err != nil {
 					return err
@@ -56,11 +56,11 @@ func ListCmd() command.SetupCommand[*config.Config] {
 				for _, key := range res.GetPayload() {
 					keys = append(keys, apiKeyRedactedModel{
 						Created:        key.CreatedAt,
-						Identifier:     key.Identifier,
+						ID:             key.ID,
 						Name:           key.Name,
-						Authority:      key.Authority,
-						ServerTemplate: key.ServerTemplate,
-						ClientTemplate: key.ClientTemplate,
+						Authority:      key.AuthorityName,
+						ServerTemplate: key.ServerTemplateName,
+						ClientTemplate: key.ClientTemplateName,
 					})
 				}
 

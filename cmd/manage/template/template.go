@@ -27,20 +27,20 @@ import (
 )
 
 var (
-	ErrRootKeyRequired = errors.New("rootkey is required")
+	ErrUserKeyRequired = errors.New("userkey is required")
 )
 
 // Cmd encapsulates the commands for template.
 func Cmd() command.SetupCommand[*config.Config] {
 
-	var rootkey string
+	var userkey string
 
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		templateCmd := &cobra.Command{
 			Use:   "template",
 			Short: "Create, list, and manage Templates",
 			PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-				ch.Config.AuthenticationKey = rootkey
+				ch.Config.AuthenticationKey = userkey
 
 				err := ch.Config.Validate()
 				if err != nil {
@@ -48,7 +48,7 @@ func Cmd() command.SetupCommand[*config.Config] {
 				}
 
 				if ch.Config.AuthenticationKey == "" {
-					return ErrRootKeyRequired
+					return ErrUserKeyRequired
 				}
 
 				return nil
@@ -61,7 +61,7 @@ func Cmd() command.SetupCommand[*config.Config] {
 		clientSetup := client.Cmd()
 		clientSetup(templateCmd, ch)
 
-		templateCmd.PersistentFlags().StringVar(&rootkey, "root-key", "", "The root key for the EndKey API")
+		templateCmd.PersistentFlags().StringVar(&userkey, "user-key", "", "The user key for the EndKey API")
 
 		cmd.AddCommand(templateCmd)
 	}

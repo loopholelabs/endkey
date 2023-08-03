@@ -131,8 +131,8 @@ func (stq *ServerTemplateQuery) FirstX(ctx context.Context) *ServerTemplate {
 
 // FirstID returns the first ServerTemplate ID from the query.
 // Returns a *NotFoundError when no ServerTemplate ID was found.
-func (stq *ServerTemplateQuery) FirstID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (stq *ServerTemplateQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = stq.Limit(1).IDs(setContextOp(ctx, stq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -144,7 +144,7 @@ func (stq *ServerTemplateQuery) FirstID(ctx context.Context) (id int, err error)
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (stq *ServerTemplateQuery) FirstIDX(ctx context.Context) int {
+func (stq *ServerTemplateQuery) FirstIDX(ctx context.Context) string {
 	id, err := stq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -182,8 +182,8 @@ func (stq *ServerTemplateQuery) OnlyX(ctx context.Context) *ServerTemplate {
 // OnlyID is like Only, but returns the only ServerTemplate ID in the query.
 // Returns a *NotSingularError when more than one ServerTemplate ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (stq *ServerTemplateQuery) OnlyID(ctx context.Context) (id int, err error) {
-	var ids []int
+func (stq *ServerTemplateQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = stq.Limit(2).IDs(setContextOp(ctx, stq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -199,7 +199,7 @@ func (stq *ServerTemplateQuery) OnlyID(ctx context.Context) (id int, err error) 
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (stq *ServerTemplateQuery) OnlyIDX(ctx context.Context) int {
+func (stq *ServerTemplateQuery) OnlyIDX(ctx context.Context) string {
 	id, err := stq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -227,7 +227,7 @@ func (stq *ServerTemplateQuery) AllX(ctx context.Context) []*ServerTemplate {
 }
 
 // IDs executes the query and returns a list of ServerTemplate IDs.
-func (stq *ServerTemplateQuery) IDs(ctx context.Context) (ids []int, err error) {
+func (stq *ServerTemplateQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if stq.ctx.Unique == nil && stq.path != nil {
 		stq.Unique(true)
 	}
@@ -239,7 +239,7 @@ func (stq *ServerTemplateQuery) IDs(ctx context.Context) (ids []int, err error) 
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (stq *ServerTemplateQuery) IDsX(ctx context.Context) []int {
+func (stq *ServerTemplateQuery) IDsX(ctx context.Context) []string {
 	ids, err := stq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -454,8 +454,8 @@ func (stq *ServerTemplateQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 }
 
 func (stq *ServerTemplateQuery) loadAuthority(ctx context.Context, query *AuthorityQuery, nodes []*ServerTemplate, init func(*ServerTemplate), assign func(*ServerTemplate, *Authority)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*ServerTemplate)
+	ids := make([]string, 0, len(nodes))
+	nodeids := make(map[string][]*ServerTemplate)
 	for i := range nodes {
 		if nodes[i].authority_server_templates == nil {
 			continue
@@ -487,7 +487,7 @@ func (stq *ServerTemplateQuery) loadAuthority(ctx context.Context, query *Author
 }
 func (stq *ServerTemplateQuery) loadAPIKeys(ctx context.Context, query *APIKeyQuery, nodes []*ServerTemplate, init func(*ServerTemplate), assign func(*ServerTemplate, *APIKey)) error {
 	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[int]*ServerTemplate)
+	nodeids := make(map[string]*ServerTemplate)
 	for i := range nodes {
 		fks = append(fks, nodes[i].ID)
 		nodeids[nodes[i].ID] = nodes[i]
@@ -527,7 +527,7 @@ func (stq *ServerTemplateQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (stq *ServerTemplateQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(servertemplate.Table, servertemplate.Columns, sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(servertemplate.Table, servertemplate.Columns, sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString))
 	_spec.From = stq.sql
 	if unique := stq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

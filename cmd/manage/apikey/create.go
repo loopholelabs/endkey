@@ -22,6 +22,7 @@ import (
 	"github.com/loopholelabs/cmdutils/pkg/command"
 	"github.com/loopholelabs/cmdutils/pkg/printer"
 	"github.com/loopholelabs/endkey/internal/config"
+	"github.com/loopholelabs/endkey/internal/key"
 	"github.com/loopholelabs/endkey/pkg/client/apikey"
 	"github.com/loopholelabs/endkey/pkg/client/models"
 	"github.com/spf13/cobra"
@@ -45,10 +46,10 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 
 				end := ch.Printer.PrintProgress(fmt.Sprintf("Creating API Key %s for authority %s...", name, authority))
 				req := &models.ModelsCreateAPIKeyRequest{
-					Authority:      authority,
-					Name:           name,
-					ClientTemplate: clientTemplate,
-					ServerTemplate: serverTemplate,
+					AuthorityName:      authority,
+					Name:               name,
+					ClientTemplateName: clientTemplate,
+					ServerTemplateName: serverTemplate,
 				}
 				res, err := client.Apikey.PostApikey(apikey.NewPostApikeyParamsWithContext(ctx).WithRequest(req))
 				end()
@@ -56,7 +57,7 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 					return err
 				}
 
-				value := fmt.Sprintf("AK-%s.%s", res.GetPayload().Identifier, res.GetPayload().Secret)
+				value := fmt.Sprintf("%s-%s.%s", key.APIPrefixString, res.GetPayload().ID, res.GetPayload().Secret)
 
 				if ch.Printer.Format() == printer.Human {
 					ch.Printer.Printf("Created API Key '%s': %s (this will only be displayed once)\n", printer.Bold(res.Payload.Name), printer.BoldGreen(value))
@@ -65,11 +66,11 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 
 				return ch.Printer.PrintResource(apiKeyModel{
 					Created:        res.GetPayload().CreatedAt,
-					Identifier:     res.GetPayload().Identifier,
+					ID:             res.GetPayload().ID,
 					Name:           res.GetPayload().Name,
-					Authority:      res.GetPayload().Authority,
-					ServerTemplate: res.GetPayload().ServerTemplate,
-					ClientTemplate: res.GetPayload().ClientTemplate,
+					Authority:      res.GetPayload().AuthorityName,
+					ServerTemplate: res.GetPayload().ServerTemplateName,
+					ClientTemplate: res.GetPayload().ClientTemplateName,
 					Value:          value,
 				})
 			},

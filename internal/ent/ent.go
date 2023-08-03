@@ -17,6 +17,7 @@ import (
 	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
 	"github.com/loopholelabs/endkey/internal/ent/rootkey"
 	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -82,6 +83,7 @@ func checkColumn(table, column string) error {
 			clienttemplate.Table: clienttemplate.ValidColumn,
 			rootkey.Table:        rootkey.ValidColumn,
 			servertemplate.Table: servertemplate.ValidColumn,
+			userkey.Table:        userkey.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

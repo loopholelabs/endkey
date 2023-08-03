@@ -18,14 +18,18 @@ package database
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/loopholelabs/endkey/internal/ent"
+	"github.com/loopholelabs/endkey/internal/ent/apikey"
 	"github.com/loopholelabs/endkey/internal/ent/authority"
 	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
 	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
-func (d *Database) CreateServerTemplate(ctx context.Context, identifier string, authorityID string, commonName string, tag string, dnsNames []string, additionalDNS bool, IPs []string, additionalIPs bool, validity string) (*ent.ServerTemplate, error) {
-	auth, err := d.sql.Authority.Query().Where(authority.Identifier(authorityID)).Only(ctx)
+func (d *Database) CreateServerTemplate(ctx context.Context, name string, authorityName string, uk *ent.UserKey, commonName string, tag string, dnsNames []string, additionalDNS bool, IPs []string, additionalIPs bool, validity string) (*ent.ServerTemplate, error) {
+	id := uuid.New().String()
+	auth, err := d.sql.Authority.Query().Where(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID))).Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, ErrNotFound
@@ -33,7 +37,7 @@ func (d *Database) CreateServerTemplate(ctx context.Context, identifier string, 
 		return nil, err
 	}
 
-	templ, err := d.sql.ServerTemplate.Create().SetIdentifier(identifier).SetAuthority(auth).SetCommonName(commonName).SetTag(tag).SetDNSNames(dnsNames).SetAllowAdditionalDNSNames(additionalDNS).SetIPAddresses(IPs).SetAllowAdditionalIps(additionalIPs).SetValidity(validity).Save(ctx)
+	templ, err := d.sql.ServerTemplate.Create().SetID(id).SetName(name).SetAuthority(auth).SetCommonName(commonName).SetTag(tag).SetDNSNames(dnsNames).SetAllowAdditionalDNSNames(additionalDNS).SetIPAddresses(IPs).SetAllowAdditionalIps(additionalIPs).SetValidity(validity).Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
 			return nil, ErrAlreadyExists
@@ -44,8 +48,8 @@ func (d *Database) CreateServerTemplate(ctx context.Context, identifier string, 
 	return templ, nil
 }
 
-func (d *Database) GetServerTemplate(ctx context.Context, identifier string, authorityID string) (*ent.ServerTemplate, error) {
-	templ, err := d.sql.ServerTemplate.Query().Where(servertemplate.Identifier(identifier), servertemplate.HasAuthorityWith(authority.Identifier(authorityID))).Only(ctx)
+func (d *Database) GetServerTemplateByNameAndUserKey(ctx context.Context, name string, authorityName string, uk *ent.UserKey) (*ent.ServerTemplate, error) {
+	templ, err := d.sql.ServerTemplate.Query().Where(servertemplate.Name(name), servertemplate.HasAuthorityWith(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID)))).Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, ErrNotFound
@@ -56,8 +60,20 @@ func (d *Database) GetServerTemplate(ctx context.Context, identifier string, aut
 	return templ, nil
 }
 
-func (d *Database) ListServerTemplates(ctx context.Context, authorityID string) (ent.ServerTemplates, error) {
-	templs, err := d.sql.ServerTemplate.Query().Where(servertemplate.HasAuthorityWith(authority.Identifier(authorityID))).All(ctx)
+func (d *Database) GetServerTemplateByAPIKey(ctx context.Context, name string, ak *ent.APIKey) (*ent.ServerTemplate, error) {
+	templ, err := d.sql.ServerTemplate.Query().Where(servertemplate.Name(name), servertemplate.HasAuthorityWith(authority.HasAPIKeysWith(apikey.ID(ak.ID)))).Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return templ, nil
+}
+
+func (d *Database) ListServerTemplates(ctx context.Context, authorityName string, uk *ent.UserKey) (ent.ServerTemplates, error) {
+	templs, err := d.sql.ServerTemplate.Query().Where(servertemplate.HasAuthorityWith(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID)))).All(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, ErrNotFound
@@ -68,8 +84,8 @@ func (d *Database) ListServerTemplates(ctx context.Context, authorityID string) 
 	return templs, nil
 }
 
-func (d *Database) DeleteServerTemplate(ctx context.Context, identifier string, authorityID string) error {
-	_, err := d.sql.ServerTemplate.Delete().Where(servertemplate.Identifier(identifier), servertemplate.HasAuthorityWith(authority.Identifier(authorityID))).Exec(ctx)
+func (d *Database) DeleteServerTemplateByName(ctx context.Context, name string, authorityName string, uk *ent.UserKey) error {
+	_, err := d.sql.ServerTemplate.Delete().Where(servertemplate.Name(name), servertemplate.HasAuthorityWith(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID)))).Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return ErrNotFound
@@ -85,8 +101,9 @@ func (d *Database) DeleteServerTemplate(ctx context.Context, identifier string, 
 	return nil
 }
 
-func (d *Database) CreateClientTemplate(ctx context.Context, identifier string, authorityID string, commonName string, tag string, dnsNames []string, additionalDNS bool, IPs []string, additionalIPs bool, validity string) (*ent.ClientTemplate, error) {
-	auth, err := d.sql.Authority.Query().Where(authority.Identifier(authorityID)).Only(ctx)
+func (d *Database) CreateClientTemplate(ctx context.Context, name string, authorityName string, uk *ent.UserKey, commonName string, tag string, dnsNames []string, additionalDNS bool, IPs []string, additionalIPs bool, validity string) (*ent.ClientTemplate, error) {
+	id := uuid.New().String()
+	auth, err := d.sql.Authority.Query().Where(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID))).Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, ErrNotFound
@@ -94,7 +111,7 @@ func (d *Database) CreateClientTemplate(ctx context.Context, identifier string, 
 		return nil, err
 	}
 
-	templ, err := d.sql.ClientTemplate.Create().SetIdentifier(identifier).SetAuthority(auth).SetCommonName(commonName).SetTag(tag).SetDNSNames(dnsNames).SetAllowAdditionalDNSNames(additionalDNS).SetIPAddresses(IPs).SetAllowAdditionalIps(additionalIPs).SetValidity(validity).Save(ctx)
+	templ, err := d.sql.ClientTemplate.Create().SetID(id).SetName(name).SetAuthority(auth).SetCommonName(commonName).SetTag(tag).SetDNSNames(dnsNames).SetAllowAdditionalDNSNames(additionalDNS).SetIPAddresses(IPs).SetAllowAdditionalIps(additionalIPs).SetValidity(validity).Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
 			return nil, ErrAlreadyExists
@@ -105,8 +122,8 @@ func (d *Database) CreateClientTemplate(ctx context.Context, identifier string, 
 	return templ, nil
 }
 
-func (d *Database) GetClientTemplate(ctx context.Context, identifier string, authorityID string) (*ent.ClientTemplate, error) {
-	templ, err := d.sql.ClientTemplate.Query().Where(clienttemplate.Identifier(identifier), clienttemplate.HasAuthorityWith(authority.Identifier(authorityID))).Only(ctx)
+func (d *Database) GetClientTemplateByNameAndUserKey(ctx context.Context, name string, authorityName string, uk *ent.UserKey) (*ent.ClientTemplate, error) {
+	templ, err := d.sql.ClientTemplate.Query().Where(clienttemplate.Name(name), clienttemplate.HasAuthorityWith(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID)))).Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, ErrNotFound
@@ -117,8 +134,20 @@ func (d *Database) GetClientTemplate(ctx context.Context, identifier string, aut
 	return templ, nil
 }
 
-func (d *Database) ListClientTemplates(ctx context.Context, authorityID string) (ent.ClientTemplates, error) {
-	templs, err := d.sql.ClientTemplate.Query().Where(clienttemplate.HasAuthorityWith(authority.Identifier(authorityID))).All(ctx)
+func (d *Database) GetClientTemplateByAPIKey(ctx context.Context, name string, ak *ent.APIKey) (*ent.ClientTemplate, error) {
+	templ, err := d.sql.ClientTemplate.Query().Where(clienttemplate.Name(name), clienttemplate.HasAuthorityWith(authority.HasAPIKeysWith(apikey.ID(ak.ID)))).Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return templ, nil
+}
+
+func (d *Database) ListClientTemplates(ctx context.Context, authorityName string, uk *ent.UserKey) (ent.ClientTemplates, error) {
+	templs, err := d.sql.ClientTemplate.Query().Where(clienttemplate.HasAuthorityWith(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID)))).All(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, ErrNotFound
@@ -129,8 +158,8 @@ func (d *Database) ListClientTemplates(ctx context.Context, authorityID string) 
 	return templs, nil
 }
 
-func (d *Database) DeleteClientTemplate(ctx context.Context, identifier string, authorityID string) error {
-	_, err := d.sql.ClientTemplate.Delete().Where(clienttemplate.Identifier(identifier), clienttemplate.HasAuthorityWith(authority.Identifier(authorityID))).Exec(ctx)
+func (d *Database) DeleteClientTemplateByName(ctx context.Context, name string, authorityName string, uk *ent.UserKey) error {
+	_, err := d.sql.ClientTemplate.Delete().Where(clienttemplate.Name(name), clienttemplate.HasAuthorityWith(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID)))).Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return ErrNotFound

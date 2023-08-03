@@ -44,8 +44,8 @@ func DeleteCmd() command.SetupCommand[*config.Config] {
 				end := ch.Printer.PrintProgress(fmt.Sprintf("Deleting API Key %s for authority %s...", name, authority))
 
 				req := &models.ModelsDeleteAPIKeyRequest{
-					Authority: authority,
-					Name:      name,
+					AuthorityName: authority,
+					Name:          name,
 				}
 
 				_, err := client.Apikey.DeleteApikey(apikey.NewDeleteApikeyParamsWithContext(ctx).WithRequest(req))

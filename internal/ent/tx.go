@@ -22,6 +22,8 @@ type Tx struct {
 	RootKey *RootKeyClient
 	// ServerTemplate is the client for interacting with the ServerTemplate builders.
 	ServerTemplate *ServerTemplateClient
+	// UserKey is the client for interacting with the UserKey builders.
+	UserKey *UserKeyClient
 
 	// lazily loaded.
 	client     *Client
@@ -158,6 +160,7 @@ func (tx *Tx) init() {
 	tx.ClientTemplate = NewClientTemplateClient(tx.config)
 	tx.RootKey = NewRootKeyClient(tx.config)
 	tx.ServerTemplate = NewServerTemplateClient(tx.config)
+	tx.UserKey = NewUserKeyClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

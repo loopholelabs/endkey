@@ -59,11 +59,11 @@ func (a *Template) init() {
 	a.app.Use(a.options.Auth().RootKeyValidate)
 
 	a.app.Post("/server", createServerMetric.Middleware(), a.CreateServer)
-	a.app.Get("/server/:authority", listServerMetric.Middleware(), a.ListServer)
+	a.app.Get("/server/:authority_name", listServerMetric.Middleware(), a.ListServer)
 	a.app.Delete("/server", deleteServerMetric.Middleware(), a.DeleteServer)
 
 	a.app.Post("/client", createClientMetric.Middleware(), a.CreateClient)
-	a.app.Get("/client/:authority", listClientMetric.Middleware(), a.ListClient)
+	a.app.Get("/client/:authority_name", listClientMetric.Middleware(), a.ListClient)
 	a.app.Delete("/client", deleteClientMetric.Middleware(), a.DeleteClient)
 }
 

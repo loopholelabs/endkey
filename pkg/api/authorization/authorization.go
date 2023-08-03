@@ -41,6 +41,7 @@ type Kind string
 
 const (
 	RootKey    Kind = "root"
+	UserKey    Kind = "user"
 	APIKeyKind Kind = "api"
 )
 
@@ -98,7 +99,7 @@ func (v *Authorization) RootKeyValidate(ctx *fiber.Ctx) error {
 	rkID := string(rkSplit[0])
 	rkSecret := rkSplit[1]
 
-	rk, err := v.db.GetRootKey(ctx.Context(), rkID)
+	rk, err := v.db.GetRootKeyByID(ctx.Context(), rkID)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return authMetric.Error(fiber.StatusUnauthorized, "invalid authorization header")
@@ -113,6 +114,42 @@ func (v *Authorization) RootKeyValidate(ctx *fiber.Ctx) error {
 
 	ctx.Locals(KindContext, RootKey)
 	ctx.Locals(KeyContext, rk)
+	return ctx.Next()
+}
+
+func (v *Authorization) UserKeyValidate(ctx *fiber.Ctx) error {
+	header, err := v.getHeader(ctx)
+	if err != nil {
+		return err
+	}
+
+	if !bytes.HasPrefix(header, key.UserPrefix) {
+		return authMetric.Error(fiber.StatusUnauthorized, "invalid authorization header")
+	}
+
+	ukSplit := bytes.Split(header[len(key.UserPrefix):], key.Delimiter)
+	if len(ukSplit) != 2 {
+		return authMetric.Error(fiber.StatusUnauthorized, "invalid authorization header")
+	}
+
+	ukID := string(ukSplit[0])
+	ukSecret := ukSplit[1]
+
+	uk, err := v.db.GetUserKeyByID(ctx.Context(), ukID)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return authMetric.Error(fiber.StatusUnauthorized, "invalid authorization header")
+		}
+		v.logger.Error().Err(err).Msg("failed to get user key")
+		return authMetric.Error(fiber.StatusInternalServerError, "unable to validate authorization header")
+	}
+
+	if bcrypt.CompareHashAndPassword(uk.Hash, append(uk.Salt, ukSecret...)) != nil {
+		return authMetric.Error(fiber.StatusUnauthorized, "invalid authorization header")
+	}
+
+	ctx.Locals(KindContext, UserKey)
+	ctx.Locals(KeyContext, uk)
 	return ctx.Next()
 }
 
@@ -134,7 +171,7 @@ func (v *Authorization) APIKeyValidate(ctx *fiber.Ctx) error {
 	akID := string(akSplit[0])
 	akSecret := akSplit[1]
 
-	ak, err := v.db.GetAPIKey(ctx.Context(), akID)
+	ak, err := v.db.GetAPIKeyByID(ctx.Context(), akID)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
 			return authMetric.Error(fiber.StatusUnauthorized, "invalid authorization header")
@@ -165,6 +202,24 @@ func GetRootKey(ctx *fiber.Ctx) (*ent.RootKey, error) {
 			return nil, errors.New("could not find root key")
 		}
 		return rk, nil
+	default:
+		return nil, errors.New("invalid key kind")
+	}
+}
+
+func GetUserKey(ctx *fiber.Ctx) (*ent.UserKey, error) {
+	kind, ok := ctx.Locals(KindContext).(Kind)
+	if !ok {
+		return nil, errors.New("could not find key kind")
+	}
+
+	switch kind {
+	case UserKey:
+		uk, ok := ctx.Locals(KeyContext).(*ent.UserKey)
+		if !ok {
+			return nil, errors.New("could not find user key")
+		}
+		return uk, nil
 	default:
 		return nil, errors.New("invalid key kind")
 	}

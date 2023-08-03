@@ -20,6 +20,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 	"time"
 )
 
@@ -37,7 +38,12 @@ func (ServerTemplate) Fields() []ent.Field {
 		field.Time("created_at").Immutable().Default(time.Now),
 
 		// A unique identifier for the Server Template, immutable, globally unique
-		field.String("identifier").NotEmpty().Unique().Immutable(),
+		field.String("id").NotEmpty().Unique().Immutable().StorageKey("id"),
+
+		// An easily recognizable name for the Server Template, immutable
+		//
+		// Its uniqueness is guaranteed within the Authority that it is scoped to
+		field.String("name").NotEmpty().Immutable(),
 
 		// The Common Name for the Server Template, immutable
 		field.String("common_name").NotEmpty().Immutable(),
@@ -69,6 +75,8 @@ func (ServerTemplate) Edges() []ent.Edge {
 		//
 		// This edge is a many-to-one relationship, as an Authority can have many Server Templates scoped to it
 		// but a Server Template can only be scoped to one Server Template at a time
+		//
+		// This edge is unique, required, and immutable
 		edge.From("authority", Authority.Type).Ref("server_templates").Unique().Required().Immutable(),
 
 		// The API Keys that are scoped to this Server Template
@@ -76,5 +84,13 @@ func (ServerTemplate) Edges() []ent.Edge {
 		// This is a one-to-many relationship, as an API Key can only be scoped to one Server Template
 		// but a Server Template can have multiple API Keys scoped to it
 		edge.To("api_keys", APIKey.Type),
+	}
+}
+
+// Indexes of the ServerTemplate.
+func (ServerTemplate) Indexes() []ent.Index {
+	return []ent.Index{
+		// Guarantee uniqueness of the Server Template's name per Authority
+		index.Fields("name").Edges("authority").Unique(),
 	}
 }

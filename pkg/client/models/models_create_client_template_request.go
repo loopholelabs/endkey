@@ -23,8 +23,8 @@ type ModelsCreateClientTemplateRequest struct {
 	// allow additional ips
 	AllowAdditionalIps bool `json:"allow_additional_ips,omitempty"`
 
-	// authority
-	Authority string `json:"authority,omitempty"`
+	// authority name
+	AuthorityName string `json:"authority_name,omitempty"`
 
 	// common name
 	CommonName string `json:"common_name,omitempty"`
@@ -32,11 +32,11 @@ type ModelsCreateClientTemplateRequest struct {
 	// dns names
 	DNSNames []string `json:"dns_names"`
 
-	// identifier
-	Identifier string `json:"identifier,omitempty"`
-
 	// ip addresses
 	IPAddresses []string `json:"ip_addresses"`
+
+	// name
+	Name string `json:"name,omitempty"`
 
 	// tag
 	Tag string `json:"tag,omitempty"`

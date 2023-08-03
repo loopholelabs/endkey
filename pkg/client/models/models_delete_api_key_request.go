@@ -17,8 +17,8 @@ import (
 // swagger:model models.DeleteAPIKeyRequest
 type ModelsDeleteAPIKeyRequest struct {
 
-	// authority
-	Authority string `json:"authority,omitempty"`
+	// authority name
+	AuthorityName string `json:"authority_name,omitempty"`
 
 	// name
 	Name string `json:"name,omitempty"`

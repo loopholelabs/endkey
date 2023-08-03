@@ -15,6 +15,7 @@ import (
 	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
 	"github.com/loopholelabs/endkey/internal/ent/predicate"
 	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
 // AuthorityUpdate is the builder for updating Authority entities.
@@ -42,15 +43,34 @@ func (au *AuthorityUpdate) SetEncryptedPrivateKey(s string) *AuthorityUpdate {
 	return au
 }
 
+// SetUserKeyID sets the "user_key" edge to the UserKey entity by ID.
+func (au *AuthorityUpdate) SetUserKeyID(id string) *AuthorityUpdate {
+	au.mutation.SetUserKeyID(id)
+	return au
+}
+
+// SetNillableUserKeyID sets the "user_key" edge to the UserKey entity by ID if the given value is not nil.
+func (au *AuthorityUpdate) SetNillableUserKeyID(id *string) *AuthorityUpdate {
+	if id != nil {
+		au = au.SetUserKeyID(*id)
+	}
+	return au
+}
+
+// SetUserKey sets the "user_key" edge to the UserKey entity.
+func (au *AuthorityUpdate) SetUserKey(u *UserKey) *AuthorityUpdate {
+	return au.SetUserKeyID(u.ID)
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
-func (au *AuthorityUpdate) AddAPIKeyIDs(ids ...int) *AuthorityUpdate {
+func (au *AuthorityUpdate) AddAPIKeyIDs(ids ...string) *AuthorityUpdate {
 	au.mutation.AddAPIKeyIDs(ids...)
 	return au
 }
 
 // AddAPIKeys adds the "api_keys" edges to the APIKey entity.
 func (au *AuthorityUpdate) AddAPIKeys(a ...*APIKey) *AuthorityUpdate {
-	ids := make([]int, len(a))
+	ids := make([]string, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
@@ -58,14 +78,14 @@ func (au *AuthorityUpdate) AddAPIKeys(a ...*APIKey) *AuthorityUpdate {
 }
 
 // AddServerTemplateIDs adds the "server_templates" edge to the ServerTemplate entity by IDs.
-func (au *AuthorityUpdate) AddServerTemplateIDs(ids ...int) *AuthorityUpdate {
+func (au *AuthorityUpdate) AddServerTemplateIDs(ids ...string) *AuthorityUpdate {
 	au.mutation.AddServerTemplateIDs(ids...)
 	return au
 }
 
 // AddServerTemplates adds the "server_templates" edges to the ServerTemplate entity.
 func (au *AuthorityUpdate) AddServerTemplates(s ...*ServerTemplate) *AuthorityUpdate {
-	ids := make([]int, len(s))
+	ids := make([]string, len(s))
 	for i := range s {
 		ids[i] = s[i].ID
 	}
@@ -73,14 +93,14 @@ func (au *AuthorityUpdate) AddServerTemplates(s ...*ServerTemplate) *AuthorityUp
 }
 
 // AddClientTemplateIDs adds the "client_templates" edge to the ClientTemplate entity by IDs.
-func (au *AuthorityUpdate) AddClientTemplateIDs(ids ...int) *AuthorityUpdate {
+func (au *AuthorityUpdate) AddClientTemplateIDs(ids ...string) *AuthorityUpdate {
 	au.mutation.AddClientTemplateIDs(ids...)
 	return au
 }
 
 // AddClientTemplates adds the "client_templates" edges to the ClientTemplate entity.
 func (au *AuthorityUpdate) AddClientTemplates(c ...*ClientTemplate) *AuthorityUpdate {
-	ids := make([]int, len(c))
+	ids := make([]string, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
@@ -92,6 +112,12 @@ func (au *AuthorityUpdate) Mutation() *AuthorityMutation {
 	return au.mutation
 }
 
+// ClearUserKey clears the "user_key" edge to the UserKey entity.
+func (au *AuthorityUpdate) ClearUserKey() *AuthorityUpdate {
+	au.mutation.ClearUserKey()
+	return au
+}
+
 // ClearAPIKeys clears all "api_keys" edges to the APIKey entity.
 func (au *AuthorityUpdate) ClearAPIKeys() *AuthorityUpdate {
 	au.mutation.ClearAPIKeys()
@@ -99,14 +125,14 @@ func (au *AuthorityUpdate) ClearAPIKeys() *AuthorityUpdate {
 }
 
 // RemoveAPIKeyIDs removes the "api_keys" edge to APIKey entities by IDs.
-func (au *AuthorityUpdate) RemoveAPIKeyIDs(ids ...int) *AuthorityUpdate {
+func (au *AuthorityUpdate) RemoveAPIKeyIDs(ids ...string) *AuthorityUpdate {
 	au.mutation.RemoveAPIKeyIDs(ids...)
 	return au
 }
 
 // RemoveAPIKeys removes "api_keys" edges to APIKey entities.
 func (au *AuthorityUpdate) RemoveAPIKeys(a ...*APIKey) *AuthorityUpdate {
-	ids := make([]int, len(a))
+	ids := make([]string, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
@@ -120,14 +146,14 @@ func (au *AuthorityUpdate) ClearServerTemplates() *AuthorityUpdate {
 }
 
 // RemoveServerTemplateIDs removes the "server_templates" edge to ServerTemplate entities by IDs.
-func (au *AuthorityUpdate) RemoveServerTemplateIDs(ids ...int) *AuthorityUpdate {
+func (au *AuthorityUpdate) RemoveServerTemplateIDs(ids ...string) *AuthorityUpdate {
 	au.mutation.RemoveServerTemplateIDs(ids...)
 	return au
 }
 
 // RemoveServerTemplates removes "server_templates" edges to ServerTemplate entities.
 func (au *AuthorityUpdate) RemoveServerTemplates(s ...*ServerTemplate) *AuthorityUpdate {
-	ids := make([]int, len(s))
+	ids := make([]string, len(s))
 	for i := range s {
 		ids[i] = s[i].ID
 	}
@@ -141,14 +167,14 @@ func (au *AuthorityUpdate) ClearClientTemplates() *AuthorityUpdate {
 }
 
 // RemoveClientTemplateIDs removes the "client_templates" edge to ClientTemplate entities by IDs.
-func (au *AuthorityUpdate) RemoveClientTemplateIDs(ids ...int) *AuthorityUpdate {
+func (au *AuthorityUpdate) RemoveClientTemplateIDs(ids ...string) *AuthorityUpdate {
 	au.mutation.RemoveClientTemplateIDs(ids...)
 	return au
 }
 
 // RemoveClientTemplates removes "client_templates" edges to ClientTemplate entities.
 func (au *AuthorityUpdate) RemoveClientTemplates(c ...*ClientTemplate) *AuthorityUpdate {
-	ids := make([]int, len(c))
+	ids := make([]string, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
@@ -201,7 +227,7 @@ func (au *AuthorityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := au.check(); err != nil {
 		return n, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(authority.Table, authority.Columns, sqlgraph.NewFieldSpec(authority.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(authority.Table, authority.Columns, sqlgraph.NewFieldSpec(authority.FieldID, field.TypeString))
 	if ps := au.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -215,6 +241,35 @@ func (au *AuthorityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := au.mutation.EncryptedPrivateKey(); ok {
 		_spec.SetField(authority.FieldEncryptedPrivateKey, field.TypeString, value)
 	}
+	if au.mutation.UserKeyCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   authority.UserKeyTable,
+			Columns: []string{authority.UserKeyColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userkey.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.UserKeyIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   authority.UserKeyTable,
+			Columns: []string{authority.UserKeyColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userkey.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if au.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -223,7 +278,7 @@ func (au *AuthorityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{authority.APIKeysColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -236,7 +291,7 @@ func (au *AuthorityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{authority.APIKeysColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -252,7 +307,7 @@ func (au *AuthorityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{authority.APIKeysColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -268,7 +323,7 @@ func (au *AuthorityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{authority.ServerTemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -281,7 +336,7 @@ func (au *AuthorityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{authority.ServerTemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -297,7 +352,7 @@ func (au *AuthorityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{authority.ServerTemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -313,7 +368,7 @@ func (au *AuthorityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{authority.ClientTemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -326,7 +381,7 @@ func (au *AuthorityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{authority.ClientTemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -342,7 +397,7 @@ func (au *AuthorityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{authority.ClientTemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -382,15 +437,34 @@ func (auo *AuthorityUpdateOne) SetEncryptedPrivateKey(s string) *AuthorityUpdate
 	return auo
 }
 
+// SetUserKeyID sets the "user_key" edge to the UserKey entity by ID.
+func (auo *AuthorityUpdateOne) SetUserKeyID(id string) *AuthorityUpdateOne {
+	auo.mutation.SetUserKeyID(id)
+	return auo
+}
+
+// SetNillableUserKeyID sets the "user_key" edge to the UserKey entity by ID if the given value is not nil.
+func (auo *AuthorityUpdateOne) SetNillableUserKeyID(id *string) *AuthorityUpdateOne {
+	if id != nil {
+		auo = auo.SetUserKeyID(*id)
+	}
+	return auo
+}
+
+// SetUserKey sets the "user_key" edge to the UserKey entity.
+func (auo *AuthorityUpdateOne) SetUserKey(u *UserKey) *AuthorityUpdateOne {
+	return auo.SetUserKeyID(u.ID)
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
-func (auo *AuthorityUpdateOne) AddAPIKeyIDs(ids ...int) *AuthorityUpdateOne {
+func (auo *AuthorityUpdateOne) AddAPIKeyIDs(ids ...string) *AuthorityUpdateOne {
 	auo.mutation.AddAPIKeyIDs(ids...)
 	return auo
 }
 
 // AddAPIKeys adds the "api_keys" edges to the APIKey entity.
 func (auo *AuthorityUpdateOne) AddAPIKeys(a ...*APIKey) *AuthorityUpdateOne {
-	ids := make([]int, len(a))
+	ids := make([]string, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
@@ -398,14 +472,14 @@ func (auo *AuthorityUpdateOne) AddAPIKeys(a ...*APIKey) *AuthorityUpdateOne {
 }
 
 // AddServerTemplateIDs adds the "server_templates" edge to the ServerTemplate entity by IDs.
-func (auo *AuthorityUpdateOne) AddServerTemplateIDs(ids ...int) *AuthorityUpdateOne {
+func (auo *AuthorityUpdateOne) AddServerTemplateIDs(ids ...string) *AuthorityUpdateOne {
 	auo.mutation.AddServerTemplateIDs(ids...)
 	return auo
 }
 
 // AddServerTemplates adds the "server_templates" edges to the ServerTemplate entity.
 func (auo *AuthorityUpdateOne) AddServerTemplates(s ...*ServerTemplate) *AuthorityUpdateOne {
-	ids := make([]int, len(s))
+	ids := make([]string, len(s))
 	for i := range s {
 		ids[i] = s[i].ID
 	}
@@ -413,14 +487,14 @@ func (auo *AuthorityUpdateOne) AddServerTemplates(s ...*ServerTemplate) *Authori
 }
 
 // AddClientTemplateIDs adds the "client_templates" edge to the ClientTemplate entity by IDs.
-func (auo *AuthorityUpdateOne) AddClientTemplateIDs(ids ...int) *AuthorityUpdateOne {
+func (auo *AuthorityUpdateOne) AddClientTemplateIDs(ids ...string) *AuthorityUpdateOne {
 	auo.mutation.AddClientTemplateIDs(ids...)
 	return auo
 }
 
 // AddClientTemplates adds the "client_templates" edges to the ClientTemplate entity.
 func (auo *AuthorityUpdateOne) AddClientTemplates(c ...*ClientTemplate) *AuthorityUpdateOne {
-	ids := make([]int, len(c))
+	ids := make([]string, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
@@ -432,6 +506,12 @@ func (auo *AuthorityUpdateOne) Mutation() *AuthorityMutation {
 	return auo.mutation
 }
 
+// ClearUserKey clears the "user_key" edge to the UserKey entity.
+func (auo *AuthorityUpdateOne) ClearUserKey() *AuthorityUpdateOne {
+	auo.mutation.ClearUserKey()
+	return auo
+}
+
 // ClearAPIKeys clears all "api_keys" edges to the APIKey entity.
 func (auo *AuthorityUpdateOne) ClearAPIKeys() *AuthorityUpdateOne {
 	auo.mutation.ClearAPIKeys()
@@ -439,14 +519,14 @@ func (auo *AuthorityUpdateOne) ClearAPIKeys() *AuthorityUpdateOne {
 }
 
 // RemoveAPIKeyIDs removes the "api_keys" edge to APIKey entities by IDs.
-func (auo *AuthorityUpdateOne) RemoveAPIKeyIDs(ids ...int) *AuthorityUpdateOne {
+func (auo *AuthorityUpdateOne) RemoveAPIKeyIDs(ids ...string) *AuthorityUpdateOne {
 	auo.mutation.RemoveAPIKeyIDs(ids...)
 	return auo
 }
 
 // RemoveAPIKeys removes "api_keys" edges to APIKey entities.
 func (auo *AuthorityUpdateOne) RemoveAPIKeys(a ...*APIKey) *AuthorityUpdateOne {
-	ids := make([]int, len(a))
+	ids := make([]string, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
@@ -460,14 +540,14 @@ func (auo *AuthorityUpdateOne) ClearServerTemplates() *AuthorityUpdateOne {
 }
 
 // RemoveServerTemplateIDs removes the "server_templates" edge to ServerTemplate entities by IDs.
-func (auo *AuthorityUpdateOne) RemoveServerTemplateIDs(ids ...int) *AuthorityUpdateOne {
+func (auo *AuthorityUpdateOne) RemoveServerTemplateIDs(ids ...string) *AuthorityUpdateOne {
 	auo.mutation.RemoveServerTemplateIDs(ids...)
 	return auo
 }
 
 // RemoveServerTemplates removes "server_templates" edges to ServerTemplate entities.
 func (auo *AuthorityUpdateOne) RemoveServerTemplates(s ...*ServerTemplate) *AuthorityUpdateOne {
-	ids := make([]int, len(s))
+	ids := make([]string, len(s))
 	for i := range s {
 		ids[i] = s[i].ID
 	}
@@ -481,14 +561,14 @@ func (auo *AuthorityUpdateOne) ClearClientTemplates() *AuthorityUpdateOne {
 }
 
 // RemoveClientTemplateIDs removes the "client_templates" edge to ClientTemplate entities by IDs.
-func (auo *AuthorityUpdateOne) RemoveClientTemplateIDs(ids ...int) *AuthorityUpdateOne {
+func (auo *AuthorityUpdateOne) RemoveClientTemplateIDs(ids ...string) *AuthorityUpdateOne {
 	auo.mutation.RemoveClientTemplateIDs(ids...)
 	return auo
 }
 
 // RemoveClientTemplates removes "client_templates" edges to ClientTemplate entities.
 func (auo *AuthorityUpdateOne) RemoveClientTemplates(c ...*ClientTemplate) *AuthorityUpdateOne {
-	ids := make([]int, len(c))
+	ids := make([]string, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
@@ -554,7 +634,7 @@ func (auo *AuthorityUpdateOne) sqlSave(ctx context.Context) (_node *Authority, e
 	if err := auo.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(authority.Table, authority.Columns, sqlgraph.NewFieldSpec(authority.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(authority.Table, authority.Columns, sqlgraph.NewFieldSpec(authority.FieldID, field.TypeString))
 	id, ok := auo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Authority.id" for update`)}
@@ -585,6 +665,35 @@ func (auo *AuthorityUpdateOne) sqlSave(ctx context.Context) (_node *Authority, e
 	if value, ok := auo.mutation.EncryptedPrivateKey(); ok {
 		_spec.SetField(authority.FieldEncryptedPrivateKey, field.TypeString, value)
 	}
+	if auo.mutation.UserKeyCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   authority.UserKeyTable,
+			Columns: []string{authority.UserKeyColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userkey.FieldID, field.TypeString),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.UserKeyIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   authority.UserKeyTable,
+			Columns: []string{authority.UserKeyColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userkey.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if auo.mutation.APIKeysCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -593,7 +702,7 @@ func (auo *AuthorityUpdateOne) sqlSave(ctx context.Context) (_node *Authority, e
 			Columns: []string{authority.APIKeysColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -606,7 +715,7 @@ func (auo *AuthorityUpdateOne) sqlSave(ctx context.Context) (_node *Authority, e
 			Columns: []string{authority.APIKeysColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -622,7 +731,7 @@ func (auo *AuthorityUpdateOne) sqlSave(ctx context.Context) (_node *Authority, e
 			Columns: []string{authority.APIKeysColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -638,7 +747,7 @@ func (auo *AuthorityUpdateOne) sqlSave(ctx context.Context) (_node *Authority, e
 			Columns: []string{authority.ServerTemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -651,7 +760,7 @@ func (auo *AuthorityUpdateOne) sqlSave(ctx context.Context) (_node *Authority, e
 			Columns: []string{authority.ServerTemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -667,7 +776,7 @@ func (auo *AuthorityUpdateOne) sqlSave(ctx context.Context) (_node *Authority, e
 			Columns: []string{authority.ServerTemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -683,7 +792,7 @@ func (auo *AuthorityUpdateOne) sqlSave(ctx context.Context) (_node *Authority, e
 			Columns: []string{authority.ClientTemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -696,7 +805,7 @@ func (auo *AuthorityUpdateOne) sqlSave(ctx context.Context) (_node *Authority, e
 			Columns: []string{authority.ClientTemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -712,7 +821,7 @@ func (auo *AuthorityUpdateOne) sqlSave(ctx context.Context) (_node *Authority, e
 			Columns: []string{authority.ClientTemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

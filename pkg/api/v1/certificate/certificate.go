@@ -90,7 +90,7 @@ func (a *Certificate) GetCA(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(&models.CAResponse{
-		Authority:     auth.Identifier,
+		AuthorityName: auth.Name,
 		CACertificate: base64.StdEncoding.EncodeToString(auth.CaCertificatePem),
 	})
 }

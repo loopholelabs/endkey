@@ -18,11 +18,11 @@ import (
 type ClientTemplate struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
-	// Identifier holds the value of the "identifier" field.
-	Identifier string `json:"identifier,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
 	// CommonName holds the value of the "common_name" field.
 	CommonName string `json:"common_name,omitempty"`
 	// Tag holds the value of the "tag" field.
@@ -40,7 +40,7 @@ type ClientTemplate struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ClientTemplateQuery when eager-loading is set.
 	Edges                      ClientTemplateEdges `json:"edges"`
-	authority_client_templates *int
+	authority_client_templates *string
 	selectValues               sql.SelectValues
 }
 
@@ -86,14 +86,12 @@ func (*ClientTemplate) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case clienttemplate.FieldAllowAdditionalDNSNames, clienttemplate.FieldAllowAdditionalIps:
 			values[i] = new(sql.NullBool)
-		case clienttemplate.FieldID:
-			values[i] = new(sql.NullInt64)
-		case clienttemplate.FieldIdentifier, clienttemplate.FieldCommonName, clienttemplate.FieldTag, clienttemplate.FieldValidity:
+		case clienttemplate.FieldID, clienttemplate.FieldName, clienttemplate.FieldCommonName, clienttemplate.FieldTag, clienttemplate.FieldValidity:
 			values[i] = new(sql.NullString)
 		case clienttemplate.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
 		case clienttemplate.ForeignKeys[0]: // authority_client_templates
-			values[i] = new(sql.NullInt64)
+			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -110,22 +108,22 @@ func (ct *ClientTemplate) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case clienttemplate.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value.Valid {
+				ct.ID = value.String
 			}
-			ct.ID = int(value.Int64)
 		case clienttemplate.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				ct.CreatedAt = value.Time
 			}
-		case clienttemplate.FieldIdentifier:
+		case clienttemplate.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field identifier", values[i])
+				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				ct.Identifier = value.String
+				ct.Name = value.String
 			}
 		case clienttemplate.FieldCommonName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -174,11 +172,11 @@ func (ct *ClientTemplate) assignValues(columns []string, values []any) error {
 				ct.AllowAdditionalIps = value.Bool
 			}
 		case clienttemplate.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field authority_client_templates", value)
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field authority_client_templates", values[i])
 			} else if value.Valid {
-				ct.authority_client_templates = new(int)
-				*ct.authority_client_templates = int(value.Int64)
+				ct.authority_client_templates = new(string)
+				*ct.authority_client_templates = value.String
 			}
 		default:
 			ct.selectValues.Set(columns[i], values[i])
@@ -229,8 +227,8 @@ func (ct *ClientTemplate) String() string {
 	builder.WriteString("created_at=")
 	builder.WriteString(ct.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("identifier=")
-	builder.WriteString(ct.Identifier)
+	builder.WriteString("name=")
+	builder.WriteString(ct.Name)
 	builder.WriteString(", ")
 	builder.WriteString("common_name=")
 	builder.WriteString(ct.CommonName)

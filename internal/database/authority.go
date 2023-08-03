@@ -18,22 +18,25 @@ package database
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"github.com/loopholelabs/endkey/internal/aes"
 	"github.com/loopholelabs/endkey/internal/ent"
 	"github.com/loopholelabs/endkey/internal/ent/authority"
+	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
 var (
 	AESECDSAPrivateKeyHeader = []byte("ECDSA-PRIVATE-KEY")
 )
 
-func (d *Database) CreateAuthority(ctx context.Context, identifier string, caPem []byte, privateKey []byte) (*ent.Authority, error) {
+func (d *Database) CreateAuthority(ctx context.Context, name string, uk *ent.UserKey, caPem []byte, privateKey []byte) (*ent.Authority, error) {
+	id := uuid.New().String()
 	encrypted, err := aes.Encrypt(d.options.EncryptionKey, AESECDSAPrivateKeyHeader, privateKey)
 	if err != nil {
 		return nil, err
 	}
 
-	a, err := d.sql.Authority.Create().SetIdentifier(identifier).SetCaCertificatePem(caPem).SetEncryptedPrivateKey(encrypted).Save(ctx)
+	a, err := d.sql.Authority.Create().SetID(id).SetName(name).SetCaCertificatePem(caPem).SetEncryptedPrivateKey(encrypted).SetUserKey(uk).Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
 			return nil, ErrAlreadyExists
@@ -44,8 +47,8 @@ func (d *Database) CreateAuthority(ctx context.Context, identifier string, caPem
 	return a, nil
 }
 
-func (d *Database) GetAuthority(ctx context.Context, identifier string) (*ent.Authority, error) {
-	a, err := d.sql.Authority.Query().Where(authority.Identifier(identifier)).Only(ctx)
+func (d *Database) GetAuthorityByName(ctx context.Context, name string, uk *ent.UserKey) (*ent.Authority, error) {
+	a, err := d.sql.Authority.Query().Where(authority.Name(name), authority.HasUserKeyWith(userkey.ID(uk.ID))).Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, ErrNotFound
@@ -56,8 +59,8 @@ func (d *Database) GetAuthority(ctx context.Context, identifier string) (*ent.Au
 	return a, nil
 }
 
-func (d *Database) ListAuthorities(ctx context.Context) (ent.Authorities, error) {
-	as, err := d.sql.Authority.Query().All(ctx)
+func (d *Database) ListAuthorities(ctx context.Context, uk *ent.UserKey) (ent.Authorities, error) {
+	as, err := d.sql.Authority.Query().Where(authority.HasUserKeyWith(userkey.ID(uk.ID))).All(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, ErrNotFound
@@ -68,8 +71,8 @@ func (d *Database) ListAuthorities(ctx context.Context) (ent.Authorities, error)
 	return as, nil
 }
 
-func (d *Database) DeleteAuthority(ctx context.Context, identifier string) error {
-	_, err := d.sql.Authority.Delete().Where(authority.Identifier(identifier)).Exec(ctx)
+func (d *Database) DeleteAuthorityByName(ctx context.Context, name string, uk *ent.UserKey) error {
+	_, err := d.sql.Authority.Delete().Where(authority.Name(name), authority.HasUserKeyWith(userkey.ID(uk.ID))).Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return ErrNotFound

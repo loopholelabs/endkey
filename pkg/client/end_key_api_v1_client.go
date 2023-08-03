@@ -16,6 +16,7 @@ import (
 	"github.com/loopholelabs/endkey/pkg/client/health"
 	"github.com/loopholelabs/endkey/pkg/client/rootkey"
 	"github.com/loopholelabs/endkey/pkg/client/template"
+	"github.com/loopholelabs/endkey/pkg/client/userkey"
 )
 
 // Default end key API v1 HTTP client.
@@ -66,6 +67,7 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *EndKeyAPIV
 	cli.Health = health.New(transport, formats)
 	cli.Rootkey = rootkey.New(transport, formats)
 	cli.Template = template.New(transport, formats)
+	cli.Userkey = userkey.New(transport, formats)
 	return cli
 }
 
@@ -122,6 +124,8 @@ type EndKeyAPIV1 struct {
 
 	Template template.ClientService
 
+	Userkey userkey.ClientService
+
 	Transport runtime.ClientTransport
 }
 
@@ -134,4 +138,5 @@ func (c *EndKeyAPIV1) SetTransport(transport runtime.ClientTransport) {
 	c.Health.SetTransport(transport)
 	c.Rootkey.SetTransport(transport)
 	c.Template.SetTransport(transport)
+	c.Userkey.SetTransport(transport)
 }

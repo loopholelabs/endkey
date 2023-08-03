@@ -26,8 +26,8 @@ type ModelsCreateClientCertificateRequest struct {
 	// csr
 	Csr string `json:"csr,omitempty"`
 
-	// template
-	Template string `json:"template,omitempty"`
+	// template name
+	TemplateName string `json:"template_name,omitempty"`
 }
 
 // Validate validates this models create client certificate request

@@ -24,11 +24,12 @@ import (
 	"github.com/loopholelabs/endkey/internal/ent/authority"
 	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
 	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/userkey"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityID string, serverTemplateID string, clientTemplateID string) (*ent.APIKey, []byte, error) {
-	identifier := uuid.New().String()
+func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityName string, uk *ent.UserKey, serverTemplateID string, clientTemplateID string) (*ent.APIKey, []byte, error) {
+	id := uuid.New().String()
 	secret := []byte(uuid.New().String())
 	salt := []byte(uuid.New().String())
 	hash, err := bcrypt.GenerateFromPassword(append(salt, secret...), bcrypt.DefaultCost)
@@ -36,7 +37,7 @@ func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityID st
 		return nil, nil, err
 	}
 
-	auth, err := d.sql.Authority.Query().Where(authority.Identifier(authorityID)).Only(ctx)
+	auth, err := d.sql.Authority.Query().Where(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID))).Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, nil, ErrNotFound
@@ -44,10 +45,10 @@ func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityID st
 		return nil, nil, err
 	}
 
-	akBuilder := d.sql.APIKey.Create().SetIdentifier(identifier).SetName(name).SetHash(hash).SetSalt(salt).SetAuthority(auth)
+	akBuilder := d.sql.APIKey.Create().SetID(id).SetName(name).SetHash(hash).SetSalt(salt).SetAuthority(auth)
 
 	if serverTemplateID != "" {
-		st, err := d.sql.ServerTemplate.Query().Where(servertemplate.Identifier(serverTemplateID)).Only(ctx)
+		st, err := d.sql.ServerTemplate.Query().Where(servertemplate.ID(serverTemplateID)).Only(ctx)
 		if err != nil {
 			if ent.IsNotFound(err) {
 				return nil, nil, ErrNotFound
@@ -58,7 +59,7 @@ func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityID st
 	}
 
 	if clientTemplateID != "" {
-		ct, err := d.sql.ClientTemplate.Query().Where(clienttemplate.Identifier(clientTemplateID)).Only(ctx)
+		ct, err := d.sql.ClientTemplate.Query().Where(clienttemplate.ID(clientTemplateID)).Only(ctx)
 		if err != nil {
 			if ent.IsNotFound(err) {
 				return nil, nil, ErrNotFound
@@ -79,8 +80,8 @@ func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityID st
 	return ak, secret, nil
 }
 
-func (d *Database) GetAPIKey(ctx context.Context, identifier string) (*ent.APIKey, error) {
-	ak, err := d.sql.APIKey.Query().Where(apikey.Identifier(identifier)).WithAuthority().WithClientTemplate().WithServerTemplate().Only(ctx)
+func (d *Database) GetAPIKeyByID(ctx context.Context, id string) (*ent.APIKey, error) {
+	ak, err := d.sql.APIKey.Query().Where(apikey.ID(id)).WithAuthority().WithClientTemplate().WithServerTemplate().Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, ErrNotFound
@@ -91,8 +92,8 @@ func (d *Database) GetAPIKey(ctx context.Context, identifier string) (*ent.APIKe
 	return ak, nil
 }
 
-func (d *Database) ListAPIKeys(ctx context.Context, authorityID string) (ent.APIKeys, error) {
-	aks, err := d.sql.APIKey.Query().Where(apikey.HasAuthorityWith(authority.Identifier(authorityID))).WithServerTemplate().WithClientTemplate().All(ctx)
+func (d *Database) ListAPIKeys(ctx context.Context, authorityName string, uk *ent.UserKey) (ent.APIKeys, error) {
+	aks, err := d.sql.APIKey.Query().Where(apikey.HasAuthorityWith(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID)))).WithServerTemplate().WithClientTemplate().All(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, ErrNotFound
@@ -103,8 +104,8 @@ func (d *Database) ListAPIKeys(ctx context.Context, authorityID string) (ent.API
 	return aks, nil
 }
 
-func (d *Database) DeleteAPIKey(ctx context.Context, name string, authorityID string) error {
-	_, err := d.sql.APIKey.Delete().Where(apikey.Name(name), apikey.HasAuthorityWith(authority.Identifier(authorityID))).Exec(ctx)
+func (d *Database) DeleteAPIKeyByName(ctx context.Context, name string, authorityName string, uk *ent.UserKey) error {
+	_, err := d.sql.APIKey.Delete().Where(apikey.Name(name), apikey.HasAuthorityWith(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID)))).Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return ErrNotFound

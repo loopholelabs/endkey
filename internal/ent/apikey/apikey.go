@@ -16,8 +16,6 @@ const (
 	FieldID = "id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
-	// FieldIdentifier holds the string denoting the identifier field in the database.
-	FieldIdentifier = "identifier"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldSalt holds the string denoting the salt field in the database.
@@ -59,7 +57,6 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
-	FieldIdentifier,
 	FieldName,
 	FieldSalt,
 	FieldHash,
@@ -91,14 +88,14 @@ func ValidColumn(column string) bool {
 var (
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
-	// IdentifierValidator is a validator for the "identifier" field. It is called by the builders before save.
-	IdentifierValidator func(string) error
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
 	// SaltValidator is a validator for the "salt" field. It is called by the builders before save.
 	SaltValidator func([]byte) error
 	// HashValidator is a validator for the "hash" field. It is called by the builders before save.
 	HashValidator func([]byte) error
+	// IDValidator is a validator for the "id" field. It is called by the builders before save.
+	IDValidator func(string) error
 )
 
 // OrderOption defines the ordering options for the APIKey queries.
@@ -112,11 +109,6 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByCreatedAt orders the results by the created_at field.
 func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
-}
-
-// ByIdentifier orders the results by the identifier field.
-func ByIdentifier(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldIdentifier, opts...).ToFunc()
 }
 
 // ByName orders the results by the name field.

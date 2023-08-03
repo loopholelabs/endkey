@@ -30,11 +30,11 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	DeleteAuthorityIdentifier(params *DeleteAuthorityIdentifierParams, opts ...ClientOption) (*DeleteAuthorityIdentifierOK, error)
+	DeleteAuthorityName(params *DeleteAuthorityNameParams, opts ...ClientOption) (*DeleteAuthorityNameOK, error)
 
 	GetAuthority(params *GetAuthorityParams, opts ...ClientOption) (*GetAuthorityOK, error)
 
-	GetAuthorityIdentifier(params *GetAuthorityIdentifierParams, opts ...ClientOption) (*GetAuthorityIdentifierOK, error)
+	GetAuthorityName(params *GetAuthorityNameParams, opts ...ClientOption) (*GetAuthorityNameOK, error)
 
 	PostAuthority(params *PostAuthorityParams, opts ...ClientOption) (*PostAuthorityOK, error)
 
@@ -42,22 +42,22 @@ type ClientService interface {
 }
 
 /*
-DeleteAuthorityIdentifier Delete an authority
+DeleteAuthorityName Delete an authority
 */
-func (a *Client) DeleteAuthorityIdentifier(params *DeleteAuthorityIdentifierParams, opts ...ClientOption) (*DeleteAuthorityIdentifierOK, error) {
+func (a *Client) DeleteAuthorityName(params *DeleteAuthorityNameParams, opts ...ClientOption) (*DeleteAuthorityNameOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewDeleteAuthorityIdentifierParams()
+		params = NewDeleteAuthorityNameParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteAuthorityIdentifier",
+		ID:                 "DeleteAuthorityName",
 		Method:             "DELETE",
-		PathPattern:        "/authority/{identifier}",
+		PathPattern:        "/authority/{name}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"https"},
 		Params:             params,
-		Reader:             &DeleteAuthorityIdentifierReader{formats: a.formats},
+		Reader:             &DeleteAuthorityNameReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -69,13 +69,13 @@ func (a *Client) DeleteAuthorityIdentifier(params *DeleteAuthorityIdentifierPara
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*DeleteAuthorityIdentifierOK)
+	success, ok := result.(*DeleteAuthorityNameOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteAuthorityIdentifier: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for DeleteAuthorityName: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -118,22 +118,22 @@ func (a *Client) GetAuthority(params *GetAuthorityParams, opts ...ClientOption) 
 }
 
 /*
-GetAuthorityIdentifier Get an authority
+GetAuthorityName Get an authority
 */
-func (a *Client) GetAuthorityIdentifier(params *GetAuthorityIdentifierParams, opts ...ClientOption) (*GetAuthorityIdentifierOK, error) {
+func (a *Client) GetAuthorityName(params *GetAuthorityNameParams, opts ...ClientOption) (*GetAuthorityNameOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetAuthorityIdentifierParams()
+		params = NewGetAuthorityNameParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "GetAuthorityIdentifier",
+		ID:                 "GetAuthorityName",
 		Method:             "GET",
-		PathPattern:        "/authority/{identifier}",
+		PathPattern:        "/authority/{name}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"https"},
 		Params:             params,
-		Reader:             &GetAuthorityIdentifierReader{formats: a.formats},
+		Reader:             &GetAuthorityNameReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -145,13 +145,13 @@ func (a *Client) GetAuthorityIdentifier(params *GetAuthorityIdentifierParams, op
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetAuthorityIdentifierOK)
+	success, ok := result.(*GetAuthorityNameOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAuthorityIdentifier: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for GetAuthorityName: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

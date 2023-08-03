@@ -110,15 +110,15 @@ func (a *Certificate) CreateClient(ctx *fiber.Ctx) error {
 			return fiber.NewError(fiber.StatusBadRequest, "template not valid for this api key")
 		}
 
-		if body.Template == "" {
-			return fiber.NewError(fiber.StatusBadRequest, "template is required")
+		if body.TemplateName == "" {
+			return fiber.NewError(fiber.StatusBadRequest, "template name is required")
 		}
 
-		if !utils.ValidString(body.Template) {
-			return fiber.NewError(fiber.StatusBadRequest, "template is invalid")
+		if !utils.ValidString(body.TemplateName) {
+			return fiber.NewError(fiber.StatusBadRequest, "template name is invalid")
 		}
 
-		templ, err = a.options.Database().GetClientTemplate(ctx.Context(), body.Template, auth.Identifier)
+		templ, err = a.options.Database().GetClientTemplateByAPIKey(ctx.Context(), body.TemplateName, ak)
 		if err != nil {
 			if errors.Is(err, database.ErrNotFound) {
 				return fiber.NewError(fiber.StatusNotFound, "template not found")
@@ -128,7 +128,7 @@ func (a *Certificate) CreateClient(ctx *fiber.Ctx) error {
 			return fiber.NewError(fiber.StatusInternalServerError, "failed to get template")
 		}
 	} else {
-		if body.Template != "" && body.Template != templ.Identifier {
+		if body.TemplateName != "" && body.TemplateName != templ.Name {
 			return fiber.NewError(fiber.StatusUnauthorized, "template not valid for this api key")
 		}
 	}
@@ -207,7 +207,7 @@ func (a *Certificate) CreateClient(ctx *fiber.Ctx) error {
 		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
 	}
 
-	a.logger.Info().Msgf("creating client certificate for template '%s' with authority '%s', for api key with ID %s", body.Template, auth.Identifier, ak.Identifier)
+	a.logger.Info().Msgf("creating client certificate for template '%s' with authority '%s', for api key %s", body.TemplateName, auth.Name, ak.Name)
 
 	certBytes, err := x509.CreateCertificate(rand.Reader, template, ca, csr.PublicKey, privateKey)
 	if err != nil {
@@ -222,8 +222,8 @@ func (a *Certificate) CreateClient(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(&models.ClientCertificateResponse{
-		Authority:             auth.Identifier,
-		Template:              templ.Identifier,
+		AuthorityName:         auth.Name,
+		TemplateName:          templ.Name,
 		AdditionalDNSNames:    body.AdditionalDNSNames,
 		AdditionalIPAddresses: body.AdditionalIPAddresses,
 		Expiry:                template.NotAfter.Format(time.RFC3339),

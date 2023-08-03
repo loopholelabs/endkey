@@ -14,6 +14,7 @@ import (
 	"github.com/loopholelabs/endkey/internal/ent/authority"
 	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
 	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
 // AuthorityCreate is the builder for creating a Authority entity.
@@ -37,9 +38,9 @@ func (ac *AuthorityCreate) SetNillableCreatedAt(t *time.Time) *AuthorityCreate {
 	return ac
 }
 
-// SetIdentifier sets the "identifier" field.
-func (ac *AuthorityCreate) SetIdentifier(s string) *AuthorityCreate {
-	ac.mutation.SetIdentifier(s)
+// SetName sets the "name" field.
+func (ac *AuthorityCreate) SetName(s string) *AuthorityCreate {
+	ac.mutation.SetName(s)
 	return ac
 }
 
@@ -55,15 +56,40 @@ func (ac *AuthorityCreate) SetEncryptedPrivateKey(s string) *AuthorityCreate {
 	return ac
 }
 
+// SetID sets the "id" field.
+func (ac *AuthorityCreate) SetID(s string) *AuthorityCreate {
+	ac.mutation.SetID(s)
+	return ac
+}
+
+// SetUserKeyID sets the "user_key" edge to the UserKey entity by ID.
+func (ac *AuthorityCreate) SetUserKeyID(id string) *AuthorityCreate {
+	ac.mutation.SetUserKeyID(id)
+	return ac
+}
+
+// SetNillableUserKeyID sets the "user_key" edge to the UserKey entity by ID if the given value is not nil.
+func (ac *AuthorityCreate) SetNillableUserKeyID(id *string) *AuthorityCreate {
+	if id != nil {
+		ac = ac.SetUserKeyID(*id)
+	}
+	return ac
+}
+
+// SetUserKey sets the "user_key" edge to the UserKey entity.
+func (ac *AuthorityCreate) SetUserKey(u *UserKey) *AuthorityCreate {
+	return ac.SetUserKeyID(u.ID)
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by IDs.
-func (ac *AuthorityCreate) AddAPIKeyIDs(ids ...int) *AuthorityCreate {
+func (ac *AuthorityCreate) AddAPIKeyIDs(ids ...string) *AuthorityCreate {
 	ac.mutation.AddAPIKeyIDs(ids...)
 	return ac
 }
 
 // AddAPIKeys adds the "api_keys" edges to the APIKey entity.
 func (ac *AuthorityCreate) AddAPIKeys(a ...*APIKey) *AuthorityCreate {
-	ids := make([]int, len(a))
+	ids := make([]string, len(a))
 	for i := range a {
 		ids[i] = a[i].ID
 	}
@@ -71,14 +97,14 @@ func (ac *AuthorityCreate) AddAPIKeys(a ...*APIKey) *AuthorityCreate {
 }
 
 // AddServerTemplateIDs adds the "server_templates" edge to the ServerTemplate entity by IDs.
-func (ac *AuthorityCreate) AddServerTemplateIDs(ids ...int) *AuthorityCreate {
+func (ac *AuthorityCreate) AddServerTemplateIDs(ids ...string) *AuthorityCreate {
 	ac.mutation.AddServerTemplateIDs(ids...)
 	return ac
 }
 
 // AddServerTemplates adds the "server_templates" edges to the ServerTemplate entity.
 func (ac *AuthorityCreate) AddServerTemplates(s ...*ServerTemplate) *AuthorityCreate {
-	ids := make([]int, len(s))
+	ids := make([]string, len(s))
 	for i := range s {
 		ids[i] = s[i].ID
 	}
@@ -86,14 +112,14 @@ func (ac *AuthorityCreate) AddServerTemplates(s ...*ServerTemplate) *AuthorityCr
 }
 
 // AddClientTemplateIDs adds the "client_templates" edge to the ClientTemplate entity by IDs.
-func (ac *AuthorityCreate) AddClientTemplateIDs(ids ...int) *AuthorityCreate {
+func (ac *AuthorityCreate) AddClientTemplateIDs(ids ...string) *AuthorityCreate {
 	ac.mutation.AddClientTemplateIDs(ids...)
 	return ac
 }
 
 // AddClientTemplates adds the "client_templates" edges to the ClientTemplate entity.
 func (ac *AuthorityCreate) AddClientTemplates(c ...*ClientTemplate) *AuthorityCreate {
-	ids := make([]int, len(c))
+	ids := make([]string, len(c))
 	for i := range c {
 		ids[i] = c[i].ID
 	}
@@ -146,12 +172,12 @@ func (ac *AuthorityCreate) check() error {
 	if _, ok := ac.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Authority.created_at"`)}
 	}
-	if _, ok := ac.mutation.Identifier(); !ok {
-		return &ValidationError{Name: "identifier", err: errors.New(`ent: missing required field "Authority.identifier"`)}
+	if _, ok := ac.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Authority.name"`)}
 	}
-	if v, ok := ac.mutation.Identifier(); ok {
-		if err := authority.IdentifierValidator(v); err != nil {
-			return &ValidationError{Name: "identifier", err: fmt.Errorf(`ent: validator failed for field "Authority.identifier": %w`, err)}
+	if v, ok := ac.mutation.Name(); ok {
+		if err := authority.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Authority.name": %w`, err)}
 		}
 	}
 	if _, ok := ac.mutation.CaCertificatePem(); !ok {
@@ -170,6 +196,11 @@ func (ac *AuthorityCreate) check() error {
 			return &ValidationError{Name: "encrypted_private_key", err: fmt.Errorf(`ent: validator failed for field "Authority.encrypted_private_key": %w`, err)}
 		}
 	}
+	if v, ok := ac.mutation.ID(); ok {
+		if err := authority.IDValidator(v); err != nil {
+			return &ValidationError{Name: "id", err: fmt.Errorf(`ent: validator failed for field "Authority.id": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -184,8 +215,13 @@ func (ac *AuthorityCreate) sqlSave(ctx context.Context) (*Authority, error) {
 		}
 		return nil, err
 	}
-	id := _spec.ID.Value.(int64)
-	_node.ID = int(id)
+	if _spec.ID.Value != nil {
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected Authority.ID type: %T", _spec.ID.Value)
+		}
+	}
 	ac.mutation.id = &_node.ID
 	ac.mutation.done = true
 	return _node, nil
@@ -194,15 +230,19 @@ func (ac *AuthorityCreate) sqlSave(ctx context.Context) (*Authority, error) {
 func (ac *AuthorityCreate) createSpec() (*Authority, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Authority{config: ac.config}
-		_spec = sqlgraph.NewCreateSpec(authority.Table, sqlgraph.NewFieldSpec(authority.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(authority.Table, sqlgraph.NewFieldSpec(authority.FieldID, field.TypeString))
 	)
+	if id, ok := ac.mutation.ID(); ok {
+		_node.ID = id
+		_spec.ID.Value = id
+	}
 	if value, ok := ac.mutation.CreatedAt(); ok {
 		_spec.SetField(authority.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := ac.mutation.Identifier(); ok {
-		_spec.SetField(authority.FieldIdentifier, field.TypeString, value)
-		_node.Identifier = value
+	if value, ok := ac.mutation.Name(); ok {
+		_spec.SetField(authority.FieldName, field.TypeString, value)
+		_node.Name = value
 	}
 	if value, ok := ac.mutation.CaCertificatePem(); ok {
 		_spec.SetField(authority.FieldCaCertificatePem, field.TypeBytes, value)
@@ -212,6 +252,23 @@ func (ac *AuthorityCreate) createSpec() (*Authority, *sqlgraph.CreateSpec) {
 		_spec.SetField(authority.FieldEncryptedPrivateKey, field.TypeString, value)
 		_node.EncryptedPrivateKey = value
 	}
+	if nodes := ac.mutation.UserKeyIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   authority.UserKeyTable,
+			Columns: []string{authority.UserKeyColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userkey.FieldID, field.TypeString),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.user_key_authorities = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	if nodes := ac.mutation.APIKeysIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -220,7 +277,7 @@ func (ac *AuthorityCreate) createSpec() (*Authority, *sqlgraph.CreateSpec) {
 			Columns: []string{authority.APIKeysColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(apikey.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -236,7 +293,7 @@ func (ac *AuthorityCreate) createSpec() (*Authority, *sqlgraph.CreateSpec) {
 			Columns: []string{authority.ServerTemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -252,7 +309,7 @@ func (ac *AuthorityCreate) createSpec() (*Authority, *sqlgraph.CreateSpec) {
 			Columns: []string{authority.ClientTemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -304,10 +361,6 @@ func (acb *AuthorityCreateBulk) Save(ctx context.Context) ([]*Authority, error) 
 					return nil, err
 				}
 				mutation.id = &nodes[i].ID
-				if specs[i].ID.Value != nil {
-					id := specs[i].ID.Value.(int64)
-					nodes[i].ID = int(id)
-				}
 				mutation.done = true
 				return nodes[i], nil
 			})

@@ -30,17 +30,17 @@ import (
 func GetCmd() command.SetupCommand[*config.Config] {
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		listCmd := &cobra.Command{
-			Use:   "get <identifier>",
-			Short: "get an Authority",
+			Use:   "get <name>",
+			Short: "get an Authority given its name",
 			Args:  cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				ctx := cmd.Context()
 				client := ch.Config.Client()
 
-				identifier := args[0]
+				name := args[0]
 
-				end := ch.Printer.PrintProgress(fmt.Sprintf("Retrieving Authority %s...", identifier))
-				res, err := client.Authority.GetAuthorityIdentifier(authority.NewGetAuthorityIdentifierParamsWithContext(ctx).WithIdentifier(identifier))
+				end := ch.Printer.PrintProgress(fmt.Sprintf("Retrieving Authority %s...", name))
+				res, err := client.Authority.GetAuthorityName(authority.NewGetAuthorityNameParamsWithContext(ctx).WithName(name))
 				end()
 				if err != nil {
 					return err
@@ -53,7 +53,8 @@ func GetCmd() command.SetupCommand[*config.Config] {
 
 				return ch.Printer.PrintResource(authorityModel{
 					Created:       res.GetPayload().CreatedAt,
-					Identifier:    res.GetPayload().Identifier,
+					ID:            res.GetPayload().ID,
+					Name:          res.GetPayload().Name,
 					CommonName:    res.GetPayload().CommonName,
 					Tag:           res.GetPayload().Tag,
 					Expiry:        res.GetPayload().Expiry,

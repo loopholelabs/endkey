@@ -19,11 +19,9 @@ import (
 type APIKey struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
-	// Identifier holds the value of the "identifier" field.
-	Identifier string `json:"identifier,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Salt holds the value of the "salt" field.
@@ -33,9 +31,9 @@ type APIKey struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the APIKeyQuery when eager-loading is set.
 	Edges                    APIKeyEdges `json:"edges"`
-	authority_api_keys       *int
-	client_template_api_keys *int
-	server_template_api_keys *int
+	authority_api_keys       *string
+	client_template_api_keys *string
+	server_template_api_keys *string
 	selectValues             sql.SelectValues
 }
 
@@ -98,18 +96,16 @@ func (*APIKey) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case apikey.FieldSalt, apikey.FieldHash:
 			values[i] = new([]byte)
-		case apikey.FieldID:
-			values[i] = new(sql.NullInt64)
-		case apikey.FieldIdentifier, apikey.FieldName:
+		case apikey.FieldID, apikey.FieldName:
 			values[i] = new(sql.NullString)
 		case apikey.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
 		case apikey.ForeignKeys[0]: // authority_api_keys
-			values[i] = new(sql.NullInt64)
+			values[i] = new(sql.NullString)
 		case apikey.ForeignKeys[1]: // client_template_api_keys
-			values[i] = new(sql.NullInt64)
+			values[i] = new(sql.NullString)
 		case apikey.ForeignKeys[2]: // server_template_api_keys
-			values[i] = new(sql.NullInt64)
+			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -126,22 +122,16 @@ func (ak *APIKey) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case apikey.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value.Valid {
+				ak.ID = value.String
 			}
-			ak.ID = int(value.Int64)
 		case apikey.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				ak.CreatedAt = value.Time
-			}
-		case apikey.FieldIdentifier:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field identifier", values[i])
-			} else if value.Valid {
-				ak.Identifier = value.String
 			}
 		case apikey.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -162,25 +152,25 @@ func (ak *APIKey) assignValues(columns []string, values []any) error {
 				ak.Hash = *value
 			}
 		case apikey.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field authority_api_keys", value)
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field authority_api_keys", values[i])
 			} else if value.Valid {
-				ak.authority_api_keys = new(int)
-				*ak.authority_api_keys = int(value.Int64)
+				ak.authority_api_keys = new(string)
+				*ak.authority_api_keys = value.String
 			}
 		case apikey.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field client_template_api_keys", value)
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field client_template_api_keys", values[i])
 			} else if value.Valid {
-				ak.client_template_api_keys = new(int)
-				*ak.client_template_api_keys = int(value.Int64)
+				ak.client_template_api_keys = new(string)
+				*ak.client_template_api_keys = value.String
 			}
 		case apikey.ForeignKeys[2]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field server_template_api_keys", value)
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field server_template_api_keys", values[i])
 			} else if value.Valid {
-				ak.server_template_api_keys = new(int)
-				*ak.server_template_api_keys = int(value.Int64)
+				ak.server_template_api_keys = new(string)
+				*ak.server_template_api_keys = value.String
 			}
 		default:
 			ak.selectValues.Set(columns[i], values[i])
@@ -235,9 +225,6 @@ func (ak *APIKey) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", ak.ID))
 	builder.WriteString("created_at=")
 	builder.WriteString(ak.CreatedAt.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("identifier=")
-	builder.WriteString(ak.Identifier)
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(ak.Name)

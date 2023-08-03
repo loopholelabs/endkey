@@ -11,48 +11,58 @@ import (
 )
 
 // ID filters vertices based on their ID field.
-func ID(id int) predicate.ServerTemplate {
+func ID(id string) predicate.ServerTemplate {
 	return predicate.ServerTemplate(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id int) predicate.ServerTemplate {
+func IDEQ(id string) predicate.ServerTemplate {
 	return predicate.ServerTemplate(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id int) predicate.ServerTemplate {
+func IDNEQ(id string) predicate.ServerTemplate {
 	return predicate.ServerTemplate(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...int) predicate.ServerTemplate {
+func IDIn(ids ...string) predicate.ServerTemplate {
 	return predicate.ServerTemplate(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...int) predicate.ServerTemplate {
+func IDNotIn(ids ...string) predicate.ServerTemplate {
 	return predicate.ServerTemplate(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id int) predicate.ServerTemplate {
+func IDGT(id string) predicate.ServerTemplate {
 	return predicate.ServerTemplate(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id int) predicate.ServerTemplate {
+func IDGTE(id string) predicate.ServerTemplate {
 	return predicate.ServerTemplate(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id int) predicate.ServerTemplate {
+func IDLT(id string) predicate.ServerTemplate {
 	return predicate.ServerTemplate(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id int) predicate.ServerTemplate {
+func IDLTE(id string) predicate.ServerTemplate {
 	return predicate.ServerTemplate(sql.FieldLTE(FieldID, id))
+}
+
+// IDEqualFold applies the EqualFold predicate on the ID field.
+func IDEqualFold(id string) predicate.ServerTemplate {
+	return predicate.ServerTemplate(sql.FieldEqualFold(FieldID, id))
+}
+
+// IDContainsFold applies the ContainsFold predicate on the ID field.
+func IDContainsFold(id string) predicate.ServerTemplate {
+	return predicate.ServerTemplate(sql.FieldContainsFold(FieldID, id))
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
@@ -60,9 +70,9 @@ func CreatedAt(v time.Time) predicate.ServerTemplate {
 	return predicate.ServerTemplate(sql.FieldEQ(FieldCreatedAt, v))
 }
 
-// Identifier applies equality check predicate on the "identifier" field. It's identical to IdentifierEQ.
-func Identifier(v string) predicate.ServerTemplate {
-	return predicate.ServerTemplate(sql.FieldEQ(FieldIdentifier, v))
+// Name applies equality check predicate on the "name" field. It's identical to NameEQ.
+func Name(v string) predicate.ServerTemplate {
+	return predicate.ServerTemplate(sql.FieldEQ(FieldName, v))
 }
 
 // CommonName applies equality check predicate on the "common_name" field. It's identical to CommonNameEQ.
@@ -130,69 +140,69 @@ func CreatedAtLTE(v time.Time) predicate.ServerTemplate {
 	return predicate.ServerTemplate(sql.FieldLTE(FieldCreatedAt, v))
 }
 
-// IdentifierEQ applies the EQ predicate on the "identifier" field.
-func IdentifierEQ(v string) predicate.ServerTemplate {
-	return predicate.ServerTemplate(sql.FieldEQ(FieldIdentifier, v))
+// NameEQ applies the EQ predicate on the "name" field.
+func NameEQ(v string) predicate.ServerTemplate {
+	return predicate.ServerTemplate(sql.FieldEQ(FieldName, v))
 }
 
-// IdentifierNEQ applies the NEQ predicate on the "identifier" field.
-func IdentifierNEQ(v string) predicate.ServerTemplate {
-	return predicate.ServerTemplate(sql.FieldNEQ(FieldIdentifier, v))
+// NameNEQ applies the NEQ predicate on the "name" field.
+func NameNEQ(v string) predicate.ServerTemplate {
+	return predicate.ServerTemplate(sql.FieldNEQ(FieldName, v))
 }
 
-// IdentifierIn applies the In predicate on the "identifier" field.
-func IdentifierIn(vs ...string) predicate.ServerTemplate {
-	return predicate.ServerTemplate(sql.FieldIn(FieldIdentifier, vs...))
+// NameIn applies the In predicate on the "name" field.
+func NameIn(vs ...string) predicate.ServerTemplate {
+	return predicate.ServerTemplate(sql.FieldIn(FieldName, vs...))
 }
 
-// IdentifierNotIn applies the NotIn predicate on the "identifier" field.
-func IdentifierNotIn(vs ...string) predicate.ServerTemplate {
-	return predicate.ServerTemplate(sql.FieldNotIn(FieldIdentifier, vs...))
+// NameNotIn applies the NotIn predicate on the "name" field.
+func NameNotIn(vs ...string) predicate.ServerTemplate {
+	return predicate.ServerTemplate(sql.FieldNotIn(FieldName, vs...))
 }
 
-// IdentifierGT applies the GT predicate on the "identifier" field.
-func IdentifierGT(v string) predicate.ServerTemplate {
-	return predicate.ServerTemplate(sql.FieldGT(FieldIdentifier, v))
+// NameGT applies the GT predicate on the "name" field.
+func NameGT(v string) predicate.ServerTemplate {
+	return predicate.ServerTemplate(sql.FieldGT(FieldName, v))
 }
 
-// IdentifierGTE applies the GTE predicate on the "identifier" field.
-func IdentifierGTE(v string) predicate.ServerTemplate {
-	return predicate.ServerTemplate(sql.FieldGTE(FieldIdentifier, v))
+// NameGTE applies the GTE predicate on the "name" field.
+func NameGTE(v string) predicate.ServerTemplate {
+	return predicate.ServerTemplate(sql.FieldGTE(FieldName, v))
 }
 
-// IdentifierLT applies the LT predicate on the "identifier" field.
-func IdentifierLT(v string) predicate.ServerTemplate {
-	return predicate.ServerTemplate(sql.FieldLT(FieldIdentifier, v))
+// NameLT applies the LT predicate on the "name" field.
+func NameLT(v string) predicate.ServerTemplate {
+	return predicate.ServerTemplate(sql.FieldLT(FieldName, v))
 }
 
-// IdentifierLTE applies the LTE predicate on the "identifier" field.
-func IdentifierLTE(v string) predicate.ServerTemplate {
-	return predicate.ServerTemplate(sql.FieldLTE(FieldIdentifier, v))
+// NameLTE applies the LTE predicate on the "name" field.
+func NameLTE(v string) predicate.ServerTemplate {
+	return predicate.ServerTemplate(sql.FieldLTE(FieldName, v))
 }
 
-// IdentifierContains applies the Contains predicate on the "identifier" field.
-func IdentifierContains(v string) predicate.ServerTemplate {
-	return predicate.ServerTemplate(sql.FieldContains(FieldIdentifier, v))
+// NameContains applies the Contains predicate on the "name" field.
+func NameContains(v string) predicate.ServerTemplate {
+	return predicate.ServerTemplate(sql.FieldContains(FieldName, v))
 }
 
-// IdentifierHasPrefix applies the HasPrefix predicate on the "identifier" field.
-func IdentifierHasPrefix(v string) predicate.ServerTemplate {
-	return predicate.ServerTemplate(sql.FieldHasPrefix(FieldIdentifier, v))
+// NameHasPrefix applies the HasPrefix predicate on the "name" field.
+func NameHasPrefix(v string) predicate.ServerTemplate {
+	return predicate.ServerTemplate(sql.FieldHasPrefix(FieldName, v))
 }
 
-// IdentifierHasSuffix applies the HasSuffix predicate on the "identifier" field.
-func IdentifierHasSuffix(v string) predicate.ServerTemplate {
-	return predicate.ServerTemplate(sql.FieldHasSuffix(FieldIdentifier, v))
+// NameHasSuffix applies the HasSuffix predicate on the "name" field.
+func NameHasSuffix(v string) predicate.ServerTemplate {
+	return predicate.ServerTemplate(sql.FieldHasSuffix(FieldName, v))
 }
 
-// IdentifierEqualFold applies the EqualFold predicate on the "identifier" field.
-func IdentifierEqualFold(v string) predicate.ServerTemplate {
-	return predicate.ServerTemplate(sql.FieldEqualFold(FieldIdentifier, v))
+// NameEqualFold applies the EqualFold predicate on the "name" field.
+func NameEqualFold(v string) predicate.ServerTemplate {
+	return predicate.ServerTemplate(sql.FieldEqualFold(FieldName, v))
 }
 
-// IdentifierContainsFold applies the ContainsFold predicate on the "identifier" field.
-func IdentifierContainsFold(v string) predicate.ServerTemplate {
-	return predicate.ServerTemplate(sql.FieldContainsFold(FieldIdentifier, v))
+// NameContainsFold applies the ContainsFold predicate on the "name" field.
+func NameContainsFold(v string) predicate.ServerTemplate {
+	return predicate.ServerTemplate(sql.FieldContainsFold(FieldName, v))
 }
 
 // CommonNameEQ applies the EQ predicate on the "common_name" field.

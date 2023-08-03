@@ -18,11 +18,11 @@ import (
 type ServerTemplate struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
-	// Identifier holds the value of the "identifier" field.
-	Identifier string `json:"identifier,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
 	// CommonName holds the value of the "common_name" field.
 	CommonName string `json:"common_name,omitempty"`
 	// Tag holds the value of the "tag" field.
@@ -40,7 +40,7 @@ type ServerTemplate struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ServerTemplateQuery when eager-loading is set.
 	Edges                      ServerTemplateEdges `json:"edges"`
-	authority_server_templates *int
+	authority_server_templates *string
 	selectValues               sql.SelectValues
 }
 
@@ -86,14 +86,12 @@ func (*ServerTemplate) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case servertemplate.FieldAllowAdditionalDNSNames, servertemplate.FieldAllowAdditionalIps:
 			values[i] = new(sql.NullBool)
-		case servertemplate.FieldID:
-			values[i] = new(sql.NullInt64)
-		case servertemplate.FieldIdentifier, servertemplate.FieldCommonName, servertemplate.FieldTag, servertemplate.FieldValidity:
+		case servertemplate.FieldID, servertemplate.FieldName, servertemplate.FieldCommonName, servertemplate.FieldTag, servertemplate.FieldValidity:
 			values[i] = new(sql.NullString)
 		case servertemplate.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
 		case servertemplate.ForeignKeys[0]: // authority_server_templates
-			values[i] = new(sql.NullInt64)
+			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -110,22 +108,22 @@ func (st *ServerTemplate) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case servertemplate.FieldID:
-			value, ok := values[i].(*sql.NullInt64)
-			if !ok {
-				return fmt.Errorf("unexpected type %T for field id", value)
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field id", values[i])
+			} else if value.Valid {
+				st.ID = value.String
 			}
-			st.ID = int(value.Int64)
 		case servertemplate.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				st.CreatedAt = value.Time
 			}
-		case servertemplate.FieldIdentifier:
+		case servertemplate.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field identifier", values[i])
+				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				st.Identifier = value.String
+				st.Name = value.String
 			}
 		case servertemplate.FieldCommonName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -174,11 +172,11 @@ func (st *ServerTemplate) assignValues(columns []string, values []any) error {
 				st.AllowAdditionalIps = value.Bool
 			}
 		case servertemplate.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field authority_server_templates", value)
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field authority_server_templates", values[i])
 			} else if value.Valid {
-				st.authority_server_templates = new(int)
-				*st.authority_server_templates = int(value.Int64)
+				st.authority_server_templates = new(string)
+				*st.authority_server_templates = value.String
 			}
 		default:
 			st.selectValues.Set(columns[i], values[i])
@@ -229,8 +227,8 @@ func (st *ServerTemplate) String() string {
 	builder.WriteString("created_at=")
 	builder.WriteString(st.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("identifier=")
-	builder.WriteString(st.Identifier)
+	builder.WriteString("name=")
+	builder.WriteString(st.Name)
 	builder.WriteString(", ")
 	builder.WriteString("common_name=")
 	builder.WriteString(st.CommonName)

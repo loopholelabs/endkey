@@ -17,6 +17,7 @@ import (
 	"github.com/loopholelabs/endkey/internal/ent/predicate"
 	"github.com/loopholelabs/endkey/internal/ent/rootkey"
 	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
 const (
@@ -33,6 +34,7 @@ const (
 	TypeClientTemplate = "ClientTemplate"
 	TypeRootKey        = "RootKey"
 	TypeServerTemplate = "ServerTemplate"
+	TypeUserKey        = "UserKey"
 )
 
 // APIKeyMutation represents an operation that mutates the APIKey nodes in the graph.
@@ -40,18 +42,17 @@ type APIKeyMutation struct {
 	config
 	op                     Op
 	typ                    string
-	id                     *int
+	id                     *string
 	created_at             *time.Time
-	identifier             *string
 	name                   *string
 	salt                   *[]byte
 	hash                   *[]byte
 	clearedFields          map[string]struct{}
-	authority              *int
+	authority              *string
 	clearedauthority       bool
-	server_template        *int
+	server_template        *string
 	clearedserver_template bool
-	client_template        *int
+	client_template        *string
 	clearedclient_template bool
 	done                   bool
 	oldValue               func(context.Context) (*APIKey, error)
@@ -78,7 +79,7 @@ func newAPIKeyMutation(c config, op Op, opts ...apikeyOption) *APIKeyMutation {
 }
 
 // withAPIKeyID sets the ID field of the mutation.
-func withAPIKeyID(id int) apikeyOption {
+func withAPIKeyID(id string) apikeyOption {
 	return func(m *APIKeyMutation) {
 		var (
 			err   error
@@ -128,9 +129,15 @@ func (m APIKeyMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of APIKey entities.
+func (m *APIKeyMutation) SetID(id string) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *APIKeyMutation) ID() (id int, exists bool) {
+func (m *APIKeyMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -141,12 +148,12 @@ func (m *APIKeyMutation) ID() (id int, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *APIKeyMutation) IDs(ctx context.Context) ([]int, error) {
+func (m *APIKeyMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []int{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -190,42 +197,6 @@ func (m *APIKeyMutation) OldCreatedAt(ctx context.Context) (v time.Time, err err
 // ResetCreatedAt resets all changes to the "created_at" field.
 func (m *APIKeyMutation) ResetCreatedAt() {
 	m.created_at = nil
-}
-
-// SetIdentifier sets the "identifier" field.
-func (m *APIKeyMutation) SetIdentifier(s string) {
-	m.identifier = &s
-}
-
-// Identifier returns the value of the "identifier" field in the mutation.
-func (m *APIKeyMutation) Identifier() (r string, exists bool) {
-	v := m.identifier
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldIdentifier returns the old "identifier" field's value of the APIKey entity.
-// If the APIKey object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *APIKeyMutation) OldIdentifier(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldIdentifier is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldIdentifier requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldIdentifier: %w", err)
-	}
-	return oldValue.Identifier, nil
-}
-
-// ResetIdentifier resets all changes to the "identifier" field.
-func (m *APIKeyMutation) ResetIdentifier() {
-	m.identifier = nil
 }
 
 // SetName sets the "name" field.
@@ -337,7 +308,7 @@ func (m *APIKeyMutation) ResetHash() {
 }
 
 // SetAuthorityID sets the "authority" edge to the Authority entity by id.
-func (m *APIKeyMutation) SetAuthorityID(id int) {
+func (m *APIKeyMutation) SetAuthorityID(id string) {
 	m.authority = &id
 }
 
@@ -352,7 +323,7 @@ func (m *APIKeyMutation) AuthorityCleared() bool {
 }
 
 // AuthorityID returns the "authority" edge ID in the mutation.
-func (m *APIKeyMutation) AuthorityID() (id int, exists bool) {
+func (m *APIKeyMutation) AuthorityID() (id string, exists bool) {
 	if m.authority != nil {
 		return *m.authority, true
 	}
@@ -362,7 +333,7 @@ func (m *APIKeyMutation) AuthorityID() (id int, exists bool) {
 // AuthorityIDs returns the "authority" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // AuthorityID instead. It exists only for internal usage by the builders.
-func (m *APIKeyMutation) AuthorityIDs() (ids []int) {
+func (m *APIKeyMutation) AuthorityIDs() (ids []string) {
 	if id := m.authority; id != nil {
 		ids = append(ids, *id)
 	}
@@ -376,7 +347,7 @@ func (m *APIKeyMutation) ResetAuthority() {
 }
 
 // SetServerTemplateID sets the "server_template" edge to the ServerTemplate entity by id.
-func (m *APIKeyMutation) SetServerTemplateID(id int) {
+func (m *APIKeyMutation) SetServerTemplateID(id string) {
 	m.server_template = &id
 }
 
@@ -391,7 +362,7 @@ func (m *APIKeyMutation) ServerTemplateCleared() bool {
 }
 
 // ServerTemplateID returns the "server_template" edge ID in the mutation.
-func (m *APIKeyMutation) ServerTemplateID() (id int, exists bool) {
+func (m *APIKeyMutation) ServerTemplateID() (id string, exists bool) {
 	if m.server_template != nil {
 		return *m.server_template, true
 	}
@@ -401,7 +372,7 @@ func (m *APIKeyMutation) ServerTemplateID() (id int, exists bool) {
 // ServerTemplateIDs returns the "server_template" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // ServerTemplateID instead. It exists only for internal usage by the builders.
-func (m *APIKeyMutation) ServerTemplateIDs() (ids []int) {
+func (m *APIKeyMutation) ServerTemplateIDs() (ids []string) {
 	if id := m.server_template; id != nil {
 		ids = append(ids, *id)
 	}
@@ -415,7 +386,7 @@ func (m *APIKeyMutation) ResetServerTemplate() {
 }
 
 // SetClientTemplateID sets the "client_template" edge to the ClientTemplate entity by id.
-func (m *APIKeyMutation) SetClientTemplateID(id int) {
+func (m *APIKeyMutation) SetClientTemplateID(id string) {
 	m.client_template = &id
 }
 
@@ -430,7 +401,7 @@ func (m *APIKeyMutation) ClientTemplateCleared() bool {
 }
 
 // ClientTemplateID returns the "client_template" edge ID in the mutation.
-func (m *APIKeyMutation) ClientTemplateID() (id int, exists bool) {
+func (m *APIKeyMutation) ClientTemplateID() (id string, exists bool) {
 	if m.client_template != nil {
 		return *m.client_template, true
 	}
@@ -440,7 +411,7 @@ func (m *APIKeyMutation) ClientTemplateID() (id int, exists bool) {
 // ClientTemplateIDs returns the "client_template" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // ClientTemplateID instead. It exists only for internal usage by the builders.
-func (m *APIKeyMutation) ClientTemplateIDs() (ids []int) {
+func (m *APIKeyMutation) ClientTemplateIDs() (ids []string) {
 	if id := m.client_template; id != nil {
 		ids = append(ids, *id)
 	}
@@ -487,12 +458,9 @@ func (m *APIKeyMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *APIKeyMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 4)
 	if m.created_at != nil {
 		fields = append(fields, apikey.FieldCreatedAt)
-	}
-	if m.identifier != nil {
-		fields = append(fields, apikey.FieldIdentifier)
 	}
 	if m.name != nil {
 		fields = append(fields, apikey.FieldName)
@@ -513,8 +481,6 @@ func (m *APIKeyMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case apikey.FieldCreatedAt:
 		return m.CreatedAt()
-	case apikey.FieldIdentifier:
-		return m.Identifier()
 	case apikey.FieldName:
 		return m.Name()
 	case apikey.FieldSalt:
@@ -532,8 +498,6 @@ func (m *APIKeyMutation) OldField(ctx context.Context, name string) (ent.Value, 
 	switch name {
 	case apikey.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
-	case apikey.FieldIdentifier:
-		return m.OldIdentifier(ctx)
 	case apikey.FieldName:
 		return m.OldName(ctx)
 	case apikey.FieldSalt:
@@ -555,13 +519,6 @@ func (m *APIKeyMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCreatedAt(v)
-		return nil
-	case apikey.FieldIdentifier:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetIdentifier(v)
 		return nil
 	case apikey.FieldName:
 		v, ok := value.(string)
@@ -635,9 +592,6 @@ func (m *APIKeyMutation) ResetField(name string) error {
 	switch name {
 	case apikey.FieldCreatedAt:
 		m.ResetCreatedAt()
-		return nil
-	case apikey.FieldIdentifier:
-		m.ResetIdentifier()
 		return nil
 	case apikey.FieldName:
 		m.ResetName()
@@ -767,20 +721,22 @@ type AuthorityMutation struct {
 	config
 	op                      Op
 	typ                     string
-	id                      *int
+	id                      *string
 	created_at              *time.Time
-	identifier              *string
+	name                    *string
 	ca_certificate_pem      *[]byte
 	encrypted_private_key   *string
 	clearedFields           map[string]struct{}
-	api_keys                map[int]struct{}
-	removedapi_keys         map[int]struct{}
+	user_key                *string
+	cleareduser_key         bool
+	api_keys                map[string]struct{}
+	removedapi_keys         map[string]struct{}
 	clearedapi_keys         bool
-	server_templates        map[int]struct{}
-	removedserver_templates map[int]struct{}
+	server_templates        map[string]struct{}
+	removedserver_templates map[string]struct{}
 	clearedserver_templates bool
-	client_templates        map[int]struct{}
-	removedclient_templates map[int]struct{}
+	client_templates        map[string]struct{}
+	removedclient_templates map[string]struct{}
 	clearedclient_templates bool
 	done                    bool
 	oldValue                func(context.Context) (*Authority, error)
@@ -807,7 +763,7 @@ func newAuthorityMutation(c config, op Op, opts ...authorityOption) *AuthorityMu
 }
 
 // withAuthorityID sets the ID field of the mutation.
-func withAuthorityID(id int) authorityOption {
+func withAuthorityID(id string) authorityOption {
 	return func(m *AuthorityMutation) {
 		var (
 			err   error
@@ -857,9 +813,15 @@ func (m AuthorityMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Authority entities.
+func (m *AuthorityMutation) SetID(id string) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *AuthorityMutation) ID() (id int, exists bool) {
+func (m *AuthorityMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -870,12 +832,12 @@ func (m *AuthorityMutation) ID() (id int, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *AuthorityMutation) IDs(ctx context.Context) ([]int, error) {
+func (m *AuthorityMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []int{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -921,40 +883,40 @@ func (m *AuthorityMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// SetIdentifier sets the "identifier" field.
-func (m *AuthorityMutation) SetIdentifier(s string) {
-	m.identifier = &s
+// SetName sets the "name" field.
+func (m *AuthorityMutation) SetName(s string) {
+	m.name = &s
 }
 
-// Identifier returns the value of the "identifier" field in the mutation.
-func (m *AuthorityMutation) Identifier() (r string, exists bool) {
-	v := m.identifier
+// Name returns the value of the "name" field in the mutation.
+func (m *AuthorityMutation) Name() (r string, exists bool) {
+	v := m.name
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldIdentifier returns the old "identifier" field's value of the Authority entity.
+// OldName returns the old "name" field's value of the Authority entity.
 // If the Authority object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AuthorityMutation) OldIdentifier(ctx context.Context) (v string, err error) {
+func (m *AuthorityMutation) OldName(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldIdentifier is only allowed on UpdateOne operations")
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldIdentifier requires an ID field in the mutation")
+		return v, errors.New("OldName requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldIdentifier: %w", err)
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
 	}
-	return oldValue.Identifier, nil
+	return oldValue.Name, nil
 }
 
-// ResetIdentifier resets all changes to the "identifier" field.
-func (m *AuthorityMutation) ResetIdentifier() {
-	m.identifier = nil
+// ResetName resets all changes to the "name" field.
+func (m *AuthorityMutation) ResetName() {
+	m.name = nil
 }
 
 // SetCaCertificatePem sets the "ca_certificate_pem" field.
@@ -1029,10 +991,49 @@ func (m *AuthorityMutation) ResetEncryptedPrivateKey() {
 	m.encrypted_private_key = nil
 }
 
+// SetUserKeyID sets the "user_key" edge to the UserKey entity by id.
+func (m *AuthorityMutation) SetUserKeyID(id string) {
+	m.user_key = &id
+}
+
+// ClearUserKey clears the "user_key" edge to the UserKey entity.
+func (m *AuthorityMutation) ClearUserKey() {
+	m.cleareduser_key = true
+}
+
+// UserKeyCleared reports if the "user_key" edge to the UserKey entity was cleared.
+func (m *AuthorityMutation) UserKeyCleared() bool {
+	return m.cleareduser_key
+}
+
+// UserKeyID returns the "user_key" edge ID in the mutation.
+func (m *AuthorityMutation) UserKeyID() (id string, exists bool) {
+	if m.user_key != nil {
+		return *m.user_key, true
+	}
+	return
+}
+
+// UserKeyIDs returns the "user_key" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserKeyID instead. It exists only for internal usage by the builders.
+func (m *AuthorityMutation) UserKeyIDs() (ids []string) {
+	if id := m.user_key; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUserKey resets all changes to the "user_key" edge.
+func (m *AuthorityMutation) ResetUserKey() {
+	m.user_key = nil
+	m.cleareduser_key = false
+}
+
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by ids.
-func (m *AuthorityMutation) AddAPIKeyIDs(ids ...int) {
+func (m *AuthorityMutation) AddAPIKeyIDs(ids ...string) {
 	if m.api_keys == nil {
-		m.api_keys = make(map[int]struct{})
+		m.api_keys = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.api_keys[ids[i]] = struct{}{}
@@ -1050,9 +1051,9 @@ func (m *AuthorityMutation) APIKeysCleared() bool {
 }
 
 // RemoveAPIKeyIDs removes the "api_keys" edge to the APIKey entity by IDs.
-func (m *AuthorityMutation) RemoveAPIKeyIDs(ids ...int) {
+func (m *AuthorityMutation) RemoveAPIKeyIDs(ids ...string) {
 	if m.removedapi_keys == nil {
-		m.removedapi_keys = make(map[int]struct{})
+		m.removedapi_keys = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.api_keys, ids[i])
@@ -1061,7 +1062,7 @@ func (m *AuthorityMutation) RemoveAPIKeyIDs(ids ...int) {
 }
 
 // RemovedAPIKeys returns the removed IDs of the "api_keys" edge to the APIKey entity.
-func (m *AuthorityMutation) RemovedAPIKeysIDs() (ids []int) {
+func (m *AuthorityMutation) RemovedAPIKeysIDs() (ids []string) {
 	for id := range m.removedapi_keys {
 		ids = append(ids, id)
 	}
@@ -1069,7 +1070,7 @@ func (m *AuthorityMutation) RemovedAPIKeysIDs() (ids []int) {
 }
 
 // APIKeysIDs returns the "api_keys" edge IDs in the mutation.
-func (m *AuthorityMutation) APIKeysIDs() (ids []int) {
+func (m *AuthorityMutation) APIKeysIDs() (ids []string) {
 	for id := range m.api_keys {
 		ids = append(ids, id)
 	}
@@ -1084,9 +1085,9 @@ func (m *AuthorityMutation) ResetAPIKeys() {
 }
 
 // AddServerTemplateIDs adds the "server_templates" edge to the ServerTemplate entity by ids.
-func (m *AuthorityMutation) AddServerTemplateIDs(ids ...int) {
+func (m *AuthorityMutation) AddServerTemplateIDs(ids ...string) {
 	if m.server_templates == nil {
-		m.server_templates = make(map[int]struct{})
+		m.server_templates = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.server_templates[ids[i]] = struct{}{}
@@ -1104,9 +1105,9 @@ func (m *AuthorityMutation) ServerTemplatesCleared() bool {
 }
 
 // RemoveServerTemplateIDs removes the "server_templates" edge to the ServerTemplate entity by IDs.
-func (m *AuthorityMutation) RemoveServerTemplateIDs(ids ...int) {
+func (m *AuthorityMutation) RemoveServerTemplateIDs(ids ...string) {
 	if m.removedserver_templates == nil {
-		m.removedserver_templates = make(map[int]struct{})
+		m.removedserver_templates = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.server_templates, ids[i])
@@ -1115,7 +1116,7 @@ func (m *AuthorityMutation) RemoveServerTemplateIDs(ids ...int) {
 }
 
 // RemovedServerTemplates returns the removed IDs of the "server_templates" edge to the ServerTemplate entity.
-func (m *AuthorityMutation) RemovedServerTemplatesIDs() (ids []int) {
+func (m *AuthorityMutation) RemovedServerTemplatesIDs() (ids []string) {
 	for id := range m.removedserver_templates {
 		ids = append(ids, id)
 	}
@@ -1123,7 +1124,7 @@ func (m *AuthorityMutation) RemovedServerTemplatesIDs() (ids []int) {
 }
 
 // ServerTemplatesIDs returns the "server_templates" edge IDs in the mutation.
-func (m *AuthorityMutation) ServerTemplatesIDs() (ids []int) {
+func (m *AuthorityMutation) ServerTemplatesIDs() (ids []string) {
 	for id := range m.server_templates {
 		ids = append(ids, id)
 	}
@@ -1138,9 +1139,9 @@ func (m *AuthorityMutation) ResetServerTemplates() {
 }
 
 // AddClientTemplateIDs adds the "client_templates" edge to the ClientTemplate entity by ids.
-func (m *AuthorityMutation) AddClientTemplateIDs(ids ...int) {
+func (m *AuthorityMutation) AddClientTemplateIDs(ids ...string) {
 	if m.client_templates == nil {
-		m.client_templates = make(map[int]struct{})
+		m.client_templates = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.client_templates[ids[i]] = struct{}{}
@@ -1158,9 +1159,9 @@ func (m *AuthorityMutation) ClientTemplatesCleared() bool {
 }
 
 // RemoveClientTemplateIDs removes the "client_templates" edge to the ClientTemplate entity by IDs.
-func (m *AuthorityMutation) RemoveClientTemplateIDs(ids ...int) {
+func (m *AuthorityMutation) RemoveClientTemplateIDs(ids ...string) {
 	if m.removedclient_templates == nil {
-		m.removedclient_templates = make(map[int]struct{})
+		m.removedclient_templates = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.client_templates, ids[i])
@@ -1169,7 +1170,7 @@ func (m *AuthorityMutation) RemoveClientTemplateIDs(ids ...int) {
 }
 
 // RemovedClientTemplates returns the removed IDs of the "client_templates" edge to the ClientTemplate entity.
-func (m *AuthorityMutation) RemovedClientTemplatesIDs() (ids []int) {
+func (m *AuthorityMutation) RemovedClientTemplatesIDs() (ids []string) {
 	for id := range m.removedclient_templates {
 		ids = append(ids, id)
 	}
@@ -1177,7 +1178,7 @@ func (m *AuthorityMutation) RemovedClientTemplatesIDs() (ids []int) {
 }
 
 // ClientTemplatesIDs returns the "client_templates" edge IDs in the mutation.
-func (m *AuthorityMutation) ClientTemplatesIDs() (ids []int) {
+func (m *AuthorityMutation) ClientTemplatesIDs() (ids []string) {
 	for id := range m.client_templates {
 		ids = append(ids, id)
 	}
@@ -1229,8 +1230,8 @@ func (m *AuthorityMutation) Fields() []string {
 	if m.created_at != nil {
 		fields = append(fields, authority.FieldCreatedAt)
 	}
-	if m.identifier != nil {
-		fields = append(fields, authority.FieldIdentifier)
+	if m.name != nil {
+		fields = append(fields, authority.FieldName)
 	}
 	if m.ca_certificate_pem != nil {
 		fields = append(fields, authority.FieldCaCertificatePem)
@@ -1248,8 +1249,8 @@ func (m *AuthorityMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case authority.FieldCreatedAt:
 		return m.CreatedAt()
-	case authority.FieldIdentifier:
-		return m.Identifier()
+	case authority.FieldName:
+		return m.Name()
 	case authority.FieldCaCertificatePem:
 		return m.CaCertificatePem()
 	case authority.FieldEncryptedPrivateKey:
@@ -1265,8 +1266,8 @@ func (m *AuthorityMutation) OldField(ctx context.Context, name string) (ent.Valu
 	switch name {
 	case authority.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
-	case authority.FieldIdentifier:
-		return m.OldIdentifier(ctx)
+	case authority.FieldName:
+		return m.OldName(ctx)
 	case authority.FieldCaCertificatePem:
 		return m.OldCaCertificatePem(ctx)
 	case authority.FieldEncryptedPrivateKey:
@@ -1287,12 +1288,12 @@ func (m *AuthorityMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetCreatedAt(v)
 		return nil
-	case authority.FieldIdentifier:
+	case authority.FieldName:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetIdentifier(v)
+		m.SetName(v)
 		return nil
 	case authority.FieldCaCertificatePem:
 		v, ok := value.([]byte)
@@ -1360,8 +1361,8 @@ func (m *AuthorityMutation) ResetField(name string) error {
 	case authority.FieldCreatedAt:
 		m.ResetCreatedAt()
 		return nil
-	case authority.FieldIdentifier:
-		m.ResetIdentifier()
+	case authority.FieldName:
+		m.ResetName()
 		return nil
 	case authority.FieldCaCertificatePem:
 		m.ResetCaCertificatePem()
@@ -1375,7 +1376,10 @@ func (m *AuthorityMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *AuthorityMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
+	if m.user_key != nil {
+		edges = append(edges, authority.EdgeUserKey)
+	}
 	if m.api_keys != nil {
 		edges = append(edges, authority.EdgeAPIKeys)
 	}
@@ -1392,6 +1396,10 @@ func (m *AuthorityMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *AuthorityMutation) AddedIDs(name string) []ent.Value {
 	switch name {
+	case authority.EdgeUserKey:
+		if id := m.user_key; id != nil {
+			return []ent.Value{*id}
+		}
 	case authority.EdgeAPIKeys:
 		ids := make([]ent.Value, 0, len(m.api_keys))
 		for id := range m.api_keys {
@@ -1416,7 +1424,7 @@ func (m *AuthorityMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *AuthorityMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedapi_keys != nil {
 		edges = append(edges, authority.EdgeAPIKeys)
 	}
@@ -1457,7 +1465,10 @@ func (m *AuthorityMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *AuthorityMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
+	if m.cleareduser_key {
+		edges = append(edges, authority.EdgeUserKey)
+	}
 	if m.clearedapi_keys {
 		edges = append(edges, authority.EdgeAPIKeys)
 	}
@@ -1474,6 +1485,8 @@ func (m *AuthorityMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *AuthorityMutation) EdgeCleared(name string) bool {
 	switch name {
+	case authority.EdgeUserKey:
+		return m.cleareduser_key
 	case authority.EdgeAPIKeys:
 		return m.clearedapi_keys
 	case authority.EdgeServerTemplates:
@@ -1488,6 +1501,9 @@ func (m *AuthorityMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *AuthorityMutation) ClearEdge(name string) error {
 	switch name {
+	case authority.EdgeUserKey:
+		m.ClearUserKey()
+		return nil
 	}
 	return fmt.Errorf("unknown Authority unique edge %s", name)
 }
@@ -1496,6 +1512,9 @@ func (m *AuthorityMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *AuthorityMutation) ResetEdge(name string) error {
 	switch name {
+	case authority.EdgeUserKey:
+		m.ResetUserKey()
+		return nil
 	case authority.EdgeAPIKeys:
 		m.ResetAPIKeys()
 		return nil
@@ -1514,9 +1533,9 @@ type ClientTemplateMutation struct {
 	config
 	op                         Op
 	typ                        string
-	id                         *int
+	id                         *string
 	created_at                 *time.Time
-	identifier                 *string
+	name                       *string
 	common_name                *string
 	tag                        *string
 	validity                   *string
@@ -1527,10 +1546,10 @@ type ClientTemplateMutation struct {
 	appendip_addresses         []string
 	allow_additional_ips       *bool
 	clearedFields              map[string]struct{}
-	authority                  *int
+	authority                  *string
 	clearedauthority           bool
-	api_keys                   map[int]struct{}
-	removedapi_keys            map[int]struct{}
+	api_keys                   map[string]struct{}
+	removedapi_keys            map[string]struct{}
 	clearedapi_keys            bool
 	done                       bool
 	oldValue                   func(context.Context) (*ClientTemplate, error)
@@ -1557,7 +1576,7 @@ func newClientTemplateMutation(c config, op Op, opts ...clienttemplateOption) *C
 }
 
 // withClientTemplateID sets the ID field of the mutation.
-func withClientTemplateID(id int) clienttemplateOption {
+func withClientTemplateID(id string) clienttemplateOption {
 	return func(m *ClientTemplateMutation) {
 		var (
 			err   error
@@ -1607,9 +1626,15 @@ func (m ClientTemplateMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ClientTemplate entities.
+func (m *ClientTemplateMutation) SetID(id string) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *ClientTemplateMutation) ID() (id int, exists bool) {
+func (m *ClientTemplateMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -1620,12 +1645,12 @@ func (m *ClientTemplateMutation) ID() (id int, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *ClientTemplateMutation) IDs(ctx context.Context) ([]int, error) {
+func (m *ClientTemplateMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []int{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -1671,40 +1696,40 @@ func (m *ClientTemplateMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// SetIdentifier sets the "identifier" field.
-func (m *ClientTemplateMutation) SetIdentifier(s string) {
-	m.identifier = &s
+// SetName sets the "name" field.
+func (m *ClientTemplateMutation) SetName(s string) {
+	m.name = &s
 }
 
-// Identifier returns the value of the "identifier" field in the mutation.
-func (m *ClientTemplateMutation) Identifier() (r string, exists bool) {
-	v := m.identifier
+// Name returns the value of the "name" field in the mutation.
+func (m *ClientTemplateMutation) Name() (r string, exists bool) {
+	v := m.name
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldIdentifier returns the old "identifier" field's value of the ClientTemplate entity.
+// OldName returns the old "name" field's value of the ClientTemplate entity.
 // If the ClientTemplate object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ClientTemplateMutation) OldIdentifier(ctx context.Context) (v string, err error) {
+func (m *ClientTemplateMutation) OldName(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldIdentifier is only allowed on UpdateOne operations")
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldIdentifier requires an ID field in the mutation")
+		return v, errors.New("OldName requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldIdentifier: %w", err)
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
 	}
-	return oldValue.Identifier, nil
+	return oldValue.Name, nil
 }
 
-// ResetIdentifier resets all changes to the "identifier" field.
-func (m *ClientTemplateMutation) ResetIdentifier() {
-	m.identifier = nil
+// ResetName resets all changes to the "name" field.
+func (m *ClientTemplateMutation) ResetName() {
+	m.name = nil
 }
 
 // SetCommonName sets the "common_name" field.
@@ -2018,7 +2043,7 @@ func (m *ClientTemplateMutation) ResetAllowAdditionalIps() {
 }
 
 // SetAuthorityID sets the "authority" edge to the Authority entity by id.
-func (m *ClientTemplateMutation) SetAuthorityID(id int) {
+func (m *ClientTemplateMutation) SetAuthorityID(id string) {
 	m.authority = &id
 }
 
@@ -2033,7 +2058,7 @@ func (m *ClientTemplateMutation) AuthorityCleared() bool {
 }
 
 // AuthorityID returns the "authority" edge ID in the mutation.
-func (m *ClientTemplateMutation) AuthorityID() (id int, exists bool) {
+func (m *ClientTemplateMutation) AuthorityID() (id string, exists bool) {
 	if m.authority != nil {
 		return *m.authority, true
 	}
@@ -2043,7 +2068,7 @@ func (m *ClientTemplateMutation) AuthorityID() (id int, exists bool) {
 // AuthorityIDs returns the "authority" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // AuthorityID instead. It exists only for internal usage by the builders.
-func (m *ClientTemplateMutation) AuthorityIDs() (ids []int) {
+func (m *ClientTemplateMutation) AuthorityIDs() (ids []string) {
 	if id := m.authority; id != nil {
 		ids = append(ids, *id)
 	}
@@ -2057,9 +2082,9 @@ func (m *ClientTemplateMutation) ResetAuthority() {
 }
 
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by ids.
-func (m *ClientTemplateMutation) AddAPIKeyIDs(ids ...int) {
+func (m *ClientTemplateMutation) AddAPIKeyIDs(ids ...string) {
 	if m.api_keys == nil {
-		m.api_keys = make(map[int]struct{})
+		m.api_keys = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.api_keys[ids[i]] = struct{}{}
@@ -2077,9 +2102,9 @@ func (m *ClientTemplateMutation) APIKeysCleared() bool {
 }
 
 // RemoveAPIKeyIDs removes the "api_keys" edge to the APIKey entity by IDs.
-func (m *ClientTemplateMutation) RemoveAPIKeyIDs(ids ...int) {
+func (m *ClientTemplateMutation) RemoveAPIKeyIDs(ids ...string) {
 	if m.removedapi_keys == nil {
-		m.removedapi_keys = make(map[int]struct{})
+		m.removedapi_keys = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.api_keys, ids[i])
@@ -2088,7 +2113,7 @@ func (m *ClientTemplateMutation) RemoveAPIKeyIDs(ids ...int) {
 }
 
 // RemovedAPIKeys returns the removed IDs of the "api_keys" edge to the APIKey entity.
-func (m *ClientTemplateMutation) RemovedAPIKeysIDs() (ids []int) {
+func (m *ClientTemplateMutation) RemovedAPIKeysIDs() (ids []string) {
 	for id := range m.removedapi_keys {
 		ids = append(ids, id)
 	}
@@ -2096,7 +2121,7 @@ func (m *ClientTemplateMutation) RemovedAPIKeysIDs() (ids []int) {
 }
 
 // APIKeysIDs returns the "api_keys" edge IDs in the mutation.
-func (m *ClientTemplateMutation) APIKeysIDs() (ids []int) {
+func (m *ClientTemplateMutation) APIKeysIDs() (ids []string) {
 	for id := range m.api_keys {
 		ids = append(ids, id)
 	}
@@ -2148,8 +2173,8 @@ func (m *ClientTemplateMutation) Fields() []string {
 	if m.created_at != nil {
 		fields = append(fields, clienttemplate.FieldCreatedAt)
 	}
-	if m.identifier != nil {
-		fields = append(fields, clienttemplate.FieldIdentifier)
+	if m.name != nil {
+		fields = append(fields, clienttemplate.FieldName)
 	}
 	if m.common_name != nil {
 		fields = append(fields, clienttemplate.FieldCommonName)
@@ -2182,8 +2207,8 @@ func (m *ClientTemplateMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case clienttemplate.FieldCreatedAt:
 		return m.CreatedAt()
-	case clienttemplate.FieldIdentifier:
-		return m.Identifier()
+	case clienttemplate.FieldName:
+		return m.Name()
 	case clienttemplate.FieldCommonName:
 		return m.CommonName()
 	case clienttemplate.FieldTag:
@@ -2209,8 +2234,8 @@ func (m *ClientTemplateMutation) OldField(ctx context.Context, name string) (ent
 	switch name {
 	case clienttemplate.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
-	case clienttemplate.FieldIdentifier:
-		return m.OldIdentifier(ctx)
+	case clienttemplate.FieldName:
+		return m.OldName(ctx)
 	case clienttemplate.FieldCommonName:
 		return m.OldCommonName(ctx)
 	case clienttemplate.FieldTag:
@@ -2241,12 +2266,12 @@ func (m *ClientTemplateMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetCreatedAt(v)
 		return nil
-	case clienttemplate.FieldIdentifier:
+	case clienttemplate.FieldName:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetIdentifier(v)
+		m.SetName(v)
 		return nil
 	case clienttemplate.FieldCommonName:
 		v, ok := value.(string)
@@ -2364,8 +2389,8 @@ func (m *ClientTemplateMutation) ResetField(name string) error {
 	case clienttemplate.FieldCreatedAt:
 		m.ResetCreatedAt()
 		return nil
-	case clienttemplate.FieldIdentifier:
-		m.ResetIdentifier()
+	case clienttemplate.FieldName:
+		m.ResetName()
 		return nil
 	case clienttemplate.FieldCommonName:
 		m.ResetCommonName()
@@ -2497,18 +2522,20 @@ func (m *ClientTemplateMutation) ResetEdge(name string) error {
 // RootKeyMutation represents an operation that mutates the RootKey nodes in the graph.
 type RootKeyMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	created_at    *time.Time
-	identifier    *string
-	name          *string
-	salt          *[]byte
-	hash          *[]byte
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*RootKey, error)
-	predicates    []predicate.RootKey
+	op               Op
+	typ              string
+	id               *string
+	created_at       *time.Time
+	name             *string
+	salt             *[]byte
+	hash             *[]byte
+	clearedFields    map[string]struct{}
+	user_keys        map[string]struct{}
+	removeduser_keys map[string]struct{}
+	cleareduser_keys bool
+	done             bool
+	oldValue         func(context.Context) (*RootKey, error)
+	predicates       []predicate.RootKey
 }
 
 var _ ent.Mutation = (*RootKeyMutation)(nil)
@@ -2531,7 +2558,7 @@ func newRootKeyMutation(c config, op Op, opts ...rootkeyOption) *RootKeyMutation
 }
 
 // withRootKeyID sets the ID field of the mutation.
-func withRootKeyID(id int) rootkeyOption {
+func withRootKeyID(id string) rootkeyOption {
 	return func(m *RootKeyMutation) {
 		var (
 			err   error
@@ -2581,9 +2608,15 @@ func (m RootKeyMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of RootKey entities.
+func (m *RootKeyMutation) SetID(id string) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *RootKeyMutation) ID() (id int, exists bool) {
+func (m *RootKeyMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -2594,12 +2627,12 @@ func (m *RootKeyMutation) ID() (id int, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *RootKeyMutation) IDs(ctx context.Context) ([]int, error) {
+func (m *RootKeyMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []int{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -2643,42 +2676,6 @@ func (m *RootKeyMutation) OldCreatedAt(ctx context.Context) (v time.Time, err er
 // ResetCreatedAt resets all changes to the "created_at" field.
 func (m *RootKeyMutation) ResetCreatedAt() {
 	m.created_at = nil
-}
-
-// SetIdentifier sets the "identifier" field.
-func (m *RootKeyMutation) SetIdentifier(s string) {
-	m.identifier = &s
-}
-
-// Identifier returns the value of the "identifier" field in the mutation.
-func (m *RootKeyMutation) Identifier() (r string, exists bool) {
-	v := m.identifier
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldIdentifier returns the old "identifier" field's value of the RootKey entity.
-// If the RootKey object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *RootKeyMutation) OldIdentifier(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldIdentifier is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldIdentifier requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldIdentifier: %w", err)
-	}
-	return oldValue.Identifier, nil
-}
-
-// ResetIdentifier resets all changes to the "identifier" field.
-func (m *RootKeyMutation) ResetIdentifier() {
-	m.identifier = nil
 }
 
 // SetName sets the "name" field.
@@ -2789,6 +2786,60 @@ func (m *RootKeyMutation) ResetHash() {
 	m.hash = nil
 }
 
+// AddUserKeyIDs adds the "user_keys" edge to the UserKey entity by ids.
+func (m *RootKeyMutation) AddUserKeyIDs(ids ...string) {
+	if m.user_keys == nil {
+		m.user_keys = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.user_keys[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUserKeys clears the "user_keys" edge to the UserKey entity.
+func (m *RootKeyMutation) ClearUserKeys() {
+	m.cleareduser_keys = true
+}
+
+// UserKeysCleared reports if the "user_keys" edge to the UserKey entity was cleared.
+func (m *RootKeyMutation) UserKeysCleared() bool {
+	return m.cleareduser_keys
+}
+
+// RemoveUserKeyIDs removes the "user_keys" edge to the UserKey entity by IDs.
+func (m *RootKeyMutation) RemoveUserKeyIDs(ids ...string) {
+	if m.removeduser_keys == nil {
+		m.removeduser_keys = make(map[string]struct{})
+	}
+	for i := range ids {
+		delete(m.user_keys, ids[i])
+		m.removeduser_keys[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUserKeys returns the removed IDs of the "user_keys" edge to the UserKey entity.
+func (m *RootKeyMutation) RemovedUserKeysIDs() (ids []string) {
+	for id := range m.removeduser_keys {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UserKeysIDs returns the "user_keys" edge IDs in the mutation.
+func (m *RootKeyMutation) UserKeysIDs() (ids []string) {
+	for id := range m.user_keys {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUserKeys resets all changes to the "user_keys" edge.
+func (m *RootKeyMutation) ResetUserKeys() {
+	m.user_keys = nil
+	m.cleareduser_keys = false
+	m.removeduser_keys = nil
+}
+
 // Where appends a list predicates to the RootKeyMutation builder.
 func (m *RootKeyMutation) Where(ps ...predicate.RootKey) {
 	m.predicates = append(m.predicates, ps...)
@@ -2823,12 +2874,9 @@ func (m *RootKeyMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RootKeyMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 4)
 	if m.created_at != nil {
 		fields = append(fields, rootkey.FieldCreatedAt)
-	}
-	if m.identifier != nil {
-		fields = append(fields, rootkey.FieldIdentifier)
 	}
 	if m.name != nil {
 		fields = append(fields, rootkey.FieldName)
@@ -2849,8 +2897,6 @@ func (m *RootKeyMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case rootkey.FieldCreatedAt:
 		return m.CreatedAt()
-	case rootkey.FieldIdentifier:
-		return m.Identifier()
 	case rootkey.FieldName:
 		return m.Name()
 	case rootkey.FieldSalt:
@@ -2868,8 +2914,6 @@ func (m *RootKeyMutation) OldField(ctx context.Context, name string) (ent.Value,
 	switch name {
 	case rootkey.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
-	case rootkey.FieldIdentifier:
-		return m.OldIdentifier(ctx)
 	case rootkey.FieldName:
 		return m.OldName(ctx)
 	case rootkey.FieldSalt:
@@ -2891,13 +2935,6 @@ func (m *RootKeyMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCreatedAt(v)
-		return nil
-	case rootkey.FieldIdentifier:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetIdentifier(v)
 		return nil
 	case rootkey.FieldName:
 		v, ok := value.(string)
@@ -2972,9 +3009,6 @@ func (m *RootKeyMutation) ResetField(name string) error {
 	case rootkey.FieldCreatedAt:
 		m.ResetCreatedAt()
 		return nil
-	case rootkey.FieldIdentifier:
-		m.ResetIdentifier()
-		return nil
 	case rootkey.FieldName:
 		m.ResetName()
 		return nil
@@ -2990,49 +3024,85 @@ func (m *RootKeyMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *RootKeyMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.user_keys != nil {
+		edges = append(edges, rootkey.EdgeUserKeys)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *RootKeyMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case rootkey.EdgeUserKeys:
+		ids := make([]ent.Value, 0, len(m.user_keys))
+		for id := range m.user_keys {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RootKeyMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.removeduser_keys != nil {
+		edges = append(edges, rootkey.EdgeUserKeys)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *RootKeyMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case rootkey.EdgeUserKeys:
+		ids := make([]ent.Value, 0, len(m.removeduser_keys))
+		for id := range m.removeduser_keys {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *RootKeyMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.cleareduser_keys {
+		edges = append(edges, rootkey.EdgeUserKeys)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *RootKeyMutation) EdgeCleared(name string) bool {
+	switch name {
+	case rootkey.EdgeUserKeys:
+		return m.cleareduser_keys
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *RootKeyMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown RootKey unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *RootKeyMutation) ResetEdge(name string) error {
+	switch name {
+	case rootkey.EdgeUserKeys:
+		m.ResetUserKeys()
+		return nil
+	}
 	return fmt.Errorf("unknown RootKey edge %s", name)
 }
 
@@ -3041,9 +3111,9 @@ type ServerTemplateMutation struct {
 	config
 	op                         Op
 	typ                        string
-	id                         *int
+	id                         *string
 	created_at                 *time.Time
-	identifier                 *string
+	name                       *string
 	common_name                *string
 	tag                        *string
 	validity                   *string
@@ -3054,10 +3124,10 @@ type ServerTemplateMutation struct {
 	appendip_addresses         []string
 	allow_additional_ips       *bool
 	clearedFields              map[string]struct{}
-	authority                  *int
+	authority                  *string
 	clearedauthority           bool
-	api_keys                   map[int]struct{}
-	removedapi_keys            map[int]struct{}
+	api_keys                   map[string]struct{}
+	removedapi_keys            map[string]struct{}
 	clearedapi_keys            bool
 	done                       bool
 	oldValue                   func(context.Context) (*ServerTemplate, error)
@@ -3084,7 +3154,7 @@ func newServerTemplateMutation(c config, op Op, opts ...servertemplateOption) *S
 }
 
 // withServerTemplateID sets the ID field of the mutation.
-func withServerTemplateID(id int) servertemplateOption {
+func withServerTemplateID(id string) servertemplateOption {
 	return func(m *ServerTemplateMutation) {
 		var (
 			err   error
@@ -3134,9 +3204,15 @@ func (m ServerTemplateMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ServerTemplate entities.
+func (m *ServerTemplateMutation) SetID(id string) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *ServerTemplateMutation) ID() (id int, exists bool) {
+func (m *ServerTemplateMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -3147,12 +3223,12 @@ func (m *ServerTemplateMutation) ID() (id int, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *ServerTemplateMutation) IDs(ctx context.Context) ([]int, error) {
+func (m *ServerTemplateMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []int{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -3198,40 +3274,40 @@ func (m *ServerTemplateMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// SetIdentifier sets the "identifier" field.
-func (m *ServerTemplateMutation) SetIdentifier(s string) {
-	m.identifier = &s
+// SetName sets the "name" field.
+func (m *ServerTemplateMutation) SetName(s string) {
+	m.name = &s
 }
 
-// Identifier returns the value of the "identifier" field in the mutation.
-func (m *ServerTemplateMutation) Identifier() (r string, exists bool) {
-	v := m.identifier
+// Name returns the value of the "name" field in the mutation.
+func (m *ServerTemplateMutation) Name() (r string, exists bool) {
+	v := m.name
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldIdentifier returns the old "identifier" field's value of the ServerTemplate entity.
+// OldName returns the old "name" field's value of the ServerTemplate entity.
 // If the ServerTemplate object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ServerTemplateMutation) OldIdentifier(ctx context.Context) (v string, err error) {
+func (m *ServerTemplateMutation) OldName(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldIdentifier is only allowed on UpdateOne operations")
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldIdentifier requires an ID field in the mutation")
+		return v, errors.New("OldName requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldIdentifier: %w", err)
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
 	}
-	return oldValue.Identifier, nil
+	return oldValue.Name, nil
 }
 
-// ResetIdentifier resets all changes to the "identifier" field.
-func (m *ServerTemplateMutation) ResetIdentifier() {
-	m.identifier = nil
+// ResetName resets all changes to the "name" field.
+func (m *ServerTemplateMutation) ResetName() {
+	m.name = nil
 }
 
 // SetCommonName sets the "common_name" field.
@@ -3545,7 +3621,7 @@ func (m *ServerTemplateMutation) ResetAllowAdditionalIps() {
 }
 
 // SetAuthorityID sets the "authority" edge to the Authority entity by id.
-func (m *ServerTemplateMutation) SetAuthorityID(id int) {
+func (m *ServerTemplateMutation) SetAuthorityID(id string) {
 	m.authority = &id
 }
 
@@ -3560,7 +3636,7 @@ func (m *ServerTemplateMutation) AuthorityCleared() bool {
 }
 
 // AuthorityID returns the "authority" edge ID in the mutation.
-func (m *ServerTemplateMutation) AuthorityID() (id int, exists bool) {
+func (m *ServerTemplateMutation) AuthorityID() (id string, exists bool) {
 	if m.authority != nil {
 		return *m.authority, true
 	}
@@ -3570,7 +3646,7 @@ func (m *ServerTemplateMutation) AuthorityID() (id int, exists bool) {
 // AuthorityIDs returns the "authority" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // AuthorityID instead. It exists only for internal usage by the builders.
-func (m *ServerTemplateMutation) AuthorityIDs() (ids []int) {
+func (m *ServerTemplateMutation) AuthorityIDs() (ids []string) {
 	if id := m.authority; id != nil {
 		ids = append(ids, *id)
 	}
@@ -3584,9 +3660,9 @@ func (m *ServerTemplateMutation) ResetAuthority() {
 }
 
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by ids.
-func (m *ServerTemplateMutation) AddAPIKeyIDs(ids ...int) {
+func (m *ServerTemplateMutation) AddAPIKeyIDs(ids ...string) {
 	if m.api_keys == nil {
-		m.api_keys = make(map[int]struct{})
+		m.api_keys = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.api_keys[ids[i]] = struct{}{}
@@ -3604,9 +3680,9 @@ func (m *ServerTemplateMutation) APIKeysCleared() bool {
 }
 
 // RemoveAPIKeyIDs removes the "api_keys" edge to the APIKey entity by IDs.
-func (m *ServerTemplateMutation) RemoveAPIKeyIDs(ids ...int) {
+func (m *ServerTemplateMutation) RemoveAPIKeyIDs(ids ...string) {
 	if m.removedapi_keys == nil {
-		m.removedapi_keys = make(map[int]struct{})
+		m.removedapi_keys = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.api_keys, ids[i])
@@ -3615,7 +3691,7 @@ func (m *ServerTemplateMutation) RemoveAPIKeyIDs(ids ...int) {
 }
 
 // RemovedAPIKeys returns the removed IDs of the "api_keys" edge to the APIKey entity.
-func (m *ServerTemplateMutation) RemovedAPIKeysIDs() (ids []int) {
+func (m *ServerTemplateMutation) RemovedAPIKeysIDs() (ids []string) {
 	for id := range m.removedapi_keys {
 		ids = append(ids, id)
 	}
@@ -3623,7 +3699,7 @@ func (m *ServerTemplateMutation) RemovedAPIKeysIDs() (ids []int) {
 }
 
 // APIKeysIDs returns the "api_keys" edge IDs in the mutation.
-func (m *ServerTemplateMutation) APIKeysIDs() (ids []int) {
+func (m *ServerTemplateMutation) APIKeysIDs() (ids []string) {
 	for id := range m.api_keys {
 		ids = append(ids, id)
 	}
@@ -3675,8 +3751,8 @@ func (m *ServerTemplateMutation) Fields() []string {
 	if m.created_at != nil {
 		fields = append(fields, servertemplate.FieldCreatedAt)
 	}
-	if m.identifier != nil {
-		fields = append(fields, servertemplate.FieldIdentifier)
+	if m.name != nil {
+		fields = append(fields, servertemplate.FieldName)
 	}
 	if m.common_name != nil {
 		fields = append(fields, servertemplate.FieldCommonName)
@@ -3709,8 +3785,8 @@ func (m *ServerTemplateMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case servertemplate.FieldCreatedAt:
 		return m.CreatedAt()
-	case servertemplate.FieldIdentifier:
-		return m.Identifier()
+	case servertemplate.FieldName:
+		return m.Name()
 	case servertemplate.FieldCommonName:
 		return m.CommonName()
 	case servertemplate.FieldTag:
@@ -3736,8 +3812,8 @@ func (m *ServerTemplateMutation) OldField(ctx context.Context, name string) (ent
 	switch name {
 	case servertemplate.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
-	case servertemplate.FieldIdentifier:
-		return m.OldIdentifier(ctx)
+	case servertemplate.FieldName:
+		return m.OldName(ctx)
 	case servertemplate.FieldCommonName:
 		return m.OldCommonName(ctx)
 	case servertemplate.FieldTag:
@@ -3768,12 +3844,12 @@ func (m *ServerTemplateMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetCreatedAt(v)
 		return nil
-	case servertemplate.FieldIdentifier:
+	case servertemplate.FieldName:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetIdentifier(v)
+		m.SetName(v)
 		return nil
 	case servertemplate.FieldCommonName:
 		v, ok := value.(string)
@@ -3891,8 +3967,8 @@ func (m *ServerTemplateMutation) ResetField(name string) error {
 	case servertemplate.FieldCreatedAt:
 		m.ResetCreatedAt()
 		return nil
-	case servertemplate.FieldIdentifier:
-		m.ResetIdentifier()
+	case servertemplate.FieldName:
+		m.ResetName()
 		return nil
 	case servertemplate.FieldCommonName:
 		m.ResetCommonName()
@@ -4019,4 +4095,650 @@ func (m *ServerTemplateMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown ServerTemplate edge %s", name)
+}
+
+// UserKeyMutation represents an operation that mutates the UserKey nodes in the graph.
+type UserKeyMutation struct {
+	config
+	op                 Op
+	typ                string
+	id                 *string
+	created_at         *time.Time
+	name               *string
+	salt               *[]byte
+	hash               *[]byte
+	clearedFields      map[string]struct{}
+	root_key           *string
+	clearedroot_key    bool
+	authorities        map[string]struct{}
+	removedauthorities map[string]struct{}
+	clearedauthorities bool
+	done               bool
+	oldValue           func(context.Context) (*UserKey, error)
+	predicates         []predicate.UserKey
+}
+
+var _ ent.Mutation = (*UserKeyMutation)(nil)
+
+// userkeyOption allows management of the mutation configuration using functional options.
+type userkeyOption func(*UserKeyMutation)
+
+// newUserKeyMutation creates new mutation for the UserKey entity.
+func newUserKeyMutation(c config, op Op, opts ...userkeyOption) *UserKeyMutation {
+	m := &UserKeyMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUserKey,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUserKeyID sets the ID field of the mutation.
+func withUserKeyID(id string) userkeyOption {
+	return func(m *UserKeyMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *UserKey
+		)
+		m.oldValue = func(ctx context.Context) (*UserKey, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().UserKey.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUserKey sets the old UserKey of the mutation.
+func withUserKey(node *UserKey) userkeyOption {
+	return func(m *UserKeyMutation) {
+		m.oldValue = func(context.Context) (*UserKey, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UserKeyMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UserKeyMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of UserKey entities.
+func (m *UserKeyMutation) SetID(id string) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UserKeyMutation) ID() (id string, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UserKeyMutation) IDs(ctx context.Context) ([]string, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []string{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().UserKey.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *UserKeyMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *UserKeyMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the UserKey entity.
+// If the UserKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserKeyMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *UserKeyMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetName sets the "name" field.
+func (m *UserKeyMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *UserKeyMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the UserKey entity.
+// If the UserKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserKeyMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *UserKeyMutation) ResetName() {
+	m.name = nil
+}
+
+// SetSalt sets the "salt" field.
+func (m *UserKeyMutation) SetSalt(b []byte) {
+	m.salt = &b
+}
+
+// Salt returns the value of the "salt" field in the mutation.
+func (m *UserKeyMutation) Salt() (r []byte, exists bool) {
+	v := m.salt
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSalt returns the old "salt" field's value of the UserKey entity.
+// If the UserKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserKeyMutation) OldSalt(ctx context.Context) (v []byte, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSalt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSalt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSalt: %w", err)
+	}
+	return oldValue.Salt, nil
+}
+
+// ResetSalt resets all changes to the "salt" field.
+func (m *UserKeyMutation) ResetSalt() {
+	m.salt = nil
+}
+
+// SetHash sets the "hash" field.
+func (m *UserKeyMutation) SetHash(b []byte) {
+	m.hash = &b
+}
+
+// Hash returns the value of the "hash" field in the mutation.
+func (m *UserKeyMutation) Hash() (r []byte, exists bool) {
+	v := m.hash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldHash returns the old "hash" field's value of the UserKey entity.
+// If the UserKey object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserKeyMutation) OldHash(ctx context.Context) (v []byte, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldHash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldHash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldHash: %w", err)
+	}
+	return oldValue.Hash, nil
+}
+
+// ResetHash resets all changes to the "hash" field.
+func (m *UserKeyMutation) ResetHash() {
+	m.hash = nil
+}
+
+// SetRootKeyID sets the "root_key" edge to the RootKey entity by id.
+func (m *UserKeyMutation) SetRootKeyID(id string) {
+	m.root_key = &id
+}
+
+// ClearRootKey clears the "root_key" edge to the RootKey entity.
+func (m *UserKeyMutation) ClearRootKey() {
+	m.clearedroot_key = true
+}
+
+// RootKeyCleared reports if the "root_key" edge to the RootKey entity was cleared.
+func (m *UserKeyMutation) RootKeyCleared() bool {
+	return m.clearedroot_key
+}
+
+// RootKeyID returns the "root_key" edge ID in the mutation.
+func (m *UserKeyMutation) RootKeyID() (id string, exists bool) {
+	if m.root_key != nil {
+		return *m.root_key, true
+	}
+	return
+}
+
+// RootKeyIDs returns the "root_key" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// RootKeyID instead. It exists only for internal usage by the builders.
+func (m *UserKeyMutation) RootKeyIDs() (ids []string) {
+	if id := m.root_key; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetRootKey resets all changes to the "root_key" edge.
+func (m *UserKeyMutation) ResetRootKey() {
+	m.root_key = nil
+	m.clearedroot_key = false
+}
+
+// AddAuthorityIDs adds the "authorities" edge to the Authority entity by ids.
+func (m *UserKeyMutation) AddAuthorityIDs(ids ...string) {
+	if m.authorities == nil {
+		m.authorities = make(map[string]struct{})
+	}
+	for i := range ids {
+		m.authorities[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAuthorities clears the "authorities" edge to the Authority entity.
+func (m *UserKeyMutation) ClearAuthorities() {
+	m.clearedauthorities = true
+}
+
+// AuthoritiesCleared reports if the "authorities" edge to the Authority entity was cleared.
+func (m *UserKeyMutation) AuthoritiesCleared() bool {
+	return m.clearedauthorities
+}
+
+// RemoveAuthorityIDs removes the "authorities" edge to the Authority entity by IDs.
+func (m *UserKeyMutation) RemoveAuthorityIDs(ids ...string) {
+	if m.removedauthorities == nil {
+		m.removedauthorities = make(map[string]struct{})
+	}
+	for i := range ids {
+		delete(m.authorities, ids[i])
+		m.removedauthorities[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAuthorities returns the removed IDs of the "authorities" edge to the Authority entity.
+func (m *UserKeyMutation) RemovedAuthoritiesIDs() (ids []string) {
+	for id := range m.removedauthorities {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AuthoritiesIDs returns the "authorities" edge IDs in the mutation.
+func (m *UserKeyMutation) AuthoritiesIDs() (ids []string) {
+	for id := range m.authorities {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAuthorities resets all changes to the "authorities" edge.
+func (m *UserKeyMutation) ResetAuthorities() {
+	m.authorities = nil
+	m.clearedauthorities = false
+	m.removedauthorities = nil
+}
+
+// Where appends a list predicates to the UserKeyMutation builder.
+func (m *UserKeyMutation) Where(ps ...predicate.UserKey) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UserKeyMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UserKeyMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UserKey, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UserKeyMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UserKeyMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UserKey).
+func (m *UserKeyMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UserKeyMutation) Fields() []string {
+	fields := make([]string, 0, 4)
+	if m.created_at != nil {
+		fields = append(fields, userkey.FieldCreatedAt)
+	}
+	if m.name != nil {
+		fields = append(fields, userkey.FieldName)
+	}
+	if m.salt != nil {
+		fields = append(fields, userkey.FieldSalt)
+	}
+	if m.hash != nil {
+		fields = append(fields, userkey.FieldHash)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UserKeyMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case userkey.FieldCreatedAt:
+		return m.CreatedAt()
+	case userkey.FieldName:
+		return m.Name()
+	case userkey.FieldSalt:
+		return m.Salt()
+	case userkey.FieldHash:
+		return m.Hash()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UserKeyMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case userkey.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case userkey.FieldName:
+		return m.OldName(ctx)
+	case userkey.FieldSalt:
+		return m.OldSalt(ctx)
+	case userkey.FieldHash:
+		return m.OldHash(ctx)
+	}
+	return nil, fmt.Errorf("unknown UserKey field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UserKeyMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case userkey.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case userkey.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case userkey.FieldSalt:
+		v, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSalt(v)
+		return nil
+	case userkey.FieldHash:
+		v, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetHash(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UserKey field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UserKeyMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UserKeyMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UserKeyMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown UserKey numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UserKeyMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UserKeyMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UserKeyMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown UserKey nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UserKeyMutation) ResetField(name string) error {
+	switch name {
+	case userkey.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case userkey.FieldName:
+		m.ResetName()
+		return nil
+	case userkey.FieldSalt:
+		m.ResetSalt()
+		return nil
+	case userkey.FieldHash:
+		m.ResetHash()
+		return nil
+	}
+	return fmt.Errorf("unknown UserKey field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UserKeyMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.root_key != nil {
+		edges = append(edges, userkey.EdgeRootKey)
+	}
+	if m.authorities != nil {
+		edges = append(edges, userkey.EdgeAuthorities)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UserKeyMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case userkey.EdgeRootKey:
+		if id := m.root_key; id != nil {
+			return []ent.Value{*id}
+		}
+	case userkey.EdgeAuthorities:
+		ids := make([]ent.Value, 0, len(m.authorities))
+		for id := range m.authorities {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UserKeyMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedauthorities != nil {
+		edges = append(edges, userkey.EdgeAuthorities)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UserKeyMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case userkey.EdgeAuthorities:
+		ids := make([]ent.Value, 0, len(m.removedauthorities))
+		for id := range m.removedauthorities {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UserKeyMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedroot_key {
+		edges = append(edges, userkey.EdgeRootKey)
+	}
+	if m.clearedauthorities {
+		edges = append(edges, userkey.EdgeAuthorities)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UserKeyMutation) EdgeCleared(name string) bool {
+	switch name {
+	case userkey.EdgeRootKey:
+		return m.clearedroot_key
+	case userkey.EdgeAuthorities:
+		return m.clearedauthorities
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UserKeyMutation) ClearEdge(name string) error {
+	switch name {
+	case userkey.EdgeRootKey:
+		m.ClearRootKey()
+		return nil
+	}
+	return fmt.Errorf("unknown UserKey unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UserKeyMutation) ResetEdge(name string) error {
+	switch name {
+	case userkey.EdgeRootKey:
+		m.ResetRootKey()
+		return nil
+	case userkey.EdgeAuthorities:
+		m.ResetAuthorities()
+		return nil
+	}
+	return fmt.Errorf("unknown UserKey edge %s", name)
 }

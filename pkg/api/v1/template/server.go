@@ -78,7 +78,7 @@ func (a *Template) CreateServer(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "common name is required")
 	}
 
-	if !utils.ValidString(body.CommonName) {
+	if !utils.ValidDNS(body.CommonName) {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid common name")
 	}
 

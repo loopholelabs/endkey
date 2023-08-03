@@ -47,7 +47,7 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 					return err
 				}
 
-				value := fmt.Sprintf("%s-%s.%s", key.RootPrefixString, res.GetPayload().ID, res.GetPayload().Secret)
+				value := fmt.Sprintf("%s%s.%s", key.RootPrefixString, res.GetPayload().ID, res.GetPayload().Secret)
 
 				if ch.Printer.Format() == printer.Human {
 					ch.Printer.Printf("Created Root Key '%s': %s (this will only be displayed once)\n", printer.Bold(res.Payload.Name), printer.BoldGreen(value))

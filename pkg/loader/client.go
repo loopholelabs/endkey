@@ -105,7 +105,7 @@ func (l *Client) Certificate(ctx context.Context) (*tls.Certificate, error) {
 		AdditionalDNSNames:    l.options.AdditionalDNSNames,
 		AdditionalIPAddresses: l.options.AdditionalIPAddresses,
 		Csr:                   base64.StdEncoding.EncodeToString(csrPEM),
-		Template:              l.options.Template,
+		TemplateName:          l.options.Template,
 	}
 
 	result, err := l.client.Certificate.PostCertificateClient(certificate.NewPostCertificateClientParamsWithContext(ctx).WithRequest(req))

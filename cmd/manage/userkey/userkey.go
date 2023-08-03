@@ -48,7 +48,7 @@ func Cmd() command.SetupCommand[*config.Config] {
 
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		userkeyCmd := &cobra.Command{
-			Use:   "user",
+			Use:   "userkey",
 			Short: "Create, list, and manage User Keys",
 			PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 				ch.Config.AuthenticationKey = rootkey

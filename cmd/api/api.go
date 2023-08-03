@@ -55,7 +55,8 @@ func Cmd() command.SetupCommand[*config.Config] {
 
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		apiCmd := &cobra.Command{
-			Use: "api",
+			Use:   "api",
+			Short: "Start the API",
 			PreRunE: func(cmd *cobra.Command, args []string) error {
 				log.Init(ch.Config.GetLogFile(), ch.Debug())
 				err := ch.Config.GlobalRequiredFlags(cmd)

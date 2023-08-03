@@ -144,8 +144,8 @@ func (d *Database) DeleteUserKeyByName(ctx context.Context, name string) error {
 		}
 	}
 
-	_, err = uk.Edges.AuthoritiesOrErr()
-	if err == nil {
+	auths, err := uk.Edges.AuthoritiesOrErr()
+	if err == nil && len(auths) > 0 {
 		return ErrAlreadyExists
 	}
 

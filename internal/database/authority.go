@@ -80,18 +80,18 @@ func (d *Database) DeleteAuthorityByName(ctx context.Context, name string, uk *e
 		return err
 	}
 
-	_, err = auth.Edges.APIKeysOrErr()
-	if err == nil {
+	aks, err := auth.Edges.APIKeysOrErr()
+	if err == nil && len(aks) != 0 {
 		return ErrAlreadyExists
 	}
 
-	_, err = auth.Edges.ServerTemplatesOrErr()
-	if err == nil {
+	stempls, err := auth.Edges.ServerTemplatesOrErr()
+	if err == nil && len(stempls) != 0 {
 		return ErrAlreadyExists
 	}
 
-	_, err = auth.Edges.ClientTemplatesOrErr()
-	if err == nil {
+	ctempls, err := auth.Edges.ClientTemplatesOrErr()
+	if err == nil && len(ctempls) != 0 {
 		return ErrAlreadyExists
 	}
 

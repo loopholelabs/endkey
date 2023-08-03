@@ -28,7 +28,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityName string, uk *ent.UserKey, serverTemplateID string, clientTemplateID string) (*ent.APIKey, []byte, error) {
+func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityName string, uk *ent.UserKey, serverTemplateName string, clientTemplateName string) (*ent.APIKey, []byte, error) {
 	id := uuid.New().String()
 	secret := []byte(uuid.New().String())
 	salt := []byte(uuid.New().String())
@@ -47,8 +47,8 @@ func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityName 
 
 	akBuilder := d.sql.APIKey.Create().SetID(id).SetName(name).SetHash(hash).SetSalt(salt).SetAuthority(auth)
 
-	if serverTemplateID != "" {
-		st, err := d.sql.ServerTemplate.Query().Where(servertemplate.ID(serverTemplateID)).Only(ctx)
+	if serverTemplateName != "" {
+		st, err := d.sql.ServerTemplate.Query().Where(servertemplate.Name(serverTemplateName)).Only(ctx)
 		if err != nil {
 			if ent.IsNotFound(err) {
 				return nil, nil, ErrNotFound
@@ -58,8 +58,8 @@ func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityName 
 		akBuilder = akBuilder.SetServerTemplate(st)
 	}
 
-	if clientTemplateID != "" {
-		ct, err := d.sql.ClientTemplate.Query().Where(clienttemplate.ID(clientTemplateID)).Only(ctx)
+	if clientTemplateName != "" {
+		ct, err := d.sql.ClientTemplate.Query().Where(clienttemplate.Name(clientTemplateName)).Only(ctx)
 		if err != nil {
 			if ent.IsNotFound(err) {
 				return nil, nil, ErrNotFound

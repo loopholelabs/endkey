@@ -235,7 +235,7 @@ func (a *UserKey) ListUserKeys(ctx *fiber.Ctx) error {
 func (a *UserKey) DeleteUserKey(ctx *fiber.Ctx) error {
 	a.logger.Debug().Msgf("received DeleteUserKey request from %s", ctx.IP())
 
-	rk, err := authorization.GetUserKey(ctx)
+	rk, err := authorization.GetRootKey(ctx)
 	if err != nil {
 		a.logger.Error().Err(err).Msg("failed to get root key from context")
 		return fiber.NewError(fiber.StatusInternalServerError, "failed to get root key from request context")

@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-package server
+package template
 
 import (
 	"fmt"
@@ -27,12 +27,12 @@ import (
 	"strings"
 )
 
-// ListCmd encapsulates the commands for listing Server Templates
+// ListCmd encapsulates the commands for listing Client Templates
 func ListCmd() command.SetupCommand[*config.Config] {
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		listCmd := &cobra.Command{
 			Use:   "list <authority>",
-			Short: "list Server Templates",
+			Short: "list Client Templates",
 			Args:  cobra.ExactArgs(1),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				ctx := cmd.Context()
@@ -40,22 +40,22 @@ func ListCmd() command.SetupCommand[*config.Config] {
 
 				authority := args[0]
 
-				end := ch.Printer.PrintProgress(fmt.Sprintf("Retrieving Server Templates for authority %s...", authority))
+				end := ch.Printer.PrintProgress(fmt.Sprintf("Retrieving Templates for authority %s...", authority))
 
-				res, err := client.Template.GetTemplateServerAuthorityName(template.NewGetTemplateServerAuthorityNameParamsWithContext(ctx).WithAuthorityName(authority))
+				res, err := client.Template.GetTemplateAuthorityName(template.NewGetTemplateAuthorityNameParamsWithContext(ctx).WithAuthorityName(authority))
 				end()
 				if err != nil {
 					return err
 				}
 
 				if len(res.GetPayload()) == 0 && ch.Printer.Format() == printer.Human {
-					ch.Printer.Println("No Server Templates have been created yet.")
+					ch.Printer.Println("No Client Templates have been created yet.")
 					return nil
 				}
 
-				templs := make([]serverTemplateModel, 0, len(res.GetPayload()))
+				templs := make([]templateModel, 0, len(res.GetPayload()))
 				for _, templ := range res.GetPayload() {
-					templs = append(templs, serverTemplateModel{
+					templs = append(templs, templateModel{
 						Created:       templ.CreatedAt,
 						ID:            templ.ID,
 						Name:          templ.Name,
@@ -67,6 +67,8 @@ func ListCmd() command.SetupCommand[*config.Config] {
 						Validity:      templ.Validity,
 						AdditionalDNS: fmt.Sprintf("%t", templ.AllowAdditionalDNSNames),
 						AdditionalIPs: fmt.Sprintf("%t", templ.AllowAdditionalIps),
+						Client:        fmt.Sprintf("%t", templ.Client),
+						Server:        fmt.Sprintf("%t", templ.Server),
 					})
 				}
 

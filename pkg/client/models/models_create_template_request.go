@@ -12,10 +12,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ModelsCreateServerTemplateRequest models create server template request
+// ModelsCreateTemplateRequest models create template request
 //
-// swagger:model models.CreateServerTemplateRequest
-type ModelsCreateServerTemplateRequest struct {
+// swagger:model models.CreateTemplateRequest
+type ModelsCreateTemplateRequest struct {
 
 	// allow additional dns names
 	AllowAdditionalDNSNames bool `json:"allow_additional_dns_names,omitempty"`
@@ -25,6 +25,9 @@ type ModelsCreateServerTemplateRequest struct {
 
 	// authority name
 	AuthorityName string `json:"authority_name,omitempty"`
+
+	// client
+	Client bool `json:"client,omitempty"`
 
 	// common name
 	CommonName string `json:"common_name,omitempty"`
@@ -38,6 +41,9 @@ type ModelsCreateServerTemplateRequest struct {
 	// name
 	Name string `json:"name,omitempty"`
 
+	// server
+	Server bool `json:"server,omitempty"`
+
 	// tag
 	Tag string `json:"tag,omitempty"`
 
@@ -45,18 +51,18 @@ type ModelsCreateServerTemplateRequest struct {
 	Validity string `json:"validity,omitempty"`
 }
 
-// Validate validates this models create server template request
-func (m *ModelsCreateServerTemplateRequest) Validate(formats strfmt.Registry) error {
+// Validate validates this models create template request
+func (m *ModelsCreateTemplateRequest) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this models create server template request based on context it is used
-func (m *ModelsCreateServerTemplateRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this models create template request based on context it is used
+func (m *ModelsCreateTemplateRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *ModelsCreateServerTemplateRequest) MarshalBinary() ([]byte, error) {
+func (m *ModelsCreateTemplateRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -64,8 +70,8 @@ func (m *ModelsCreateServerTemplateRequest) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ModelsCreateServerTemplateRequest) UnmarshalBinary(b []byte) error {
-	var res ModelsCreateServerTemplateRequest
+func (m *ModelsCreateTemplateRequest) UnmarshalBinary(b []byte) error {
+	var res ModelsCreateTemplateRequest
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-package server
+package template
 
 import (
 	"fmt"
@@ -27,13 +27,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// DeleteCmd encapsulates the commands for deleting Server Templates
+// DeleteCmd encapsulates the commands for deleting Client Templates
 func DeleteCmd() command.SetupCommand[*config.Config] {
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		deleteCmd := &cobra.Command{
 			Use:   "delete <authority> <name>",
 			Args:  cobra.ExactArgs(2),
-			Short: "delete a Server Template with the given name and authority",
+			Short: "delete a Template with the given name and authority",
 			RunE: func(cmd *cobra.Command, args []string) error {
 				ctx := cmd.Context()
 				client := ch.Config.Client()
@@ -41,21 +41,21 @@ func DeleteCmd() command.SetupCommand[*config.Config] {
 				authority := args[0]
 				name := args[1]
 
-				end := ch.Printer.PrintProgress(fmt.Sprintf("Deleting Server Template %s for authority %s...", name, authority))
+				end := ch.Printer.PrintProgress(fmt.Sprintf("Deleting Client Template %s for authority %s...", name, authority))
 
-				req := &models.ModelsDeleteServerTemplateRequest{
+				req := &models.ModelsDeleteTemplateRequest{
 					AuthorityName: authority,
 					Name:          name,
 				}
 
-				_, err := client.Template.DeleteTemplateServer(template.NewDeleteTemplateServerParamsWithContext(ctx).WithRequest(req))
+				_, err := client.Template.DeleteTemplate(template.NewDeleteTemplateParamsWithContext(ctx).WithRequest(req))
 				end()
 				if err != nil {
 					return err
 				}
 
 				if ch.Printer.Format() == printer.Human {
-					ch.Printer.Printf("%s %s %s\n", printer.BoldRed("Server Template"), printer.BoldGreen(name), printer.BoldRed("deleted"))
+					ch.Printer.Printf("%s %s %s\n", printer.BoldRed("Template"), printer.BoldGreen(name), printer.BoldRed("deleted"))
 					return nil
 				}
 

@@ -59,7 +59,6 @@ func ListCmd() command.SetupCommand[*config.Config] {
 						ID:           key.ID,
 						Name:         key.Name,
 						Authority:    key.AuthorityName,
-						TemplateKind: key.TemplateKind,
 						TemplateName: key.TemplateName,
 					})
 				}

@@ -14,7 +14,7 @@
 	limitations under the License.
 */
 
-package server
+package template
 
 import (
 	"fmt"
@@ -27,20 +27,22 @@ import (
 	"strings"
 )
 
-// CreateCmd encapsulates the commands for creating Server Templates
+// CreateCmd encapsulates the commands for creating Templates
 func CreateCmd() command.SetupCommand[*config.Config] {
 	var allowAdditionalDNSNames bool
 	var allowAdditionalIPs bool
 	var dnsNames []string
 	var ipAddresses []string
+	var client bool
+	var server bool
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		createCmd := &cobra.Command{
 			Use:   "create <authority> <name> <common-name> <tag> <validity>",
 			Args:  cobra.ExactArgs(5),
-			Short: "Create a Server Template with the given name ",
+			Short: "Create a Client Template with the given name ",
 			RunE: func(cmd *cobra.Command, args []string) error {
 				ctx := cmd.Context()
-				client := ch.Config.Client()
+				c := ch.Config.Client()
 
 				authority := args[0]
 				name := args[1]
@@ -48,8 +50,8 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 				tag := args[3]
 				validity := args[4]
 
-				end := ch.Printer.PrintProgress(fmt.Sprintf("Creating Server Template %s for authority %s...", name, authority))
-				req := &models.ModelsCreateServerTemplateRequest{
+				end := ch.Printer.PrintProgress(fmt.Sprintf("Creating Template %s for authority %s...", name, authority))
+				req := &models.ModelsCreateTemplateRequest{
 					AllowAdditionalDNSNames: allowAdditionalDNSNames,
 					AllowAdditionalIps:      allowAdditionalIPs,
 					AuthorityName:           authority,
@@ -59,15 +61,17 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 					IPAddresses:             ipAddresses,
 					Tag:                     tag,
 					Validity:                validity,
+					Client:                  client,
+					Server:                  server,
 				}
 
-				res, err := client.Template.PostTemplateServer(template.NewPostTemplateServerParamsWithContext(ctx).WithRequest(req))
+				res, err := c.Template.PostTemplate(template.NewPostTemplateParamsWithContext(ctx).WithRequest(req))
 				end()
 				if err != nil {
 					return err
 				}
 
-				return ch.Printer.PrintResource(serverTemplateModel{
+				return ch.Printer.PrintResource(templateModel{
 					Created:       res.GetPayload().CreatedAt,
 					ID:            res.GetPayload().ID,
 					Name:          res.GetPayload().Name,
@@ -79,6 +83,8 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 					Validity:      res.GetPayload().Validity,
 					AdditionalDNS: fmt.Sprintf("%t", res.GetPayload().AllowAdditionalDNSNames),
 					AdditionalIPs: fmt.Sprintf("%t", res.GetPayload().AllowAdditionalIps),
+					Client:        fmt.Sprintf("%t", res.GetPayload().Client),
+					Server:        fmt.Sprintf("%t", res.GetPayload().Server),
 				})
 			},
 		}
@@ -87,6 +93,8 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 		createCmd.Flags().BoolVar(&allowAdditionalIPs, "allow-additional-ips", false, "Allow additional IP addresses")
 		createCmd.Flags().StringSliceVar(&dnsNames, "dns-names", []string{}, "DNS names")
 		createCmd.Flags().StringSliceVar(&ipAddresses, "ip-addresses", []string{}, "IP addresses")
+		createCmd.Flags().BoolVar(&client, "client", false, "Client certificate template")
+		createCmd.Flags().BoolVar(&server, "server", false, "Server certificate template")
 
 		cmd.AddCommand(createCmd)
 	}

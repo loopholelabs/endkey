@@ -36,7 +36,6 @@ const (
 
 type certificateModel struct {
 	Authority     string `header:"authority" json:"authority"`
-	Kind          string `header:"kind" json:"kind"`
 	Template      string `header:"template" json:"template"`
 	AdditionalDNS string `header:"additional_dns_names" json:"additional_dns_names"`
 	AdditionalIP  string `header:"additional_ip_addresses" json:"additional_ip_addresses"`

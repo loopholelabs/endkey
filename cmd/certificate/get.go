@@ -114,7 +114,6 @@ func GetCmd() command.SetupCommand[*config.Config] {
 							err := ch.Printer.PrintResource(certificateModel{
 								Authority:     res.AuthorityName,
 								Template:      res.TemplateName,
-								Kind:          res.TemplateKind,
 								AdditionalDNS: strings.Join(res.AdditionalDNSNames, ","),
 								AdditionalIP:  strings.Join(res.AdditionalIPAddresses, ","),
 								Expiry:        res.Expiry,

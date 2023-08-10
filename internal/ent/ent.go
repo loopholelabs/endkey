@@ -14,9 +14,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/loopholelabs/endkey/internal/ent/apikey"
 	"github.com/loopholelabs/endkey/internal/ent/authority"
-	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
 	"github.com/loopholelabs/endkey/internal/ent/rootkey"
-	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/template"
 	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
@@ -78,12 +77,11 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			apikey.Table:         apikey.ValidColumn,
-			authority.Table:      authority.ValidColumn,
-			clienttemplate.Table: clienttemplate.ValidColumn,
-			rootkey.Table:        rootkey.ValidColumn,
-			servertemplate.Table: servertemplate.ValidColumn,
-			userkey.Table:        userkey.ValidColumn,
+			apikey.Table:    apikey.ValidColumn,
+			authority.Table: authority.ValidColumn,
+			rootkey.Table:   rootkey.ValidColumn,
+			template.Table:  template.ValidColumn,
+			userkey.Table:   userkey.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

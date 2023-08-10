@@ -12,14 +12,11 @@ type APIKey func(*sql.Selector)
 // Authority is the predicate function for authority builders.
 type Authority func(*sql.Selector)
 
-// ClientTemplate is the predicate function for clienttemplate builders.
-type ClientTemplate func(*sql.Selector)
-
 // RootKey is the predicate function for rootkey builders.
 type RootKey func(*sql.Selector)
 
-// ServerTemplate is the predicate function for servertemplate builders.
-type ServerTemplate func(*sql.Selector)
+// Template is the predicate function for template builders.
+type Template func(*sql.Selector)
 
 // UserKey is the predicate function for userkey builders.
 type UserKey func(*sql.Selector)

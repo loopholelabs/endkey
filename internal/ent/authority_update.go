@@ -12,9 +12,8 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/loopholelabs/endkey/internal/ent/apikey"
 	"github.com/loopholelabs/endkey/internal/ent/authority"
-	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
 	"github.com/loopholelabs/endkey/internal/ent/predicate"
-	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/template"
 	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
@@ -77,34 +76,19 @@ func (au *AuthorityUpdate) AddAPIKeys(a ...*APIKey) *AuthorityUpdate {
 	return au.AddAPIKeyIDs(ids...)
 }
 
-// AddServerTemplateIDs adds the "server_templates" edge to the ServerTemplate entity by IDs.
-func (au *AuthorityUpdate) AddServerTemplateIDs(ids ...string) *AuthorityUpdate {
-	au.mutation.AddServerTemplateIDs(ids...)
+// AddTemplateIDs adds the "templates" edge to the Template entity by IDs.
+func (au *AuthorityUpdate) AddTemplateIDs(ids ...string) *AuthorityUpdate {
+	au.mutation.AddTemplateIDs(ids...)
 	return au
 }
 
-// AddServerTemplates adds the "server_templates" edges to the ServerTemplate entity.
-func (au *AuthorityUpdate) AddServerTemplates(s ...*ServerTemplate) *AuthorityUpdate {
-	ids := make([]string, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// AddTemplates adds the "templates" edges to the Template entity.
+func (au *AuthorityUpdate) AddTemplates(t ...*Template) *AuthorityUpdate {
+	ids := make([]string, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
-	return au.AddServerTemplateIDs(ids...)
-}
-
-// AddClientTemplateIDs adds the "client_templates" edge to the ClientTemplate entity by IDs.
-func (au *AuthorityUpdate) AddClientTemplateIDs(ids ...string) *AuthorityUpdate {
-	au.mutation.AddClientTemplateIDs(ids...)
-	return au
-}
-
-// AddClientTemplates adds the "client_templates" edges to the ClientTemplate entity.
-func (au *AuthorityUpdate) AddClientTemplates(c ...*ClientTemplate) *AuthorityUpdate {
-	ids := make([]string, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return au.AddClientTemplateIDs(ids...)
+	return au.AddTemplateIDs(ids...)
 }
 
 // Mutation returns the AuthorityMutation object of the builder.
@@ -139,46 +123,25 @@ func (au *AuthorityUpdate) RemoveAPIKeys(a ...*APIKey) *AuthorityUpdate {
 	return au.RemoveAPIKeyIDs(ids...)
 }
 
-// ClearServerTemplates clears all "server_templates" edges to the ServerTemplate entity.
-func (au *AuthorityUpdate) ClearServerTemplates() *AuthorityUpdate {
-	au.mutation.ClearServerTemplates()
+// ClearTemplates clears all "templates" edges to the Template entity.
+func (au *AuthorityUpdate) ClearTemplates() *AuthorityUpdate {
+	au.mutation.ClearTemplates()
 	return au
 }
 
-// RemoveServerTemplateIDs removes the "server_templates" edge to ServerTemplate entities by IDs.
-func (au *AuthorityUpdate) RemoveServerTemplateIDs(ids ...string) *AuthorityUpdate {
-	au.mutation.RemoveServerTemplateIDs(ids...)
+// RemoveTemplateIDs removes the "templates" edge to Template entities by IDs.
+func (au *AuthorityUpdate) RemoveTemplateIDs(ids ...string) *AuthorityUpdate {
+	au.mutation.RemoveTemplateIDs(ids...)
 	return au
 }
 
-// RemoveServerTemplates removes "server_templates" edges to ServerTemplate entities.
-func (au *AuthorityUpdate) RemoveServerTemplates(s ...*ServerTemplate) *AuthorityUpdate {
-	ids := make([]string, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// RemoveTemplates removes "templates" edges to Template entities.
+func (au *AuthorityUpdate) RemoveTemplates(t ...*Template) *AuthorityUpdate {
+	ids := make([]string, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
-	return au.RemoveServerTemplateIDs(ids...)
-}
-
-// ClearClientTemplates clears all "client_templates" edges to the ClientTemplate entity.
-func (au *AuthorityUpdate) ClearClientTemplates() *AuthorityUpdate {
-	au.mutation.ClearClientTemplates()
-	return au
-}
-
-// RemoveClientTemplateIDs removes the "client_templates" edge to ClientTemplate entities by IDs.
-func (au *AuthorityUpdate) RemoveClientTemplateIDs(ids ...string) *AuthorityUpdate {
-	au.mutation.RemoveClientTemplateIDs(ids...)
-	return au
-}
-
-// RemoveClientTemplates removes "client_templates" edges to ClientTemplate entities.
-func (au *AuthorityUpdate) RemoveClientTemplates(c ...*ClientTemplate) *AuthorityUpdate {
-	ids := make([]string, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return au.RemoveClientTemplateIDs(ids...)
+	return au.RemoveTemplateIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -315,28 +278,28 @@ func (au *AuthorityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if au.mutation.ServerTemplatesCleared() {
+	if au.mutation.TemplatesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   authority.ServerTemplatesTable,
-			Columns: []string{authority.ServerTemplatesColumn},
+			Table:   authority.TemplatesTable,
+			Columns: []string{authority.TemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(template.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := au.mutation.RemovedServerTemplatesIDs(); len(nodes) > 0 && !au.mutation.ServerTemplatesCleared() {
+	if nodes := au.mutation.RemovedTemplatesIDs(); len(nodes) > 0 && !au.mutation.TemplatesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   authority.ServerTemplatesTable,
-			Columns: []string{authority.ServerTemplatesColumn},
+			Table:   authority.TemplatesTable,
+			Columns: []string{authority.TemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(template.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -344,60 +307,15 @@ func (au *AuthorityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := au.mutation.ServerTemplatesIDs(); len(nodes) > 0 {
+	if nodes := au.mutation.TemplatesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   authority.ServerTemplatesTable,
-			Columns: []string{authority.ServerTemplatesColumn},
+			Table:   authority.TemplatesTable,
+			Columns: []string{authority.TemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if au.mutation.ClientTemplatesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   authority.ClientTemplatesTable,
-			Columns: []string{authority.ClientTemplatesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := au.mutation.RemovedClientTemplatesIDs(); len(nodes) > 0 && !au.mutation.ClientTemplatesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   authority.ClientTemplatesTable,
-			Columns: []string{authority.ClientTemplatesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := au.mutation.ClientTemplatesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   authority.ClientTemplatesTable,
-			Columns: []string{authority.ClientTemplatesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(template.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -471,34 +389,19 @@ func (auo *AuthorityUpdateOne) AddAPIKeys(a ...*APIKey) *AuthorityUpdateOne {
 	return auo.AddAPIKeyIDs(ids...)
 }
 
-// AddServerTemplateIDs adds the "server_templates" edge to the ServerTemplate entity by IDs.
-func (auo *AuthorityUpdateOne) AddServerTemplateIDs(ids ...string) *AuthorityUpdateOne {
-	auo.mutation.AddServerTemplateIDs(ids...)
+// AddTemplateIDs adds the "templates" edge to the Template entity by IDs.
+func (auo *AuthorityUpdateOne) AddTemplateIDs(ids ...string) *AuthorityUpdateOne {
+	auo.mutation.AddTemplateIDs(ids...)
 	return auo
 }
 
-// AddServerTemplates adds the "server_templates" edges to the ServerTemplate entity.
-func (auo *AuthorityUpdateOne) AddServerTemplates(s ...*ServerTemplate) *AuthorityUpdateOne {
-	ids := make([]string, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// AddTemplates adds the "templates" edges to the Template entity.
+func (auo *AuthorityUpdateOne) AddTemplates(t ...*Template) *AuthorityUpdateOne {
+	ids := make([]string, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
-	return auo.AddServerTemplateIDs(ids...)
-}
-
-// AddClientTemplateIDs adds the "client_templates" edge to the ClientTemplate entity by IDs.
-func (auo *AuthorityUpdateOne) AddClientTemplateIDs(ids ...string) *AuthorityUpdateOne {
-	auo.mutation.AddClientTemplateIDs(ids...)
-	return auo
-}
-
-// AddClientTemplates adds the "client_templates" edges to the ClientTemplate entity.
-func (auo *AuthorityUpdateOne) AddClientTemplates(c ...*ClientTemplate) *AuthorityUpdateOne {
-	ids := make([]string, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return auo.AddClientTemplateIDs(ids...)
+	return auo.AddTemplateIDs(ids...)
 }
 
 // Mutation returns the AuthorityMutation object of the builder.
@@ -533,46 +436,25 @@ func (auo *AuthorityUpdateOne) RemoveAPIKeys(a ...*APIKey) *AuthorityUpdateOne {
 	return auo.RemoveAPIKeyIDs(ids...)
 }
 
-// ClearServerTemplates clears all "server_templates" edges to the ServerTemplate entity.
-func (auo *AuthorityUpdateOne) ClearServerTemplates() *AuthorityUpdateOne {
-	auo.mutation.ClearServerTemplates()
+// ClearTemplates clears all "templates" edges to the Template entity.
+func (auo *AuthorityUpdateOne) ClearTemplates() *AuthorityUpdateOne {
+	auo.mutation.ClearTemplates()
 	return auo
 }
 
-// RemoveServerTemplateIDs removes the "server_templates" edge to ServerTemplate entities by IDs.
-func (auo *AuthorityUpdateOne) RemoveServerTemplateIDs(ids ...string) *AuthorityUpdateOne {
-	auo.mutation.RemoveServerTemplateIDs(ids...)
+// RemoveTemplateIDs removes the "templates" edge to Template entities by IDs.
+func (auo *AuthorityUpdateOne) RemoveTemplateIDs(ids ...string) *AuthorityUpdateOne {
+	auo.mutation.RemoveTemplateIDs(ids...)
 	return auo
 }
 
-// RemoveServerTemplates removes "server_templates" edges to ServerTemplate entities.
-func (auo *AuthorityUpdateOne) RemoveServerTemplates(s ...*ServerTemplate) *AuthorityUpdateOne {
-	ids := make([]string, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// RemoveTemplates removes "templates" edges to Template entities.
+func (auo *AuthorityUpdateOne) RemoveTemplates(t ...*Template) *AuthorityUpdateOne {
+	ids := make([]string, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
-	return auo.RemoveServerTemplateIDs(ids...)
-}
-
-// ClearClientTemplates clears all "client_templates" edges to the ClientTemplate entity.
-func (auo *AuthorityUpdateOne) ClearClientTemplates() *AuthorityUpdateOne {
-	auo.mutation.ClearClientTemplates()
-	return auo
-}
-
-// RemoveClientTemplateIDs removes the "client_templates" edge to ClientTemplate entities by IDs.
-func (auo *AuthorityUpdateOne) RemoveClientTemplateIDs(ids ...string) *AuthorityUpdateOne {
-	auo.mutation.RemoveClientTemplateIDs(ids...)
-	return auo
-}
-
-// RemoveClientTemplates removes "client_templates" edges to ClientTemplate entities.
-func (auo *AuthorityUpdateOne) RemoveClientTemplates(c ...*ClientTemplate) *AuthorityUpdateOne {
-	ids := make([]string, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return auo.RemoveClientTemplateIDs(ids...)
+	return auo.RemoveTemplateIDs(ids...)
 }
 
 // Where appends a list predicates to the AuthorityUpdate builder.
@@ -739,28 +621,28 @@ func (auo *AuthorityUpdateOne) sqlSave(ctx context.Context) (_node *Authority, e
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if auo.mutation.ServerTemplatesCleared() {
+	if auo.mutation.TemplatesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   authority.ServerTemplatesTable,
-			Columns: []string{authority.ServerTemplatesColumn},
+			Table:   authority.TemplatesTable,
+			Columns: []string{authority.TemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(template.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := auo.mutation.RemovedServerTemplatesIDs(); len(nodes) > 0 && !auo.mutation.ServerTemplatesCleared() {
+	if nodes := auo.mutation.RemovedTemplatesIDs(); len(nodes) > 0 && !auo.mutation.TemplatesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   authority.ServerTemplatesTable,
-			Columns: []string{authority.ServerTemplatesColumn},
+			Table:   authority.TemplatesTable,
+			Columns: []string{authority.TemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(template.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -768,60 +650,15 @@ func (auo *AuthorityUpdateOne) sqlSave(ctx context.Context) (_node *Authority, e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := auo.mutation.ServerTemplatesIDs(); len(nodes) > 0 {
+	if nodes := auo.mutation.TemplatesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   authority.ServerTemplatesTable,
-			Columns: []string{authority.ServerTemplatesColumn},
+			Table:   authority.TemplatesTable,
+			Columns: []string{authority.TemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if auo.mutation.ClientTemplatesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   authority.ClientTemplatesTable,
-			Columns: []string{authority.ClientTemplatesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := auo.mutation.RemovedClientTemplatesIDs(); len(nodes) > 0 && !auo.mutation.ClientTemplatesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   authority.ClientTemplatesTable,
-			Columns: []string{authority.ClientTemplatesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := auo.mutation.ClientTemplatesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   authority.ClientTemplatesTable,
-			Columns: []string{authority.ClientTemplatesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(template.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

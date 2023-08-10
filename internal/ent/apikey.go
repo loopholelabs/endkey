@@ -11,8 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/loopholelabs/endkey/internal/ent/apikey"
 	"github.com/loopholelabs/endkey/internal/ent/authority"
-	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
-	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/template"
 )
 
 // APIKey is the model entity for the APIKey schema.
@@ -30,24 +29,21 @@ type APIKey struct {
 	Hash []byte `json:"hash,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the APIKeyQuery when eager-loading is set.
-	Edges                    APIKeyEdges `json:"edges"`
-	authority_api_keys       *string
-	client_template_api_keys *string
-	server_template_api_keys *string
-	selectValues             sql.SelectValues
+	Edges              APIKeyEdges `json:"edges"`
+	authority_api_keys *string
+	template_api_keys  *string
+	selectValues       sql.SelectValues
 }
 
 // APIKeyEdges holds the relations/edges for other nodes in the graph.
 type APIKeyEdges struct {
 	// Authority holds the value of the authority edge.
 	Authority *Authority `json:"authority,omitempty"`
-	// ServerTemplate holds the value of the server_template edge.
-	ServerTemplate *ServerTemplate `json:"server_template,omitempty"`
-	// ClientTemplate holds the value of the client_template edge.
-	ClientTemplate *ClientTemplate `json:"client_template,omitempty"`
+	// Template holds the value of the template edge.
+	Template *Template `json:"template,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [2]bool
 }
 
 // AuthorityOrErr returns the Authority value or an error if the edge
@@ -63,30 +59,17 @@ func (e APIKeyEdges) AuthorityOrErr() (*Authority, error) {
 	return nil, &NotLoadedError{edge: "authority"}
 }
 
-// ServerTemplateOrErr returns the ServerTemplate value or an error if the edge
+// TemplateOrErr returns the Template value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e APIKeyEdges) ServerTemplateOrErr() (*ServerTemplate, error) {
+func (e APIKeyEdges) TemplateOrErr() (*Template, error) {
 	if e.loadedTypes[1] {
-		if e.ServerTemplate == nil {
+		if e.Template == nil {
 			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: servertemplate.Label}
+			return nil, &NotFoundError{label: template.Label}
 		}
-		return e.ServerTemplate, nil
+		return e.Template, nil
 	}
-	return nil, &NotLoadedError{edge: "server_template"}
-}
-
-// ClientTemplateOrErr returns the ClientTemplate value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e APIKeyEdges) ClientTemplateOrErr() (*ClientTemplate, error) {
-	if e.loadedTypes[2] {
-		if e.ClientTemplate == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: clienttemplate.Label}
-		}
-		return e.ClientTemplate, nil
-	}
-	return nil, &NotLoadedError{edge: "client_template"}
+	return nil, &NotLoadedError{edge: "template"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -102,9 +85,7 @@ func (*APIKey) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case apikey.ForeignKeys[0]: // authority_api_keys
 			values[i] = new(sql.NullString)
-		case apikey.ForeignKeys[1]: // client_template_api_keys
-			values[i] = new(sql.NullString)
-		case apikey.ForeignKeys[2]: // server_template_api_keys
+		case apikey.ForeignKeys[1]: // template_api_keys
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -160,17 +141,10 @@ func (ak *APIKey) assignValues(columns []string, values []any) error {
 			}
 		case apikey.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field client_template_api_keys", values[i])
+				return fmt.Errorf("unexpected type %T for field template_api_keys", values[i])
 			} else if value.Valid {
-				ak.client_template_api_keys = new(string)
-				*ak.client_template_api_keys = value.String
-			}
-		case apikey.ForeignKeys[2]:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field server_template_api_keys", values[i])
-			} else if value.Valid {
-				ak.server_template_api_keys = new(string)
-				*ak.server_template_api_keys = value.String
+				ak.template_api_keys = new(string)
+				*ak.template_api_keys = value.String
 			}
 		default:
 			ak.selectValues.Set(columns[i], values[i])
@@ -190,14 +164,9 @@ func (ak *APIKey) QueryAuthority() *AuthorityQuery {
 	return NewAPIKeyClient(ak.config).QueryAuthority(ak)
 }
 
-// QueryServerTemplate queries the "server_template" edge of the APIKey entity.
-func (ak *APIKey) QueryServerTemplate() *ServerTemplateQuery {
-	return NewAPIKeyClient(ak.config).QueryServerTemplate(ak)
-}
-
-// QueryClientTemplate queries the "client_template" edge of the APIKey entity.
-func (ak *APIKey) QueryClientTemplate() *ClientTemplateQuery {
-	return NewAPIKeyClient(ak.config).QueryClientTemplate(ak)
+// QueryTemplate queries the "template" edge of the APIKey entity.
+func (ak *APIKey) QueryTemplate() *TemplateQuery {
+	return NewAPIKeyClient(ak.config).QueryTemplate(ak)
 }
 
 // Update returns a builder for updating this APIKey.

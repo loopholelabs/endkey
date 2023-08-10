@@ -11,11 +11,11 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/loopholelabs/endkey/internal/ent/authority"
-	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
+	"github.com/loopholelabs/endkey/internal/ent/template"
 )
 
-// ClientTemplate is the model entity for the ClientTemplate schema.
-type ClientTemplate struct {
+// Template is the model entity for the Template schema.
+type Template struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID string `json:"id,omitempty"`
@@ -37,15 +37,19 @@ type ClientTemplate struct {
 	IPAddresses []string `json:"ip_addresses,omitempty"`
 	// AllowAdditionalIps holds the value of the "allow_additional_ips" field.
 	AllowAdditionalIps bool `json:"allow_additional_ips,omitempty"`
+	// Client holds the value of the "client" field.
+	Client bool `json:"client,omitempty"`
+	// Server holds the value of the "server" field.
+	Server bool `json:"server,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the ClientTemplateQuery when eager-loading is set.
-	Edges                      ClientTemplateEdges `json:"edges"`
-	authority_client_templates *string
-	selectValues               sql.SelectValues
+	// The values are being populated by the TemplateQuery when eager-loading is set.
+	Edges               TemplateEdges `json:"edges"`
+	authority_templates *string
+	selectValues        sql.SelectValues
 }
 
-// ClientTemplateEdges holds the relations/edges for other nodes in the graph.
-type ClientTemplateEdges struct {
+// TemplateEdges holds the relations/edges for other nodes in the graph.
+type TemplateEdges struct {
 	// Authority holds the value of the authority edge.
 	Authority *Authority `json:"authority,omitempty"`
 	// APIKeys holds the value of the api_keys edge.
@@ -57,7 +61,7 @@ type ClientTemplateEdges struct {
 
 // AuthorityOrErr returns the Authority value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e ClientTemplateEdges) AuthorityOrErr() (*Authority, error) {
+func (e TemplateEdges) AuthorityOrErr() (*Authority, error) {
 	if e.loadedTypes[0] {
 		if e.Authority == nil {
 			// Edge was loaded but was not found.
@@ -70,7 +74,7 @@ func (e ClientTemplateEdges) AuthorityOrErr() (*Authority, error) {
 
 // APIKeysOrErr returns the APIKeys value or an error if the edge
 // was not loaded in eager-loading.
-func (e ClientTemplateEdges) APIKeysOrErr() ([]*APIKey, error) {
+func (e TemplateEdges) APIKeysOrErr() ([]*APIKey, error) {
 	if e.loadedTypes[1] {
 		return e.APIKeys, nil
 	}
@@ -78,19 +82,19 @@ func (e ClientTemplateEdges) APIKeysOrErr() ([]*APIKey, error) {
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
-func (*ClientTemplate) scanValues(columns []string) ([]any, error) {
+func (*Template) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case clienttemplate.FieldDNSNames, clienttemplate.FieldIPAddresses:
+		case template.FieldDNSNames, template.FieldIPAddresses:
 			values[i] = new([]byte)
-		case clienttemplate.FieldAllowAdditionalDNSNames, clienttemplate.FieldAllowAdditionalIps:
+		case template.FieldAllowAdditionalDNSNames, template.FieldAllowAdditionalIps, template.FieldClient, template.FieldServer:
 			values[i] = new(sql.NullBool)
-		case clienttemplate.FieldID, clienttemplate.FieldName, clienttemplate.FieldCommonName, clienttemplate.FieldTag, clienttemplate.FieldValidity:
+		case template.FieldID, template.FieldName, template.FieldCommonName, template.FieldTag, template.FieldValidity:
 			values[i] = new(sql.NullString)
-		case clienttemplate.FieldCreatedAt:
+		case template.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
-		case clienttemplate.ForeignKeys[0]: // authority_client_templates
+		case template.ForeignKeys[0]: // authority_templates
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -100,159 +104,177 @@ func (*ClientTemplate) scanValues(columns []string) ([]any, error) {
 }
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
-// to the ClientTemplate fields.
-func (ct *ClientTemplate) assignValues(columns []string, values []any) error {
+// to the Template fields.
+func (t *Template) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
 	for i := range columns {
 		switch columns[i] {
-		case clienttemplate.FieldID:
+		case template.FieldID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
-				ct.ID = value.String
+				t.ID = value.String
 			}
-		case clienttemplate.FieldCreatedAt:
+		case template.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				ct.CreatedAt = value.Time
+				t.CreatedAt = value.Time
 			}
-		case clienttemplate.FieldName:
+		case template.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				ct.Name = value.String
+				t.Name = value.String
 			}
-		case clienttemplate.FieldCommonName:
+		case template.FieldCommonName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field common_name", values[i])
 			} else if value.Valid {
-				ct.CommonName = value.String
+				t.CommonName = value.String
 			}
-		case clienttemplate.FieldTag:
+		case template.FieldTag:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tag", values[i])
 			} else if value.Valid {
-				ct.Tag = value.String
+				t.Tag = value.String
 			}
-		case clienttemplate.FieldValidity:
+		case template.FieldValidity:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field validity", values[i])
 			} else if value.Valid {
-				ct.Validity = value.String
+				t.Validity = value.String
 			}
-		case clienttemplate.FieldDNSNames:
+		case template.FieldDNSNames:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field dns_names", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ct.DNSNames); err != nil {
+				if err := json.Unmarshal(*value, &t.DNSNames); err != nil {
 					return fmt.Errorf("unmarshal field dns_names: %w", err)
 				}
 			}
-		case clienttemplate.FieldAllowAdditionalDNSNames:
+		case template.FieldAllowAdditionalDNSNames:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field allow_additional_dns_names", values[i])
 			} else if value.Valid {
-				ct.AllowAdditionalDNSNames = value.Bool
+				t.AllowAdditionalDNSNames = value.Bool
 			}
-		case clienttemplate.FieldIPAddresses:
+		case template.FieldIPAddresses:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field ip_addresses", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ct.IPAddresses); err != nil {
+				if err := json.Unmarshal(*value, &t.IPAddresses); err != nil {
 					return fmt.Errorf("unmarshal field ip_addresses: %w", err)
 				}
 			}
-		case clienttemplate.FieldAllowAdditionalIps:
+		case template.FieldAllowAdditionalIps:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field allow_additional_ips", values[i])
 			} else if value.Valid {
-				ct.AllowAdditionalIps = value.Bool
+				t.AllowAdditionalIps = value.Bool
 			}
-		case clienttemplate.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field authority_client_templates", values[i])
+		case template.FieldClient:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field client", values[i])
 			} else if value.Valid {
-				ct.authority_client_templates = new(string)
-				*ct.authority_client_templates = value.String
+				t.Client = value.Bool
+			}
+		case template.FieldServer:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field server", values[i])
+			} else if value.Valid {
+				t.Server = value.Bool
+			}
+		case template.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field authority_templates", values[i])
+			} else if value.Valid {
+				t.authority_templates = new(string)
+				*t.authority_templates = value.String
 			}
 		default:
-			ct.selectValues.Set(columns[i], values[i])
+			t.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
 }
 
-// Value returns the ent.Value that was dynamically selected and assigned to the ClientTemplate.
+// Value returns the ent.Value that was dynamically selected and assigned to the Template.
 // This includes values selected through modifiers, order, etc.
-func (ct *ClientTemplate) Value(name string) (ent.Value, error) {
-	return ct.selectValues.Get(name)
+func (t *Template) Value(name string) (ent.Value, error) {
+	return t.selectValues.Get(name)
 }
 
-// QueryAuthority queries the "authority" edge of the ClientTemplate entity.
-func (ct *ClientTemplate) QueryAuthority() *AuthorityQuery {
-	return NewClientTemplateClient(ct.config).QueryAuthority(ct)
+// QueryAuthority queries the "authority" edge of the Template entity.
+func (t *Template) QueryAuthority() *AuthorityQuery {
+	return NewTemplateClient(t.config).QueryAuthority(t)
 }
 
-// QueryAPIKeys queries the "api_keys" edge of the ClientTemplate entity.
-func (ct *ClientTemplate) QueryAPIKeys() *APIKeyQuery {
-	return NewClientTemplateClient(ct.config).QueryAPIKeys(ct)
+// QueryAPIKeys queries the "api_keys" edge of the Template entity.
+func (t *Template) QueryAPIKeys() *APIKeyQuery {
+	return NewTemplateClient(t.config).QueryAPIKeys(t)
 }
 
-// Update returns a builder for updating this ClientTemplate.
-// Note that you need to call ClientTemplate.Unwrap() before calling this method if this ClientTemplate
+// Update returns a builder for updating this Template.
+// Note that you need to call Template.Unwrap() before calling this method if this Template
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (ct *ClientTemplate) Update() *ClientTemplateUpdateOne {
-	return NewClientTemplateClient(ct.config).UpdateOne(ct)
+func (t *Template) Update() *TemplateUpdateOne {
+	return NewTemplateClient(t.config).UpdateOne(t)
 }
 
-// Unwrap unwraps the ClientTemplate entity that was returned from a transaction after it was closed,
+// Unwrap unwraps the Template entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (ct *ClientTemplate) Unwrap() *ClientTemplate {
-	_tx, ok := ct.config.driver.(*txDriver)
+func (t *Template) Unwrap() *Template {
+	_tx, ok := t.config.driver.(*txDriver)
 	if !ok {
-		panic("ent: ClientTemplate is not a transactional entity")
+		panic("ent: Template is not a transactional entity")
 	}
-	ct.config.driver = _tx.drv
-	return ct
+	t.config.driver = _tx.drv
+	return t
 }
 
 // String implements the fmt.Stringer.
-func (ct *ClientTemplate) String() string {
+func (t *Template) String() string {
 	var builder strings.Builder
-	builder.WriteString("ClientTemplate(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", ct.ID))
+	builder.WriteString("Template(")
+	builder.WriteString(fmt.Sprintf("id=%v, ", t.ID))
 	builder.WriteString("created_at=")
-	builder.WriteString(ct.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(t.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
-	builder.WriteString(ct.Name)
+	builder.WriteString(t.Name)
 	builder.WriteString(", ")
 	builder.WriteString("common_name=")
-	builder.WriteString(ct.CommonName)
+	builder.WriteString(t.CommonName)
 	builder.WriteString(", ")
 	builder.WriteString("tag=")
-	builder.WriteString(ct.Tag)
+	builder.WriteString(t.Tag)
 	builder.WriteString(", ")
 	builder.WriteString("validity=")
-	builder.WriteString(ct.Validity)
+	builder.WriteString(t.Validity)
 	builder.WriteString(", ")
 	builder.WriteString("dns_names=")
-	builder.WriteString(fmt.Sprintf("%v", ct.DNSNames))
+	builder.WriteString(fmt.Sprintf("%v", t.DNSNames))
 	builder.WriteString(", ")
 	builder.WriteString("allow_additional_dns_names=")
-	builder.WriteString(fmt.Sprintf("%v", ct.AllowAdditionalDNSNames))
+	builder.WriteString(fmt.Sprintf("%v", t.AllowAdditionalDNSNames))
 	builder.WriteString(", ")
 	builder.WriteString("ip_addresses=")
-	builder.WriteString(fmt.Sprintf("%v", ct.IPAddresses))
+	builder.WriteString(fmt.Sprintf("%v", t.IPAddresses))
 	builder.WriteString(", ")
 	builder.WriteString("allow_additional_ips=")
-	builder.WriteString(fmt.Sprintf("%v", ct.AllowAdditionalIps))
+	builder.WriteString(fmt.Sprintf("%v", t.AllowAdditionalIps))
+	builder.WriteString(", ")
+	builder.WriteString("client=")
+	builder.WriteString(fmt.Sprintf("%v", t.Client))
+	builder.WriteString(", ")
+	builder.WriteString("server=")
+	builder.WriteString(fmt.Sprintf("%v", t.Server))
 	builder.WriteByte(')')
 	return builder.String()
 }
 
-// ClientTemplates is a parsable slice of ClientTemplate.
-type ClientTemplates []*ClientTemplate
+// Templates is a parsable slice of Template.
+type Templates []*Template

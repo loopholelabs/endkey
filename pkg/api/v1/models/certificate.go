@@ -25,7 +25,8 @@ type CreateCertificateRequest struct {
 type CertificateResponse struct {
 	AuthorityName         string   `json:"authority_name"`
 	TemplateName          string   `json:"template_name"`
-	TemplateKind          string   `json:"template_kind"`
+	Client                bool     `json:"client"`
+	Server                bool     `json:"server"`
 	AdditionalDNSNames    []string `json:"additional_dns_names"`
 	AdditionalIPAddresses []string `json:"additional_ip_addresses"`
 	Expiry                string   `json:"expiry"`

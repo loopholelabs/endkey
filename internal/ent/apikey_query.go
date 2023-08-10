@@ -12,22 +12,20 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/loopholelabs/endkey/internal/ent/apikey"
 	"github.com/loopholelabs/endkey/internal/ent/authority"
-	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
 	"github.com/loopholelabs/endkey/internal/ent/predicate"
-	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/template"
 )
 
 // APIKeyQuery is the builder for querying APIKey entities.
 type APIKeyQuery struct {
 	config
-	ctx                *QueryContext
-	order              []apikey.OrderOption
-	inters             []Interceptor
-	predicates         []predicate.APIKey
-	withAuthority      *AuthorityQuery
-	withServerTemplate *ServerTemplateQuery
-	withClientTemplate *ClientTemplateQuery
-	withFKs            bool
+	ctx           *QueryContext
+	order         []apikey.OrderOption
+	inters        []Interceptor
+	predicates    []predicate.APIKey
+	withAuthority *AuthorityQuery
+	withTemplate  *TemplateQuery
+	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -86,9 +84,9 @@ func (akq *APIKeyQuery) QueryAuthority() *AuthorityQuery {
 	return query
 }
 
-// QueryServerTemplate chains the current query on the "server_template" edge.
-func (akq *APIKeyQuery) QueryServerTemplate() *ServerTemplateQuery {
-	query := (&ServerTemplateClient{config: akq.config}).Query()
+// QueryTemplate chains the current query on the "template" edge.
+func (akq *APIKeyQuery) QueryTemplate() *TemplateQuery {
+	query := (&TemplateClient{config: akq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := akq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -99,30 +97,8 @@ func (akq *APIKeyQuery) QueryServerTemplate() *ServerTemplateQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(apikey.Table, apikey.FieldID, selector),
-			sqlgraph.To(servertemplate.Table, servertemplate.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, apikey.ServerTemplateTable, apikey.ServerTemplateColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(akq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryClientTemplate chains the current query on the "client_template" edge.
-func (akq *APIKeyQuery) QueryClientTemplate() *ClientTemplateQuery {
-	query := (&ClientTemplateClient{config: akq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := akq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := akq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(apikey.Table, apikey.FieldID, selector),
-			sqlgraph.To(clienttemplate.Table, clienttemplate.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, apikey.ClientTemplateTable, apikey.ClientTemplateColumn),
+			sqlgraph.To(template.Table, template.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, apikey.TemplateTable, apikey.TemplateColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(akq.driver.Dialect(), step)
 		return fromU, nil
@@ -317,14 +293,13 @@ func (akq *APIKeyQuery) Clone() *APIKeyQuery {
 		return nil
 	}
 	return &APIKeyQuery{
-		config:             akq.config,
-		ctx:                akq.ctx.Clone(),
-		order:              append([]apikey.OrderOption{}, akq.order...),
-		inters:             append([]Interceptor{}, akq.inters...),
-		predicates:         append([]predicate.APIKey{}, akq.predicates...),
-		withAuthority:      akq.withAuthority.Clone(),
-		withServerTemplate: akq.withServerTemplate.Clone(),
-		withClientTemplate: akq.withClientTemplate.Clone(),
+		config:        akq.config,
+		ctx:           akq.ctx.Clone(),
+		order:         append([]apikey.OrderOption{}, akq.order...),
+		inters:        append([]Interceptor{}, akq.inters...),
+		predicates:    append([]predicate.APIKey{}, akq.predicates...),
+		withAuthority: akq.withAuthority.Clone(),
+		withTemplate:  akq.withTemplate.Clone(),
 		// clone intermediate query.
 		sql:  akq.sql.Clone(),
 		path: akq.path,
@@ -342,25 +317,14 @@ func (akq *APIKeyQuery) WithAuthority(opts ...func(*AuthorityQuery)) *APIKeyQuer
 	return akq
 }
 
-// WithServerTemplate tells the query-builder to eager-load the nodes that are connected to
-// the "server_template" edge. The optional arguments are used to configure the query builder of the edge.
-func (akq *APIKeyQuery) WithServerTemplate(opts ...func(*ServerTemplateQuery)) *APIKeyQuery {
-	query := (&ServerTemplateClient{config: akq.config}).Query()
+// WithTemplate tells the query-builder to eager-load the nodes that are connected to
+// the "template" edge. The optional arguments are used to configure the query builder of the edge.
+func (akq *APIKeyQuery) WithTemplate(opts ...func(*TemplateQuery)) *APIKeyQuery {
+	query := (&TemplateClient{config: akq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	akq.withServerTemplate = query
-	return akq
-}
-
-// WithClientTemplate tells the query-builder to eager-load the nodes that are connected to
-// the "client_template" edge. The optional arguments are used to configure the query builder of the edge.
-func (akq *APIKeyQuery) WithClientTemplate(opts ...func(*ClientTemplateQuery)) *APIKeyQuery {
-	query := (&ClientTemplateClient{config: akq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	akq.withClientTemplate = query
+	akq.withTemplate = query
 	return akq
 }
 
@@ -443,13 +407,12 @@ func (akq *APIKeyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*APIK
 		nodes       = []*APIKey{}
 		withFKs     = akq.withFKs
 		_spec       = akq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [2]bool{
 			akq.withAuthority != nil,
-			akq.withServerTemplate != nil,
-			akq.withClientTemplate != nil,
+			akq.withTemplate != nil,
 		}
 	)
-	if akq.withAuthority != nil || akq.withServerTemplate != nil || akq.withClientTemplate != nil {
+	if akq.withAuthority != nil || akq.withTemplate != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -479,15 +442,9 @@ func (akq *APIKeyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*APIK
 			return nil, err
 		}
 	}
-	if query := akq.withServerTemplate; query != nil {
-		if err := akq.loadServerTemplate(ctx, query, nodes, nil,
-			func(n *APIKey, e *ServerTemplate) { n.Edges.ServerTemplate = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := akq.withClientTemplate; query != nil {
-		if err := akq.loadClientTemplate(ctx, query, nodes, nil,
-			func(n *APIKey, e *ClientTemplate) { n.Edges.ClientTemplate = e }); err != nil {
+	if query := akq.withTemplate; query != nil {
+		if err := akq.loadTemplate(ctx, query, nodes, nil,
+			func(n *APIKey, e *Template) { n.Edges.Template = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -526,14 +483,14 @@ func (akq *APIKeyQuery) loadAuthority(ctx context.Context, query *AuthorityQuery
 	}
 	return nil
 }
-func (akq *APIKeyQuery) loadServerTemplate(ctx context.Context, query *ServerTemplateQuery, nodes []*APIKey, init func(*APIKey), assign func(*APIKey, *ServerTemplate)) error {
+func (akq *APIKeyQuery) loadTemplate(ctx context.Context, query *TemplateQuery, nodes []*APIKey, init func(*APIKey), assign func(*APIKey, *Template)) error {
 	ids := make([]string, 0, len(nodes))
 	nodeids := make(map[string][]*APIKey)
 	for i := range nodes {
-		if nodes[i].server_template_api_keys == nil {
+		if nodes[i].template_api_keys == nil {
 			continue
 		}
-		fk := *nodes[i].server_template_api_keys
+		fk := *nodes[i].template_api_keys
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -542,7 +499,7 @@ func (akq *APIKeyQuery) loadServerTemplate(ctx context.Context, query *ServerTem
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(servertemplate.IDIn(ids...))
+	query.Where(template.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -550,39 +507,7 @@ func (akq *APIKeyQuery) loadServerTemplate(ctx context.Context, query *ServerTem
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "server_template_api_keys" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (akq *APIKeyQuery) loadClientTemplate(ctx context.Context, query *ClientTemplateQuery, nodes []*APIKey, init func(*APIKey), assign func(*APIKey, *ClientTemplate)) error {
-	ids := make([]string, 0, len(nodes))
-	nodeids := make(map[string][]*APIKey)
-	for i := range nodes {
-		if nodes[i].client_template_api_keys == nil {
-			continue
-		}
-		fk := *nodes[i].client_template_api_keys
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(clienttemplate.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "client_template_api_keys" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "template_api_keys" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)

@@ -12,10 +12,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ModelsClientTemplateResponse models client template response
+// ModelsTemplateResponse models template response
 //
-// swagger:model models.ClientTemplateResponse
-type ModelsClientTemplateResponse struct {
+// swagger:model models.TemplateResponse
+type ModelsTemplateResponse struct {
 
 	// allow additional dns names
 	AllowAdditionalDNSNames bool `json:"allow_additional_dns_names,omitempty"`
@@ -25,6 +25,9 @@ type ModelsClientTemplateResponse struct {
 
 	// authority name
 	AuthorityName string `json:"authority_name,omitempty"`
+
+	// client
+	Client bool `json:"client,omitempty"`
 
 	// common name
 	CommonName string `json:"common_name,omitempty"`
@@ -44,6 +47,9 @@ type ModelsClientTemplateResponse struct {
 	// name
 	Name string `json:"name,omitempty"`
 
+	// server
+	Server bool `json:"server,omitempty"`
+
 	// tag
 	Tag string `json:"tag,omitempty"`
 
@@ -51,18 +57,18 @@ type ModelsClientTemplateResponse struct {
 	Validity string `json:"validity,omitempty"`
 }
 
-// Validate validates this models client template response
-func (m *ModelsClientTemplateResponse) Validate(formats strfmt.Registry) error {
+// Validate validates this models template response
+func (m *ModelsTemplateResponse) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this models client template response based on context it is used
-func (m *ModelsClientTemplateResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this models template response based on context it is used
+func (m *ModelsTemplateResponse) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *ModelsClientTemplateResponse) MarshalBinary() ([]byte, error) {
+func (m *ModelsTemplateResponse) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -70,8 +76,8 @@ func (m *ModelsClientTemplateResponse) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ModelsClientTemplateResponse) UnmarshalBinary(b []byte) error {
-	var res ModelsClientTemplateResponse
+func (m *ModelsTemplateResponse) UnmarshalBinary(b []byte) error {
+	var res ModelsTemplateResponse
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

@@ -23,9 +23,6 @@ type ModelsCreateAPIKeyRequest struct {
 	// name
 	Name string `json:"name,omitempty"`
 
-	// template kind
-	TemplateKind string `json:"template_kind,omitempty"`
-
 	// template name
 	TemplateName string `json:"template_name,omitempty"`
 }

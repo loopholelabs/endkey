@@ -20,7 +20,6 @@ type CreateAPIKeyRequest struct {
 	Name          string `json:"name"`
 	AuthorityName string `json:"authority_name"`
 	TemplateName  string `json:"template_name"`
-	TemplateKind  string `json:"template_kind"`
 }
 
 type DeleteAPIKeyRequest struct {
@@ -34,6 +33,5 @@ type APIKeyResponse struct {
 	Name          string `json:"name"`
 	AuthorityName string `json:"authority_name"`
 	TemplateName  string `json:"template_name"`
-	TemplateKind  string `json:"template_kind"`
 	Secret        string `json:"secret"`
 }

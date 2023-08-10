@@ -30,38 +30,32 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	DeleteTemplateClient(params *DeleteTemplateClientParams, opts ...ClientOption) (*DeleteTemplateClientOK, error)
+	DeleteTemplate(params *DeleteTemplateParams, opts ...ClientOption) (*DeleteTemplateOK, error)
 
-	DeleteTemplateServer(params *DeleteTemplateServerParams, opts ...ClientOption) (*DeleteTemplateServerOK, error)
+	GetTemplateAuthorityName(params *GetTemplateAuthorityNameParams, opts ...ClientOption) (*GetTemplateAuthorityNameOK, error)
 
-	GetTemplateClientAuthorityName(params *GetTemplateClientAuthorityNameParams, opts ...ClientOption) (*GetTemplateClientAuthorityNameOK, error)
-
-	GetTemplateServerAuthorityName(params *GetTemplateServerAuthorityNameParams, opts ...ClientOption) (*GetTemplateServerAuthorityNameOK, error)
-
-	PostTemplateClient(params *PostTemplateClientParams, opts ...ClientOption) (*PostTemplateClientOK, error)
-
-	PostTemplateServer(params *PostTemplateServerParams, opts ...ClientOption) (*PostTemplateServerOK, error)
+	PostTemplate(params *PostTemplateParams, opts ...ClientOption) (*PostTemplateOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
 
 /*
-DeleteTemplateClient Delete a Client Template
+DeleteTemplate Delete a Template
 */
-func (a *Client) DeleteTemplateClient(params *DeleteTemplateClientParams, opts ...ClientOption) (*DeleteTemplateClientOK, error) {
+func (a *Client) DeleteTemplate(params *DeleteTemplateParams, opts ...ClientOption) (*DeleteTemplateOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewDeleteTemplateClientParams()
+		params = NewDeleteTemplateParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteTemplateClient",
+		ID:                 "DeleteTemplate",
 		Method:             "DELETE",
-		PathPattern:        "/template/client",
+		PathPattern:        "/template",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"https"},
 		Params:             params,
-		Reader:             &DeleteTemplateClientReader{formats: a.formats},
+		Reader:             &DeleteTemplateReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -73,71 +67,33 @@ func (a *Client) DeleteTemplateClient(params *DeleteTemplateClientParams, opts .
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*DeleteTemplateClientOK)
+	success, ok := result.(*DeleteTemplateOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteTemplateClient: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for DeleteTemplate: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
 /*
-DeleteTemplateServer Delete a Server Template
+GetTemplateAuthorityName List all Templates
 */
-func (a *Client) DeleteTemplateServer(params *DeleteTemplateServerParams, opts ...ClientOption) (*DeleteTemplateServerOK, error) {
+func (a *Client) GetTemplateAuthorityName(params *GetTemplateAuthorityNameParams, opts ...ClientOption) (*GetTemplateAuthorityNameOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewDeleteTemplateServerParams()
+		params = NewGetTemplateAuthorityNameParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteTemplateServer",
-		Method:             "DELETE",
-		PathPattern:        "/template/server",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"https"},
-		Params:             params,
-		Reader:             &DeleteTemplateServerReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*DeleteTemplateServerOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteTemplateServer: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-GetTemplateClientAuthorityName List all Client Templates
-*/
-func (a *Client) GetTemplateClientAuthorityName(params *GetTemplateClientAuthorityNameParams, opts ...ClientOption) (*GetTemplateClientAuthorityNameOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetTemplateClientAuthorityNameParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "GetTemplateClientAuthorityName",
+		ID:                 "GetTemplateAuthorityName",
 		Method:             "GET",
-		PathPattern:        "/template/client/{authority_name}",
+		PathPattern:        "/template/{authority_name}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"https"},
 		Params:             params,
-		Reader:             &GetTemplateClientAuthorityNameReader{formats: a.formats},
+		Reader:             &GetTemplateAuthorityNameReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -149,71 +105,33 @@ func (a *Client) GetTemplateClientAuthorityName(params *GetTemplateClientAuthori
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetTemplateClientAuthorityNameOK)
+	success, ok := result.(*GetTemplateAuthorityNameOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetTemplateClientAuthorityName: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for GetTemplateAuthorityName: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
 /*
-GetTemplateServerAuthorityName List all Server Templates
+PostTemplate Create a new Template
 */
-func (a *Client) GetTemplateServerAuthorityName(params *GetTemplateServerAuthorityNameParams, opts ...ClientOption) (*GetTemplateServerAuthorityNameOK, error) {
+func (a *Client) PostTemplate(params *PostTemplateParams, opts ...ClientOption) (*PostTemplateOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetTemplateServerAuthorityNameParams()
+		params = NewPostTemplateParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "GetTemplateServerAuthorityName",
-		Method:             "GET",
-		PathPattern:        "/template/server/{authority_name}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"https"},
-		Params:             params,
-		Reader:             &GetTemplateServerAuthorityNameReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetTemplateServerAuthorityNameOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetTemplateServerAuthorityName: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-PostTemplateClient Create a new Client Template
-*/
-func (a *Client) PostTemplateClient(params *PostTemplateClientParams, opts ...ClientOption) (*PostTemplateClientOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewPostTemplateClientParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "PostTemplateClient",
+		ID:                 "PostTemplate",
 		Method:             "POST",
-		PathPattern:        "/template/client",
+		PathPattern:        "/template",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"https"},
 		Params:             params,
-		Reader:             &PostTemplateClientReader{formats: a.formats},
+		Reader:             &PostTemplateReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -225,51 +143,13 @@ func (a *Client) PostTemplateClient(params *PostTemplateClientParams, opts ...Cl
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*PostTemplateClientOK)
+	success, ok := result.(*PostTemplateOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostTemplateClient: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-PostTemplateServer Create a new Server Template
-*/
-func (a *Client) PostTemplateServer(params *PostTemplateServerParams, opts ...ClientOption) (*PostTemplateServerOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewPostTemplateServerParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "PostTemplateServer",
-		Method:             "POST",
-		PathPattern:        "/template/server",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"https"},
-		Params:             params,
-		Reader:             &PostTemplateServerReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*PostTemplateServerOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostTemplateServer: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for PostTemplate: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

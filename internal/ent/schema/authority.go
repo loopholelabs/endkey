@@ -74,17 +74,11 @@ func (Authority) Edges() []ent.Edge {
 		// but an Authority can have multiple API Keys scoped to it
 		edge.To("api_keys", APIKey.Type),
 
-		// The Server Templates created for this Authority
+		// The Templates created for this Authority
 		//
-		// This is a one-to-many relationship, as a Server Template can only be scoped to one Authority
-		// but an Authority can have multiple Server Templates scoped to it
-		edge.To("server_templates", ServerTemplate.Type),
-
-		// The Client Templates created for this Authority
-		//
-		// This is a one-to-many relationship, as a Client Template can only be scoped to one Authority
-		// but an Authority can have multiple Client Templates scoped to it
-		edge.To("client_templates", ClientTemplate.Type),
+		// This is a one-to-many relationship, as a Template can only be scoped to one Authority
+		// but an Authority can have multiple Templates scoped to it
+		edge.To("templates", Template.Type),
 	}
 }
 

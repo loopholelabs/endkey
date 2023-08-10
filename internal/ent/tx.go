@@ -16,12 +16,10 @@ type Tx struct {
 	APIKey *APIKeyClient
 	// Authority is the client for interacting with the Authority builders.
 	Authority *AuthorityClient
-	// ClientTemplate is the client for interacting with the ClientTemplate builders.
-	ClientTemplate *ClientTemplateClient
 	// RootKey is the client for interacting with the RootKey builders.
 	RootKey *RootKeyClient
-	// ServerTemplate is the client for interacting with the ServerTemplate builders.
-	ServerTemplate *ServerTemplateClient
+	// Template is the client for interacting with the Template builders.
+	Template *TemplateClient
 	// UserKey is the client for interacting with the UserKey builders.
 	UserKey *UserKeyClient
 
@@ -157,9 +155,8 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.APIKey = NewAPIKeyClient(tx.config)
 	tx.Authority = NewAuthorityClient(tx.config)
-	tx.ClientTemplate = NewClientTemplateClient(tx.config)
 	tx.RootKey = NewRootKeyClient(tx.config)
-	tx.ServerTemplate = NewServerTemplateClient(tx.config)
+	tx.Template = NewTemplateClient(tx.config)
 	tx.UserKey = NewUserKeyClient(tx.config)
 }
 

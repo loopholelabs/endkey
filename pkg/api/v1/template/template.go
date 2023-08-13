@@ -232,6 +232,7 @@ func (a *Template) List(ctx *fiber.Ctx) error {
 			Name:                    templ.Name,
 			AuthorityName:           authorityName,
 			CommonName:              templ.CommonName,
+			AllowOverrideCommonName: templ.AllowOverrideCommonName,
 			Tag:                     templ.Tag,
 			DNSNames:                templ.DNSNames,
 			AllowAdditionalDNSNames: templ.AllowAdditionalDNSNames,

@@ -24,19 +24,20 @@ import (
 )
 
 type templateModel struct {
-	Created       string `header:"created_at" json:"created_at"`
-	ID            string `header:"id" json:"id"`
-	Name          string `header:"name" json:"name"`
-	Authority     string `header:"authority" json:"authority"`
-	CommonName    string `header:"common_name" json:"common_name"`
-	Tag           string `header:"tag" json:"tag"`
-	DNSNames      string `header:"dns_names" json:"dns_names"`
-	IPAddresses   string `header:"ip_addresses" json:"ip_addresses"`
-	Validity      string `header:"validity" json:"validity"`
-	AdditionalDNS string `header:"allow_additional_dns_names" json:"allow_additional_dns_names"`
-	AdditionalIPs string `header:"allow_additional_ips" json:"allow_additional_ips"`
-	Client        string `header:"client" json:"client"`
-	Server        string `header:"server" json:"server"`
+	Created            string `header:"created_at" json:"created_at"`
+	ID                 string `header:"id" json:"id"`
+	Name               string `header:"name" json:"name"`
+	Authority          string `header:"authority" json:"authority"`
+	CommonName         string `header:"common_name" json:"common_name"`
+	OverrideCommonName string `header:"override_common_name" json:"override_common_name"`
+	Tag                string `header:"tag" json:"tag"`
+	DNSNames           string `header:"dns_names" json:"dns_names"`
+	IPAddresses        string `header:"ip_addresses" json:"ip_addresses"`
+	Validity           string `header:"validity" json:"validity"`
+	AdditionalDNS      string `header:"allow_additional_dns_names" json:"allow_additional_dns_names"`
+	AdditionalIPs      string `header:"allow_additional_ips" json:"allow_additional_ips"`
+	Client             string `header:"client" json:"client"`
+	Server             string `header:"server" json:"server"`
 }
 
 // Cmd encapsulates the commands for template.

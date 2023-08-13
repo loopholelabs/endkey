@@ -43,6 +43,7 @@ import (
 func GetCmd() command.SetupCommand[*config.Config] {
 	var additionalDNSNames []string
 	var additionalIPAddresses []string
+	var overrideCommonName string
 
 	var daemon bool
 	var execute string
@@ -75,7 +76,7 @@ func GetCmd() command.SetupCommand[*config.Config] {
 						}
 						return nil
 					case <-interval.C:
-						res, privateKey, err := GetCertificate(ctx, ch.Config.Client(), additionalDNSNames, additionalIPAddresses)
+						res, privateKey, err := GetCertificate(ctx, ch.Config.Client(), additionalDNSNames, additionalIPAddresses, overrideCommonName)
 						if end != nil {
 							end()
 						}
@@ -153,6 +154,7 @@ func GetCmd() command.SetupCommand[*config.Config] {
 
 		clientCmd.Flags().StringSliceVar(&additionalDNSNames, "dns", []string{}, "Additional DNS Names to add to the certificate")
 		clientCmd.Flags().StringSliceVar(&additionalIPAddresses, "ips", []string{}, "Additional IP Addresses to add to the certificate")
+		clientCmd.Flags().StringVar(&overrideCommonName, "common-name", "", "Override the common name of the certificate")
 
 		clientCmd.Flags().BoolVar(&daemon, "daemon", false, "Run the command as a daemon")
 		clientCmd.Flags().StringVar(&execute, "execute", "", "Execute a command after creating the certificate")
@@ -161,7 +163,7 @@ func GetCmd() command.SetupCommand[*config.Config] {
 	}
 }
 
-func GetCertificate(ctx context.Context, client *client.EndKeyAPIV1, additionalDNSNames []string, additionalIPAddresses []string) (*models.ModelsCertificateResponse, *ecdsa.PrivateKey, error) {
+func GetCertificate(ctx context.Context, client *client.EndKeyAPIV1, additionalDNSNames []string, additionalIPAddresses []string, overrideCommonName string) (*models.ModelsCertificateResponse, *ecdsa.PrivateKey, error) {
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to generate private key: %w", err)
@@ -179,6 +181,7 @@ func GetCertificate(ctx context.Context, client *client.EndKeyAPIV1, additionalD
 	req := &models.ModelsCreateCertificateRequest{
 		AdditionalDNSNames:    additionalDNSNames,
 		AdditionalIPAddresses: additionalIPAddresses,
+		OverrideCommonName:    overrideCommonName,
 		Csr:                   base64.StdEncoding.EncodeToString(csrPEM),
 	}
 

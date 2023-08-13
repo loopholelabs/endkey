@@ -31,6 +31,7 @@ import (
 func CreateCmd() command.SetupCommand[*config.Config] {
 	var allowAdditionalDNSNames bool
 	var allowAdditionalIPs bool
+	var allowOverrideCommonName bool
 	var dnsNames []string
 	var ipAddresses []string
 	var client bool
@@ -56,6 +57,7 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 					AllowAdditionalIps:      allowAdditionalIPs,
 					AuthorityName:           authority,
 					CommonName:              commonName,
+					AllowOverrideCommonName: allowOverrideCommonName,
 					DNSNames:                dnsNames,
 					Name:                    name,
 					IPAddresses:             ipAddresses,
@@ -72,19 +74,20 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 				}
 
 				return ch.Printer.PrintResource(templateModel{
-					Created:       res.GetPayload().CreatedAt,
-					ID:            res.GetPayload().ID,
-					Name:          res.GetPayload().Name,
-					Authority:     res.GetPayload().AuthorityName,
-					CommonName:    res.GetPayload().CommonName,
-					Tag:           res.GetPayload().Tag,
-					DNSNames:      strings.Join(res.GetPayload().DNSNames, ","),
-					IPAddresses:   strings.Join(res.GetPayload().IPAddresses, ","),
-					Validity:      res.GetPayload().Validity,
-					AdditionalDNS: fmt.Sprintf("%t", res.GetPayload().AllowAdditionalDNSNames),
-					AdditionalIPs: fmt.Sprintf("%t", res.GetPayload().AllowAdditionalIps),
-					Client:        fmt.Sprintf("%t", res.GetPayload().Client),
-					Server:        fmt.Sprintf("%t", res.GetPayload().Server),
+					Created:            res.GetPayload().CreatedAt,
+					ID:                 res.GetPayload().ID,
+					Name:               res.GetPayload().Name,
+					Authority:          res.GetPayload().AuthorityName,
+					CommonName:         res.GetPayload().CommonName,
+					OverrideCommonName: fmt.Sprintf("%t", res.GetPayload().AllowOverrideCommonName),
+					Tag:                res.GetPayload().Tag,
+					DNSNames:           strings.Join(res.GetPayload().DNSNames, ","),
+					IPAddresses:        strings.Join(res.GetPayload().IPAddresses, ","),
+					Validity:           res.GetPayload().Validity,
+					AdditionalDNS:      fmt.Sprintf("%t", res.GetPayload().AllowAdditionalDNSNames),
+					AdditionalIPs:      fmt.Sprintf("%t", res.GetPayload().AllowAdditionalIps),
+					Client:             fmt.Sprintf("%t", res.GetPayload().Client),
+					Server:             fmt.Sprintf("%t", res.GetPayload().Server),
 				})
 			},
 		}
@@ -93,6 +96,7 @@ func CreateCmd() command.SetupCommand[*config.Config] {
 		createCmd.Flags().BoolVar(&allowAdditionalIPs, "allow-additional-ips", false, "Allow additional IP addresses")
 		createCmd.Flags().StringSliceVar(&dnsNames, "dns-names", []string{}, "DNS names")
 		createCmd.Flags().StringSliceVar(&ipAddresses, "ip-addresses", []string{}, "IP addresses")
+		createCmd.Flags().BoolVar(&allowOverrideCommonName, "allow-override-common-name", false, "Allow overriding Common Name")
 		createCmd.Flags().BoolVar(&client, "client", false, "Client certificate template")
 		createCmd.Flags().BoolVar(&server, "server", false, "Server certificate template")
 

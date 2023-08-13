@@ -56,19 +56,20 @@ func ListCmd() command.SetupCommand[*config.Config] {
 				templs := make([]templateModel, 0, len(res.GetPayload()))
 				for _, templ := range res.GetPayload() {
 					templs = append(templs, templateModel{
-						Created:       templ.CreatedAt,
-						ID:            templ.ID,
-						Name:          templ.Name,
-						Authority:     templ.AuthorityName,
-						CommonName:    templ.CommonName,
-						Tag:           templ.Tag,
-						DNSNames:      strings.Join(templ.DNSNames, ","),
-						IPAddresses:   strings.Join(templ.IPAddresses, ","),
-						Validity:      templ.Validity,
-						AdditionalDNS: fmt.Sprintf("%t", templ.AllowAdditionalDNSNames),
-						AdditionalIPs: fmt.Sprintf("%t", templ.AllowAdditionalIps),
-						Client:        fmt.Sprintf("%t", templ.Client),
-						Server:        fmt.Sprintf("%t", templ.Server),
+						Created:            templ.CreatedAt,
+						ID:                 templ.ID,
+						Name:               templ.Name,
+						Authority:          templ.AuthorityName,
+						CommonName:         templ.CommonName,
+						OverrideCommonName: fmt.Sprintf("%t", templ.AllowOverrideCommonName),
+						Tag:                templ.Tag,
+						DNSNames:           strings.Join(templ.DNSNames, ","),
+						IPAddresses:        strings.Join(templ.IPAddresses, ","),
+						Validity:           templ.Validity,
+						AdditionalDNS:      fmt.Sprintf("%t", templ.AllowAdditionalDNSNames),
+						AdditionalIPs:      fmt.Sprintf("%t", templ.AllowAdditionalIps),
+						Client:             fmt.Sprintf("%t", templ.Client),
+						Server:             fmt.Sprintf("%t", templ.Server),
 					})
 				}
 

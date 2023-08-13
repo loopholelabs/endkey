@@ -32,6 +32,8 @@ const (
 	FieldIPAddresses = "ip_addresses"
 	// FieldAllowAdditionalIps holds the string denoting the allow_additional_ips field in the database.
 	FieldAllowAdditionalIps = "allow_additional_ips"
+	// FieldAllowOverrideCommonName holds the string denoting the allow_override_common_name field in the database.
+	FieldAllowOverrideCommonName = "allow_override_common_name"
 	// FieldClient holds the string denoting the client field in the database.
 	FieldClient = "client"
 	// FieldServer holds the string denoting the server field in the database.
@@ -70,6 +72,7 @@ var Columns = []string{
 	FieldAllowAdditionalDNSNames,
 	FieldIPAddresses,
 	FieldAllowAdditionalIps,
+	FieldAllowOverrideCommonName,
 	FieldClient,
 	FieldServer,
 }
@@ -110,6 +113,8 @@ var (
 	DefaultAllowAdditionalDNSNames bool
 	// DefaultAllowAdditionalIps holds the default value on creation for the "allow_additional_ips" field.
 	DefaultAllowAdditionalIps bool
+	// DefaultAllowOverrideCommonName holds the default value on creation for the "allow_override_common_name" field.
+	DefaultAllowOverrideCommonName bool
 	// DefaultClient holds the default value on creation for the "client" field.
 	DefaultClient bool
 	// DefaultServer holds the default value on creation for the "server" field.
@@ -159,6 +164,11 @@ func ByAllowAdditionalDNSNames(opts ...sql.OrderTermOption) OrderOption {
 // ByAllowAdditionalIps orders the results by the allow_additional_ips field.
 func ByAllowAdditionalIps(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAllowAdditionalIps, opts...).ToFunc()
+}
+
+// ByAllowOverrideCommonName orders the results by the allow_override_common_name field.
+func ByAllowOverrideCommonName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAllowOverrideCommonName, opts...).ToFunc()
 }
 
 // ByClient orders the results by the client field.

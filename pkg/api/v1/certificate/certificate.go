@@ -142,6 +142,18 @@ func (a *Certificate) CreateCertificate(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "error finding template for api key")
 	}
 
+	if !templ.AllowAdditionalDNSNames && len(body.AdditionalDNSNames) != 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "additional dns names not allowed")
+	}
+
+	if !templ.AllowAdditionalIps && len(body.AdditionalIPAddresses) != 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "additional ip addresses not allowed")
+	}
+
+	if !templ.AllowOverrideCommonName && len(body.OverrideCommonName) != 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "overriding common name not allowed")
+	}
+
 	ca, err := utils.DecodeX509Certificate(auth.CaCertificatePem)
 	if err != nil {
 		a.logger.Error().Err(err).Msg("failed to decode ca certificate")
@@ -193,15 +205,19 @@ func (a *Certificate) CreateCertificate(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed to parse validity")
 	}
 
+	commonName := templ.CommonName
+	if body.OverrideCommonName != "" {
+		commonName = body.OverrideCommonName
+	}
+
 	t := &x509.Certificate{
 		SerialNumber:       big.NewInt(1),
 		Signature:          csr.Signature,
 		SignatureAlgorithm: x509.ECDSAWithSHA256,
 		PublicKeyAlgorithm: x509.ECDSA,
 		PublicKey:          csr.PublicKey,
-		Issuer:             ca.Subject,
 		Subject: pkix.Name{
-			CommonName:         templ.CommonName,
+			CommonName:         commonName,
 			Organization:       []string{a.options.Identifier(), templ.Name},
 			Country:            []string{"-"},
 			Province:           []string{"-"},
@@ -243,6 +259,7 @@ func (a *Certificate) CreateCertificate(ctx *fiber.Ctx) error {
 		TemplateName:          templ.Name,
 		AdditionalDNSNames:    body.AdditionalDNSNames,
 		AdditionalIPAddresses: body.AdditionalIPAddresses,
+		CommonName:            commonName,
 		Expiry:                t.NotAfter.Format(time.RFC3339),
 		CACertificate:         base64.StdEncoding.EncodeToString(auth.CaCertificatePem),
 		PublicCertificate:     base64.StdEncoding.EncodeToString(certPEM),

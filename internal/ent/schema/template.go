@@ -66,6 +66,9 @@ func (Template) Fields() []ent.Field {
 		// Whether to allow additional IP Addresses for the Template, immutable
 		field.Bool("allow_additional_ips").Immutable().Default(false),
 
+		// Whether to allow overriding the Common Name for the Template, immutable
+		field.Bool("allow_override_common_name").Immutable().Default(false),
+
 		// Whether this is a client Template, immutable
 		field.Bool("client").Immutable().Default(false),
 

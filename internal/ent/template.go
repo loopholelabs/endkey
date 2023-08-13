@@ -37,6 +37,8 @@ type Template struct {
 	IPAddresses []string `json:"ip_addresses,omitempty"`
 	// AllowAdditionalIps holds the value of the "allow_additional_ips" field.
 	AllowAdditionalIps bool `json:"allow_additional_ips,omitempty"`
+	// AllowOverrideCommonName holds the value of the "allow_override_common_name" field.
+	AllowOverrideCommonName bool `json:"allow_override_common_name,omitempty"`
 	// Client holds the value of the "client" field.
 	Client bool `json:"client,omitempty"`
 	// Server holds the value of the "server" field.
@@ -88,7 +90,7 @@ func (*Template) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case template.FieldDNSNames, template.FieldIPAddresses:
 			values[i] = new([]byte)
-		case template.FieldAllowAdditionalDNSNames, template.FieldAllowAdditionalIps, template.FieldClient, template.FieldServer:
+		case template.FieldAllowAdditionalDNSNames, template.FieldAllowAdditionalIps, template.FieldAllowOverrideCommonName, template.FieldClient, template.FieldServer:
 			values[i] = new(sql.NullBool)
 		case template.FieldID, template.FieldName, template.FieldCommonName, template.FieldTag, template.FieldValidity:
 			values[i] = new(sql.NullString)
@@ -174,6 +176,12 @@ func (t *Template) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field allow_additional_ips", values[i])
 			} else if value.Valid {
 				t.AllowAdditionalIps = value.Bool
+			}
+		case template.FieldAllowOverrideCommonName:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field allow_override_common_name", values[i])
+			} else if value.Valid {
+				t.AllowOverrideCommonName = value.Bool
 			}
 		case template.FieldClient:
 			if value, ok := values[i].(*sql.NullBool); !ok {
@@ -266,6 +274,9 @@ func (t *Template) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("allow_additional_ips=")
 	builder.WriteString(fmt.Sprintf("%v", t.AllowAdditionalIps))
+	builder.WriteString(", ")
+	builder.WriteString("allow_override_common_name=")
+	builder.WriteString(fmt.Sprintf("%v", t.AllowOverrideCommonName))
 	builder.WriteString(", ")
 	builder.WriteString("client=")
 	builder.WriteString(fmt.Sprintf("%v", t.Client))

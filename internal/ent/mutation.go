@@ -1988,6 +1988,7 @@ type TemplateMutation struct {
 	ip_addresses               *[]string
 	appendip_addresses         []string
 	allow_additional_ips       *bool
+	allow_override_common_name *bool
 	client                     *bool
 	server                     *bool
 	clearedFields              map[string]struct{}
@@ -2487,6 +2488,42 @@ func (m *TemplateMutation) ResetAllowAdditionalIps() {
 	m.allow_additional_ips = nil
 }
 
+// SetAllowOverrideCommonName sets the "allow_override_common_name" field.
+func (m *TemplateMutation) SetAllowOverrideCommonName(b bool) {
+	m.allow_override_common_name = &b
+}
+
+// AllowOverrideCommonName returns the value of the "allow_override_common_name" field in the mutation.
+func (m *TemplateMutation) AllowOverrideCommonName() (r bool, exists bool) {
+	v := m.allow_override_common_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAllowOverrideCommonName returns the old "allow_override_common_name" field's value of the Template entity.
+// If the Template object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TemplateMutation) OldAllowOverrideCommonName(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAllowOverrideCommonName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAllowOverrideCommonName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAllowOverrideCommonName: %w", err)
+	}
+	return oldValue.AllowOverrideCommonName, nil
+}
+
+// ResetAllowOverrideCommonName resets all changes to the "allow_override_common_name" field.
+func (m *TemplateMutation) ResetAllowOverrideCommonName() {
+	m.allow_override_common_name = nil
+}
+
 // SetClient sets the "client" field.
 func (m *TemplateMutation) SetClient(b bool) {
 	m.client = &b
@@ -2686,7 +2723,7 @@ func (m *TemplateMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TemplateMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 12)
 	if m.created_at != nil {
 		fields = append(fields, template.FieldCreatedAt)
 	}
@@ -2713,6 +2750,9 @@ func (m *TemplateMutation) Fields() []string {
 	}
 	if m.allow_additional_ips != nil {
 		fields = append(fields, template.FieldAllowAdditionalIps)
+	}
+	if m.allow_override_common_name != nil {
+		fields = append(fields, template.FieldAllowOverrideCommonName)
 	}
 	if m.client != nil {
 		fields = append(fields, template.FieldClient)
@@ -2746,6 +2786,8 @@ func (m *TemplateMutation) Field(name string) (ent.Value, bool) {
 		return m.IPAddresses()
 	case template.FieldAllowAdditionalIps:
 		return m.AllowAdditionalIps()
+	case template.FieldAllowOverrideCommonName:
+		return m.AllowOverrideCommonName()
 	case template.FieldClient:
 		return m.GetClient()
 	case template.FieldServer:
@@ -2777,6 +2819,8 @@ func (m *TemplateMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldIPAddresses(ctx)
 	case template.FieldAllowAdditionalIps:
 		return m.OldAllowAdditionalIps(ctx)
+	case template.FieldAllowOverrideCommonName:
+		return m.OldAllowOverrideCommonName(ctx)
 	case template.FieldClient:
 		return m.OldClient(ctx)
 	case template.FieldServer:
@@ -2852,6 +2896,13 @@ func (m *TemplateMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAllowAdditionalIps(v)
+		return nil
+	case template.FieldAllowOverrideCommonName:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAllowOverrideCommonName(v)
 		return nil
 	case template.FieldClient:
 		v, ok := value.(bool)
@@ -2957,6 +3008,9 @@ func (m *TemplateMutation) ResetField(name string) error {
 		return nil
 	case template.FieldAllowAdditionalIps:
 		m.ResetAllowAdditionalIps()
+		return nil
+	case template.FieldAllowOverrideCommonName:
+		m.ResetAllowOverrideCommonName()
 		return nil
 	case template.FieldClient:
 		m.ResetClient()

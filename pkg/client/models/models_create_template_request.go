@@ -23,6 +23,9 @@ type ModelsCreateTemplateRequest struct {
 	// allow additional ips
 	AllowAdditionalIps bool `json:"allow_additional_ips,omitempty"`
 
+	// allow override common name
+	AllowOverrideCommonName bool `json:"allow_override_common_name,omitempty"`
+
 	// authority name
 	AuthorityName string `json:"authority_name,omitempty"`
 

@@ -100,6 +100,11 @@ func AllowAdditionalIps(v bool) predicate.Template {
 	return predicate.Template(sql.FieldEQ(FieldAllowAdditionalIps, v))
 }
 
+// AllowOverrideCommonName applies equality check predicate on the "allow_override_common_name" field. It's identical to AllowOverrideCommonNameEQ.
+func AllowOverrideCommonName(v bool) predicate.Template {
+	return predicate.Template(sql.FieldEQ(FieldAllowOverrideCommonName, v))
+}
+
 // Client applies equality check predicate on the "client" field. It's identical to ClientEQ.
 func Client(v bool) predicate.Template {
 	return predicate.Template(sql.FieldEQ(FieldClient, v))
@@ -448,6 +453,16 @@ func AllowAdditionalIpsEQ(v bool) predicate.Template {
 // AllowAdditionalIpsNEQ applies the NEQ predicate on the "allow_additional_ips" field.
 func AllowAdditionalIpsNEQ(v bool) predicate.Template {
 	return predicate.Template(sql.FieldNEQ(FieldAllowAdditionalIps, v))
+}
+
+// AllowOverrideCommonNameEQ applies the EQ predicate on the "allow_override_common_name" field.
+func AllowOverrideCommonNameEQ(v bool) predicate.Template {
+	return predicate.Template(sql.FieldEQ(FieldAllowOverrideCommonName, v))
+}
+
+// AllowOverrideCommonNameNEQ applies the NEQ predicate on the "allow_override_common_name" field.
+func AllowOverrideCommonNameNEQ(v bool) predicate.Template {
+	return predicate.Template(sql.FieldNEQ(FieldAllowOverrideCommonName, v))
 }
 
 // ClientEQ applies the EQ predicate on the "client" field.

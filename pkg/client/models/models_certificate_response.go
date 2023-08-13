@@ -32,6 +32,9 @@ type ModelsCertificateResponse struct {
 	// client
 	Client bool `json:"client,omitempty"`
 
+	// common name
+	CommonName string `json:"common_name,omitempty"`
+
 	// expiry
 	Expiry string `json:"expiry,omitempty"`
 

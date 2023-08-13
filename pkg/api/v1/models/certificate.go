@@ -19,6 +19,7 @@ package models
 type CreateCertificateRequest struct {
 	AdditionalDNSNames    []string `json:"additional_dns_names"`
 	AdditionalIPAddresses []string `json:"additional_ip_addresses"`
+	OverrideCommonName    string   `json:"override_common_name"`
 	CSR                   string   `json:"csr" format:"base64"`
 }
 
@@ -29,6 +30,7 @@ type CertificateResponse struct {
 	Server                bool     `json:"server"`
 	AdditionalDNSNames    []string `json:"additional_dns_names"`
 	AdditionalIPAddresses []string `json:"additional_ip_addresses"`
+	CommonName            string   `json:"common_name"`
 	Expiry                string   `json:"expiry"`
 	CACertificate         string   `json:"ca_certificate" format:"base64"`
 	PublicCertificate     string   `json:"public_certificate" format:"base64"`

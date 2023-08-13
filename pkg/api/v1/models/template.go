@@ -20,6 +20,7 @@ type CreateTemplateRequest struct {
 	Name                    string   `json:"name"`
 	AuthorityName           string   `json:"authority_name"`
 	CommonName              string   `json:"common_name"`
+	AllowOverrideCommonName bool     `json:"allow_override_common_name"`
 	Tag                     string   `json:"tag"`
 	DNSNames                []string `json:"dns_names"`
 	AllowAdditionalDNSNames bool     `json:"allow_additional_dns_names"`
@@ -41,6 +42,7 @@ type TemplateResponse struct {
 	Name                    string   `json:"name"`
 	AuthorityName           string   `json:"authority_name"`
 	CommonName              string   `json:"common_name"`
+	AllowOverrideCommonName bool     `json:"allow_override_common_name"`
 	Tag                     string   `json:"tag"`
 	DNSNames                []string `json:"dns_names"`
 	AllowAdditionalDNSNames bool     `json:"allow_additional_dns_names"`

@@ -101,6 +101,7 @@ var (
 		{Name: "allow_additional_dns_names", Type: field.TypeBool, Default: false},
 		{Name: "ip_addresses", Type: field.TypeJSON, Nullable: true},
 		{Name: "allow_additional_ips", Type: field.TypeBool, Default: false},
+		{Name: "allow_override_common_name", Type: field.TypeBool, Default: false},
 		{Name: "client", Type: field.TypeBool, Default: false},
 		{Name: "server", Type: field.TypeBool, Default: false},
 		{Name: "authority_templates", Type: field.TypeString},
@@ -113,7 +114,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "templates_authorities_templates",
-				Columns:    []*schema.Column{TemplatesColumns[12]},
+				Columns:    []*schema.Column{TemplatesColumns[13]},
 				RefColumns: []*schema.Column{AuthoritiesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -122,7 +123,7 @@ var (
 			{
 				Name:    "template_name_authority_templates",
 				Unique:  true,
-				Columns: []*schema.Column{TemplatesColumns[2], TemplatesColumns[12]},
+				Columns: []*schema.Column{TemplatesColumns[2], TemplatesColumns[13]},
 			},
 		},
 	}

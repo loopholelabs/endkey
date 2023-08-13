@@ -150,8 +150,8 @@ func (a *Authority) CreateAuthority(ctx *fiber.Ctx) error {
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(validity),
 		IsCA:                  true,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
-		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
+		MaxPathLen:            1,
 		BasicConstraintsValid: true,
 	}
 

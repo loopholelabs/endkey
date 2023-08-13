@@ -113,12 +113,16 @@ func init() {
 	templateDescAllowAdditionalIps := templateFields[9].Descriptor()
 	// template.DefaultAllowAdditionalIps holds the default value on creation for the allow_additional_ips field.
 	template.DefaultAllowAdditionalIps = templateDescAllowAdditionalIps.Default.(bool)
+	// templateDescAllowOverrideCommonName is the schema descriptor for allow_override_common_name field.
+	templateDescAllowOverrideCommonName := templateFields[10].Descriptor()
+	// template.DefaultAllowOverrideCommonName holds the default value on creation for the allow_override_common_name field.
+	template.DefaultAllowOverrideCommonName = templateDescAllowOverrideCommonName.Default.(bool)
 	// templateDescClient is the schema descriptor for client field.
-	templateDescClient := templateFields[10].Descriptor()
+	templateDescClient := templateFields[11].Descriptor()
 	// template.DefaultClient holds the default value on creation for the client field.
 	template.DefaultClient = templateDescClient.Default.(bool)
 	// templateDescServer is the schema descriptor for server field.
-	templateDescServer := templateFields[11].Descriptor()
+	templateDescServer := templateFields[12].Descriptor()
 	// template.DefaultServer holds the default value on creation for the server field.
 	template.DefaultServer = templateDescServer.Default.(bool)
 	// templateDescID is the schema descriptor for id field.

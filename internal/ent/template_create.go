@@ -100,6 +100,20 @@ func (tc *TemplateCreate) SetNillableAllowAdditionalIps(b *bool) *TemplateCreate
 	return tc
 }
 
+// SetAllowOverrideCommonName sets the "allow_override_common_name" field.
+func (tc *TemplateCreate) SetAllowOverrideCommonName(b bool) *TemplateCreate {
+	tc.mutation.SetAllowOverrideCommonName(b)
+	return tc
+}
+
+// SetNillableAllowOverrideCommonName sets the "allow_override_common_name" field if the given value is not nil.
+func (tc *TemplateCreate) SetNillableAllowOverrideCommonName(b *bool) *TemplateCreate {
+	if b != nil {
+		tc.SetAllowOverrideCommonName(*b)
+	}
+	return tc
+}
+
 // SetClient sets the "client" field.
 func (tc *TemplateCreate) SetClient(b bool) *TemplateCreate {
 	tc.mutation.SetClient(b)
@@ -207,6 +221,10 @@ func (tc *TemplateCreate) defaults() {
 		v := template.DefaultAllowAdditionalIps
 		tc.mutation.SetAllowAdditionalIps(v)
 	}
+	if _, ok := tc.mutation.AllowOverrideCommonName(); !ok {
+		v := template.DefaultAllowOverrideCommonName
+		tc.mutation.SetAllowOverrideCommonName(v)
+	}
 	if _, ok := tc.mutation.GetClient(); !ok {
 		v := template.DefaultClient
 		tc.mutation.SetClient(v)
@@ -259,6 +277,9 @@ func (tc *TemplateCreate) check() error {
 	}
 	if _, ok := tc.mutation.AllowAdditionalIps(); !ok {
 		return &ValidationError{Name: "allow_additional_ips", err: errors.New(`ent: missing required field "Template.allow_additional_ips"`)}
+	}
+	if _, ok := tc.mutation.AllowOverrideCommonName(); !ok {
+		return &ValidationError{Name: "allow_override_common_name", err: errors.New(`ent: missing required field "Template.allow_override_common_name"`)}
 	}
 	if _, ok := tc.mutation.GetClient(); !ok {
 		return &ValidationError{Name: "client", err: errors.New(`ent: missing required field "Template.client"`)}
@@ -344,6 +365,10 @@ func (tc *TemplateCreate) createSpec() (*Template, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.AllowAdditionalIps(); ok {
 		_spec.SetField(template.FieldAllowAdditionalIps, field.TypeBool, value)
 		_node.AllowAdditionalIps = value
+	}
+	if value, ok := tc.mutation.AllowOverrideCommonName(); ok {
+		_spec.SetField(template.FieldAllowOverrideCommonName, field.TypeBool, value)
+		_node.AllowOverrideCommonName = value
 	}
 	if value, ok := tc.mutation.GetClient(); ok {
 		_spec.SetField(template.FieldClient, field.TypeBool, value)

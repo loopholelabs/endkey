@@ -151,7 +151,7 @@ func (a *Template) Create(ctx *fiber.Ctx) error {
 
 	a.logger.Info().Msgf("creating template '%s' with authority '%s', common name '%s', dns names '%v', validity %s, client %t, and server %t for user key %s", body.Name, body.AuthorityName, body.CommonName, body.DNSNames, validity.String(), body.Client, body.Server, uk.Name)
 
-	templ, err := a.options.Database().CreateTemplate(ctx.Context(), body.Name, body.AuthorityName, uk, body.CommonName, body.Tag, body.DNSNames, body.AllowAdditionalDNSNames, body.IPAddresses, body.AllowAdditionalIPs, validity.String(), body.Client, body.Server)
+	templ, err := a.options.Database().CreateTemplate(ctx.Context(), body.Name, body.AuthorityName, uk, body.CommonName, body.AllowOverrideCommonName, body.Tag, body.DNSNames, body.AllowAdditionalDNSNames, body.IPAddresses, body.AllowAdditionalIPs, validity.String(), body.Client, body.Server)
 	if err != nil {
 		if errors.Is(err, database.ErrAlreadyExists) {
 			return fiber.NewError(fiber.StatusConflict, "template already exists")
@@ -167,6 +167,7 @@ func (a *Template) Create(ctx *fiber.Ctx) error {
 		Name:                    templ.Name,
 		AuthorityName:           body.AuthorityName,
 		CommonName:              templ.CommonName,
+		AllowOverrideCommonName: templ.AllowOverrideCommonName,
 		Tag:                     templ.Tag,
 		DNSNames:                templ.DNSNames,
 		AllowAdditionalDNSNames: templ.AllowAdditionalDNSNames,

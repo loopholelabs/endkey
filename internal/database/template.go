@@ -26,7 +26,7 @@ import (
 	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
-func (d *Database) CreateTemplate(ctx context.Context, name string, authorityName string, uk *ent.UserKey, commonName string, tag string, dnsNames []string, additionalDNS bool, IPs []string, additionalIPs bool, validity string, client bool, server bool) (*ent.Template, error) {
+func (d *Database) CreateTemplate(ctx context.Context, name string, authorityName string, uk *ent.UserKey, commonName string, allowOverrideCommonName bool, tag string, dnsNames []string, additionalDNS bool, IPs []string, additionalIPs bool, validity string, client bool, server bool) (*ent.Template, error) {
 	id := uuid.New().String()
 	auth, err := d.sql.Authority.Query().Where(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID))).Only(ctx)
 	if err != nil {
@@ -36,7 +36,7 @@ func (d *Database) CreateTemplate(ctx context.Context, name string, authorityNam
 		return nil, err
 	}
 
-	templ, err := d.sql.Template.Create().SetID(id).SetName(name).SetAuthority(auth).SetCommonName(commonName).SetTag(tag).SetDNSNames(dnsNames).SetAllowAdditionalDNSNames(additionalDNS).SetIPAddresses(IPs).SetAllowAdditionalIps(additionalIPs).SetValidity(validity).SetClient(client).SetServer(server).Save(ctx)
+	templ, err := d.sql.Template.Create().SetID(id).SetName(name).SetAuthority(auth).SetCommonName(commonName).SetAllowOverrideCommonName(allowOverrideCommonName).SetTag(tag).SetDNSNames(dnsNames).SetAllowAdditionalDNSNames(additionalDNS).SetIPAddresses(IPs).SetAllowAdditionalIps(additionalIPs).SetValidity(validity).SetClient(client).SetServer(server).Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
 			return nil, ErrAlreadyExists

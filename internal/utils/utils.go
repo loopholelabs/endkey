@@ -23,6 +23,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"github.com/gofiber/fiber/v2"
 	"math/rand"
 	"os"
@@ -43,6 +44,8 @@ const (
 
 var (
 	invalidString = regexp.MustCompile(`[^a-zA-Z0-9\-]`)
+
+	ErrInvalidPKCS8PrivateKey = errors.New("invalid PKCS8 private key")
 )
 
 // RandomString generates a random string of length n
@@ -78,13 +81,20 @@ func DefaultFiberApp() *fiber.App {
 }
 
 func EncodeECDSAPrivateKey(privateKey *ecdsa.PrivateKey) []byte {
-	marshalled, _ := x509.MarshalECPrivateKey(privateKey)
+	marshalled, _ := x509.MarshalPKCS8PrivateKey(privateKey)
 	return pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: marshalled})
 }
 
 func DecodeECDSAPrivateKey(encoded []byte) (*ecdsa.PrivateKey, error) {
 	block, _ := pem.Decode(encoded)
-	return x509.ParseECPrivateKey(block.Bytes)
+	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	if privateKey, ok := key.(*ecdsa.PrivateKey); ok {
+		return privateKey, nil
+	}
+	return nil, ErrInvalidPKCS8PrivateKey
 }
 
 func EncodeX509Certificate(caBytes []byte) ([]byte, error) {

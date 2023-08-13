@@ -33,29 +33,41 @@ import (
 	"github.com/loopholelabs/endkey/pkg/client/certificate"
 	"github.com/loopholelabs/endkey/pkg/client/models"
 	"github.com/loopholelabs/tls/pkg/loader"
+	"github.com/rs/zerolog"
 )
 
 var _ loader.Loader = (*Loader)(nil)
 
 var (
+	ErrDisabled        = errors.New("endkey is disabled")
 	ErrInvalidEndpoint = errors.New("invalid endpoint")
 	ErrInvalidAPIKey   = errors.New("invalid api key")
 )
 
 type Options struct {
+	LogName               string
+	Disabled              bool
 	Endpoint              string
-	TLS                   bool
 	APIKey                string
+	TLS                   bool
 	AdditionalDNSNames    []string
 	AdditionalIPAddresses []string
+	OverrideCommonName    string
 }
 
 type Loader struct {
+	logger  *zerolog.Logger
 	options *Options
 	client  *client.EndKeyAPIV1
 }
 
-func New(options *Options) (*Loader, error) {
+func New(options *Options, logger *zerolog.Logger) (*Loader, error) {
+	l := logger.With().Str(options.LogName, "ENDKEY").Logger()
+	if options.Disabled {
+		l.Warn().Msg("disabled")
+		return nil, ErrDisabled
+	}
+
 	if options.Endpoint == "" {
 		return nil, ErrInvalidEndpoint
 	}
@@ -74,12 +86,14 @@ func New(options *Options) (*Loader, error) {
 	c := client.New(r, strfmt.Default)
 
 	return &Loader{
+		logger:  &l,
 		options: options,
 		client:  c,
 	}, nil
 }
 
 func (l *Loader) RootCA(ctx context.Context) (*x509.CertPool, error) {
+	l.logger.Info().Msg("loading root ca")
 	result, err := l.client.Certificate.GetCertificate(certificate.NewGetCertificateParamsWithContext(ctx))
 	if err != nil {
 		return nil, err
@@ -93,10 +107,13 @@ func (l *Loader) RootCA(ctx context.Context) (*x509.CertPool, error) {
 	caPool := x509.NewCertPool()
 	caPool.AppendCertsFromPEM(caPEM)
 
+	l.logger.Info().Msg("loaded root ca")
+
 	return caPool, nil
 }
 
 func (l *Loader) Certificate(ctx context.Context) (*tls.Certificate, error) {
+	l.logger.Info().Msg("loading certificate")
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		return nil, err
@@ -114,6 +131,7 @@ func (l *Loader) Certificate(ctx context.Context) (*tls.Certificate, error) {
 	req := &models.ModelsCreateCertificateRequest{
 		AdditionalDNSNames:    l.options.AdditionalDNSNames,
 		AdditionalIPAddresses: l.options.AdditionalIPAddresses,
+		OverrideCommonName:    l.options.OverrideCommonName,
 		Csr:                   base64.StdEncoding.EncodeToString(csrPEM),
 	}
 
@@ -131,6 +149,8 @@ func (l *Loader) Certificate(ctx context.Context) (*tls.Certificate, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	l.logger.Info().Msg("loaded certificate")
 
 	return &tls.Certificate{
 		Certificate: [][]byte{cert.Raw},

@@ -67,7 +67,6 @@ func (c *Config) RootPersistentFlags(flags *pflag.FlagSet) {
 	flags.StringSliceVar(&c.AdditionalDNSNames, "endkey-additional-dns-names", []string{}, "Additional DNS names")
 	flags.StringSliceVar(&c.AdditionalIPAddresses, "endkey-additional-ip-addresses", []string{}, "Additional IP addresses")
 	flags.StringVar(&c.OverrideCommonName, "endkey-override-common-name", "", "Override common name")
-
 }
 
 func (c *Config) GenerateOptions(logName string) (*Options, error) {

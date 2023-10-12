@@ -19,8 +19,6 @@ package log
 import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
 	"os"
@@ -30,7 +28,6 @@ import (
 var (
 	once   sync.Once
 	Logger = NewLogger(io.Discard, zerolog.InfoLevel)
-	Zap    = NewZapLogger(io.Discard)
 )
 
 // init sets up the time format and an error marshaller that lets us record an error's stack trace
@@ -43,10 +40,6 @@ func init() {
 func NewLogger(w io.Writer, level zerolog.Level) *zerolog.Logger {
 	l := zerolog.New(w).Level(level).With().Timestamp().Logger()
 	return &l
-}
-
-func NewZapLogger(w io.Writer) *zap.Logger {
-	return zap.New(zapcore.NewCore(zapcore.NewConsoleEncoder(zap.NewProductionEncoderConfig()), zapcore.AddSync(w), zapcore.InfoLevel))
 }
 
 func Init(logFile string, debug bool) {
@@ -67,7 +60,6 @@ func Init(logFile string, debug bool) {
 		} else {
 			Logger = NewLogger(writer, zerolog.InfoLevel)
 		}
-		Zap = NewZapLogger(writer)
 		Logger.Info().Msg("logger initialized")
 	})
 }

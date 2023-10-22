@@ -128,7 +128,7 @@ func (d *Database) ListRootKeys(ctx context.Context) (ent.RootKeys, error) {
 }
 
 func (d *Database) DeleteRootKeyByName(ctx context.Context, name string) error {
-	_, err := d.sql.RootKey.Delete().Where(rootkey.Name(name)).Exec(ctx)
+	n, err := d.sql.RootKey.Delete().Where(rootkey.Name(name)).Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return ErrNotFound
@@ -139,6 +139,10 @@ func (d *Database) DeleteRootKeyByName(ctx context.Context, name string) error {
 		}
 
 		return err
+	}
+
+	if n == 0 {
+		return ErrNotFound
 	}
 
 	return nil

@@ -127,6 +127,10 @@ func (a *APIKey) CreateAPIKey(ctx *fiber.Ctx) error {
 			return fiber.NewError(fiber.StatusConflict, "api key already exists for this authority")
 		}
 
+		if errors.Is(err, database.ErrNotFound) {
+			return fiber.NewError(fiber.StatusNotFound, "authority or template not found")
+		}
+
 		a.logger.Error().Err(err).Msg("failed to create api key")
 		return fiber.NewError(fiber.StatusInternalServerError, "failed to create api key")
 	}

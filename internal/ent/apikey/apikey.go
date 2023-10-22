@@ -24,10 +24,8 @@ const (
 	FieldHash = "hash"
 	// EdgeAuthority holds the string denoting the authority edge name in mutations.
 	EdgeAuthority = "authority"
-	// EdgeServerTemplate holds the string denoting the server_template edge name in mutations.
-	EdgeServerTemplate = "server_template"
-	// EdgeClientTemplate holds the string denoting the client_template edge name in mutations.
-	EdgeClientTemplate = "client_template"
+	// EdgeTemplate holds the string denoting the template edge name in mutations.
+	EdgeTemplate = "template"
 	// Table holds the table name of the apikey in the database.
 	Table = "api_keys"
 	// AuthorityTable is the table that holds the authority relation/edge.
@@ -37,20 +35,13 @@ const (
 	AuthorityInverseTable = "authorities"
 	// AuthorityColumn is the table column denoting the authority relation/edge.
 	AuthorityColumn = "authority_api_keys"
-	// ServerTemplateTable is the table that holds the server_template relation/edge.
-	ServerTemplateTable = "api_keys"
-	// ServerTemplateInverseTable is the table name for the ServerTemplate entity.
-	// It exists in this package in order to avoid circular dependency with the "servertemplate" package.
-	ServerTemplateInverseTable = "server_templates"
-	// ServerTemplateColumn is the table column denoting the server_template relation/edge.
-	ServerTemplateColumn = "server_template_api_keys"
-	// ClientTemplateTable is the table that holds the client_template relation/edge.
-	ClientTemplateTable = "api_keys"
-	// ClientTemplateInverseTable is the table name for the ClientTemplate entity.
-	// It exists in this package in order to avoid circular dependency with the "clienttemplate" package.
-	ClientTemplateInverseTable = "client_templates"
-	// ClientTemplateColumn is the table column denoting the client_template relation/edge.
-	ClientTemplateColumn = "client_template_api_keys"
+	// TemplateTable is the table that holds the template relation/edge.
+	TemplateTable = "api_keys"
+	// TemplateInverseTable is the table name for the Template entity.
+	// It exists in this package in order to avoid circular dependency with the "template" package.
+	TemplateInverseTable = "templates"
+	// TemplateColumn is the table column denoting the template relation/edge.
+	TemplateColumn = "template_api_keys"
 )
 
 // Columns holds all SQL columns for apikey fields.
@@ -66,8 +57,7 @@ var Columns = []string{
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"authority_api_keys",
-	"client_template_api_keys",
-	"server_template_api_keys",
+	"template_api_keys",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -123,17 +113,10 @@ func ByAuthorityField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
-// ByServerTemplateField orders the results by server_template field.
-func ByServerTemplateField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByTemplateField orders the results by template field.
+func ByTemplateField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newServerTemplateStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByClientTemplateField orders the results by client_template field.
-func ByClientTemplateField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newClientTemplateStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newTemplateStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newAuthorityStep() *sqlgraph.Step {
@@ -143,17 +126,10 @@ func newAuthorityStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, true, AuthorityTable, AuthorityColumn),
 	)
 }
-func newServerTemplateStep() *sqlgraph.Step {
+func newTemplateStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ServerTemplateInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, ServerTemplateTable, ServerTemplateColumn),
-	)
-}
-func newClientTemplateStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ClientTemplateInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, ClientTemplateTable, ClientTemplateColumn),
+		sqlgraph.To(TemplateInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, TemplateTable, TemplateColumn),
 	)
 }

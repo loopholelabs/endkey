@@ -12,8 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/loopholelabs/endkey/internal/ent/apikey"
 	"github.com/loopholelabs/endkey/internal/ent/authority"
-	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
-	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/template"
 	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
@@ -96,34 +95,19 @@ func (ac *AuthorityCreate) AddAPIKeys(a ...*APIKey) *AuthorityCreate {
 	return ac.AddAPIKeyIDs(ids...)
 }
 
-// AddServerTemplateIDs adds the "server_templates" edge to the ServerTemplate entity by IDs.
-func (ac *AuthorityCreate) AddServerTemplateIDs(ids ...string) *AuthorityCreate {
-	ac.mutation.AddServerTemplateIDs(ids...)
+// AddTemplateIDs adds the "templates" edge to the Template entity by IDs.
+func (ac *AuthorityCreate) AddTemplateIDs(ids ...string) *AuthorityCreate {
+	ac.mutation.AddTemplateIDs(ids...)
 	return ac
 }
 
-// AddServerTemplates adds the "server_templates" edges to the ServerTemplate entity.
-func (ac *AuthorityCreate) AddServerTemplates(s ...*ServerTemplate) *AuthorityCreate {
-	ids := make([]string, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// AddTemplates adds the "templates" edges to the Template entity.
+func (ac *AuthorityCreate) AddTemplates(t ...*Template) *AuthorityCreate {
+	ids := make([]string, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
-	return ac.AddServerTemplateIDs(ids...)
-}
-
-// AddClientTemplateIDs adds the "client_templates" edge to the ClientTemplate entity by IDs.
-func (ac *AuthorityCreate) AddClientTemplateIDs(ids ...string) *AuthorityCreate {
-	ac.mutation.AddClientTemplateIDs(ids...)
-	return ac
-}
-
-// AddClientTemplates adds the "client_templates" edges to the ClientTemplate entity.
-func (ac *AuthorityCreate) AddClientTemplates(c ...*ClientTemplate) *AuthorityCreate {
-	ids := make([]string, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
-	}
-	return ac.AddClientTemplateIDs(ids...)
+	return ac.AddTemplateIDs(ids...)
 }
 
 // Mutation returns the AuthorityMutation object of the builder.
@@ -285,31 +269,15 @@ func (ac *AuthorityCreate) createSpec() (*Authority, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := ac.mutation.ServerTemplatesIDs(); len(nodes) > 0 {
+	if nodes := ac.mutation.TemplatesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   authority.ServerTemplatesTable,
-			Columns: []string{authority.ServerTemplatesColumn},
+			Table:   authority.TemplatesTable,
+			Columns: []string{authority.TemplatesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ac.mutation.ClientTemplatesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   authority.ClientTemplatesTable,
-			Columns: []string{authority.ClientTemplatesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(template.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

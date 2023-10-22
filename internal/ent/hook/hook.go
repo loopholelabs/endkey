@@ -33,18 +33,6 @@ func (f AuthorityFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AuthorityMutation", m)
 }
 
-// The ClientTemplateFunc type is an adapter to allow the use of ordinary
-// function as ClientTemplate mutator.
-type ClientTemplateFunc func(context.Context, *ent.ClientTemplateMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f ClientTemplateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.ClientTemplateMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ClientTemplateMutation", m)
-}
-
 // The RootKeyFunc type is an adapter to allow the use of ordinary
 // function as RootKey mutator.
 type RootKeyFunc func(context.Context, *ent.RootKeyMutation) (ent.Value, error)
@@ -57,16 +45,16 @@ func (f RootKeyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RootKeyMutation", m)
 }
 
-// The ServerTemplateFunc type is an adapter to allow the use of ordinary
-// function as ServerTemplate mutator.
-type ServerTemplateFunc func(context.Context, *ent.ServerTemplateMutation) (ent.Value, error)
+// The TemplateFunc type is an adapter to allow the use of ordinary
+// function as Template mutator.
+type TemplateFunc func(context.Context, *ent.TemplateMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f ServerTemplateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.ServerTemplateMutation); ok {
+func (f TemplateFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TemplateMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ServerTemplateMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TemplateMutation", m)
 }
 
 // The UserKeyFunc type is an adapter to allow the use of ordinary

@@ -39,13 +39,11 @@ type AuthorityEdges struct {
 	UserKey *UserKey `json:"user_key,omitempty"`
 	// APIKeys holds the value of the api_keys edge.
 	APIKeys []*APIKey `json:"api_keys,omitempty"`
-	// ServerTemplates holds the value of the server_templates edge.
-	ServerTemplates []*ServerTemplate `json:"server_templates,omitempty"`
-	// ClientTemplates holds the value of the client_templates edge.
-	ClientTemplates []*ClientTemplate `json:"client_templates,omitempty"`
+	// Templates holds the value of the templates edge.
+	Templates []*Template `json:"templates,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [3]bool
 }
 
 // UserKeyOrErr returns the UserKey value or an error if the edge
@@ -70,22 +68,13 @@ func (e AuthorityEdges) APIKeysOrErr() ([]*APIKey, error) {
 	return nil, &NotLoadedError{edge: "api_keys"}
 }
 
-// ServerTemplatesOrErr returns the ServerTemplates value or an error if the edge
+// TemplatesOrErr returns the Templates value or an error if the edge
 // was not loaded in eager-loading.
-func (e AuthorityEdges) ServerTemplatesOrErr() ([]*ServerTemplate, error) {
+func (e AuthorityEdges) TemplatesOrErr() ([]*Template, error) {
 	if e.loadedTypes[2] {
-		return e.ServerTemplates, nil
+		return e.Templates, nil
 	}
-	return nil, &NotLoadedError{edge: "server_templates"}
-}
-
-// ClientTemplatesOrErr returns the ClientTemplates value or an error if the edge
-// was not loaded in eager-loading.
-func (e AuthorityEdges) ClientTemplatesOrErr() ([]*ClientTemplate, error) {
-	if e.loadedTypes[3] {
-		return e.ClientTemplates, nil
-	}
-	return nil, &NotLoadedError{edge: "client_templates"}
+	return nil, &NotLoadedError{edge: "templates"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -176,14 +165,9 @@ func (a *Authority) QueryAPIKeys() *APIKeyQuery {
 	return NewAuthorityClient(a.config).QueryAPIKeys(a)
 }
 
-// QueryServerTemplates queries the "server_templates" edge of the Authority entity.
-func (a *Authority) QueryServerTemplates() *ServerTemplateQuery {
-	return NewAuthorityClient(a.config).QueryServerTemplates(a)
-}
-
-// QueryClientTemplates queries the "client_templates" edge of the Authority entity.
-func (a *Authority) QueryClientTemplates() *ClientTemplateQuery {
-	return NewAuthorityClient(a.config).QueryClientTemplates(a)
+// QueryTemplates queries the "templates" edge of the Authority entity.
+func (a *Authority) QueryTemplates() *TemplateQuery {
+	return NewAuthorityClient(a.config).QueryTemplates(a)
 }
 
 // Update returns a builder for updating this Authority.

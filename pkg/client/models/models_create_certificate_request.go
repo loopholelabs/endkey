@@ -25,6 +25,9 @@ type ModelsCreateCertificateRequest struct {
 
 	// csr
 	Csr string `json:"csr,omitempty"`
+
+	// override common name
+	OverrideCommonName string `json:"override_common_name,omitempty"`
 }
 
 // Validate validates this models create certificate request

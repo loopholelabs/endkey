@@ -64,24 +64,16 @@ func (APIKey) Edges() []ent.Edge {
 		// This is a many-to-one relationship, as an Authority can have multiple API Keys scoped to it
 		// but an API Key can only be scoped to one Authority
 		//
-		// This edge is unique, required and immutable
+		// This edge is unique, required, and immutable
 		edge.From("authority", Authority.Type).Ref("api_keys").Unique().Required().Immutable(),
 
-		// An optional Server Template that this API Key is scoped to
+		// The Template that this API Key is scoped to
 		//
-		// This is a many-to-one relationship, as a Server Template can have multiple API Keys scoped to it
-		// but an API Key can only be scoped to one Server Template at a time
+		// This is a many-to-one relationship, as a Template can have multiple API Keys scoped to it
+		// but an API Key can only be scoped to one Template at a time
 		//
-		// This edge is unique and immutable
-		edge.From("server_template", ServerTemplate.Type).Ref("api_keys").Unique().Immutable(),
-
-		// An optional Client Template that this API Key is scoped to
-		//
-		// This is a many-to-one relationship, as a Client Template can have multiple API Keys scoped to it
-		// but an API Key can only be scoped to one Client Template at a time
-		//
-		// This edge is unique and immutable
-		edge.From("client_template", ClientTemplate.Type).Ref("api_keys").Unique().Immutable(),
+		// This edge is unique, required, and immutable
+		edge.From("template", Template.Type).Ref("api_keys").Unique().Required().Immutable(),
 	}
 }
 

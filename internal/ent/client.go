@@ -16,9 +16,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/loopholelabs/endkey/internal/ent/apikey"
 	"github.com/loopholelabs/endkey/internal/ent/authority"
-	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
 	"github.com/loopholelabs/endkey/internal/ent/rootkey"
-	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/template"
 	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
@@ -31,12 +30,10 @@ type Client struct {
 	APIKey *APIKeyClient
 	// Authority is the client for interacting with the Authority builders.
 	Authority *AuthorityClient
-	// ClientTemplate is the client for interacting with the ClientTemplate builders.
-	ClientTemplate *ClientTemplateClient
 	// RootKey is the client for interacting with the RootKey builders.
 	RootKey *RootKeyClient
-	// ServerTemplate is the client for interacting with the ServerTemplate builders.
-	ServerTemplate *ServerTemplateClient
+	// Template is the client for interacting with the Template builders.
+	Template *TemplateClient
 	// UserKey is the client for interacting with the UserKey builders.
 	UserKey *UserKeyClient
 }
@@ -54,9 +51,8 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.APIKey = NewAPIKeyClient(c.config)
 	c.Authority = NewAuthorityClient(c.config)
-	c.ClientTemplate = NewClientTemplateClient(c.config)
 	c.RootKey = NewRootKeyClient(c.config)
-	c.ServerTemplate = NewServerTemplateClient(c.config)
+	c.Template = NewTemplateClient(c.config)
 	c.UserKey = NewUserKeyClient(c.config)
 }
 
@@ -138,14 +134,13 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:            ctx,
-		config:         cfg,
-		APIKey:         NewAPIKeyClient(cfg),
-		Authority:      NewAuthorityClient(cfg),
-		ClientTemplate: NewClientTemplateClient(cfg),
-		RootKey:        NewRootKeyClient(cfg),
-		ServerTemplate: NewServerTemplateClient(cfg),
-		UserKey:        NewUserKeyClient(cfg),
+		ctx:       ctx,
+		config:    cfg,
+		APIKey:    NewAPIKeyClient(cfg),
+		Authority: NewAuthorityClient(cfg),
+		RootKey:   NewRootKeyClient(cfg),
+		Template:  NewTemplateClient(cfg),
+		UserKey:   NewUserKeyClient(cfg),
 	}, nil
 }
 
@@ -163,14 +158,13 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:            ctx,
-		config:         cfg,
-		APIKey:         NewAPIKeyClient(cfg),
-		Authority:      NewAuthorityClient(cfg),
-		ClientTemplate: NewClientTemplateClient(cfg),
-		RootKey:        NewRootKeyClient(cfg),
-		ServerTemplate: NewServerTemplateClient(cfg),
-		UserKey:        NewUserKeyClient(cfg),
+		ctx:       ctx,
+		config:    cfg,
+		APIKey:    NewAPIKeyClient(cfg),
+		Authority: NewAuthorityClient(cfg),
+		RootKey:   NewRootKeyClient(cfg),
+		Template:  NewTemplateClient(cfg),
+		UserKey:   NewUserKeyClient(cfg),
 	}, nil
 }
 
@@ -199,21 +193,21 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	for _, n := range []interface{ Use(...Hook) }{
-		c.APIKey, c.Authority, c.ClientTemplate, c.RootKey, c.ServerTemplate, c.UserKey,
-	} {
-		n.Use(hooks...)
-	}
+	c.APIKey.Use(hooks...)
+	c.Authority.Use(hooks...)
+	c.RootKey.Use(hooks...)
+	c.Template.Use(hooks...)
+	c.UserKey.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.APIKey, c.Authority, c.ClientTemplate, c.RootKey, c.ServerTemplate, c.UserKey,
-	} {
-		n.Intercept(interceptors...)
-	}
+	c.APIKey.Intercept(interceptors...)
+	c.Authority.Intercept(interceptors...)
+	c.RootKey.Intercept(interceptors...)
+	c.Template.Intercept(interceptors...)
+	c.UserKey.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -223,12 +217,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.APIKey.mutate(ctx, m)
 	case *AuthorityMutation:
 		return c.Authority.mutate(ctx, m)
-	case *ClientTemplateMutation:
-		return c.ClientTemplate.mutate(ctx, m)
 	case *RootKeyMutation:
 		return c.RootKey.mutate(ctx, m)
-	case *ServerTemplateMutation:
-		return c.ServerTemplate.mutate(ctx, m)
+	case *TemplateMutation:
+		return c.Template.mutate(ctx, m)
 	case *UserKeyMutation:
 		return c.UserKey.mutate(ctx, m)
 	default:
@@ -345,31 +337,15 @@ func (c *APIKeyClient) QueryAuthority(ak *APIKey) *AuthorityQuery {
 	return query
 }
 
-// QueryServerTemplate queries the server_template edge of a APIKey.
-func (c *APIKeyClient) QueryServerTemplate(ak *APIKey) *ServerTemplateQuery {
-	query := (&ServerTemplateClient{config: c.config}).Query()
+// QueryTemplate queries the template edge of a APIKey.
+func (c *APIKeyClient) QueryTemplate(ak *APIKey) *TemplateQuery {
+	query := (&TemplateClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := ak.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(apikey.Table, apikey.FieldID, id),
-			sqlgraph.To(servertemplate.Table, servertemplate.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, apikey.ServerTemplateTable, apikey.ServerTemplateColumn),
-		)
-		fromV = sqlgraph.Neighbors(ak.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryClientTemplate queries the client_template edge of a APIKey.
-func (c *APIKeyClient) QueryClientTemplate(ak *APIKey) *ClientTemplateQuery {
-	query := (&ClientTemplateClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ak.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(apikey.Table, apikey.FieldID, id),
-			sqlgraph.To(clienttemplate.Table, clienttemplate.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, apikey.ClientTemplateTable, apikey.ClientTemplateColumn),
+			sqlgraph.To(template.Table, template.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, apikey.TemplateTable, apikey.TemplateColumn),
 		)
 		fromV = sqlgraph.Neighbors(ak.driver.Dialect(), step)
 		return fromV, nil
@@ -527,31 +503,15 @@ func (c *AuthorityClient) QueryAPIKeys(a *Authority) *APIKeyQuery {
 	return query
 }
 
-// QueryServerTemplates queries the server_templates edge of a Authority.
-func (c *AuthorityClient) QueryServerTemplates(a *Authority) *ServerTemplateQuery {
-	query := (&ServerTemplateClient{config: c.config}).Query()
+// QueryTemplates queries the templates edge of a Authority.
+func (c *AuthorityClient) QueryTemplates(a *Authority) *TemplateQuery {
+	query := (&TemplateClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := a.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(authority.Table, authority.FieldID, id),
-			sqlgraph.To(servertemplate.Table, servertemplate.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, authority.ServerTemplatesTable, authority.ServerTemplatesColumn),
-		)
-		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryClientTemplates queries the client_templates edge of a Authority.
-func (c *AuthorityClient) QueryClientTemplates(a *Authority) *ClientTemplateQuery {
-	query := (&ClientTemplateClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := a.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(authority.Table, authority.FieldID, id),
-			sqlgraph.To(clienttemplate.Table, clienttemplate.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, authority.ClientTemplatesTable, authority.ClientTemplatesColumn),
+			sqlgraph.To(template.Table, template.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, authority.TemplatesTable, authority.TemplatesColumn),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -581,156 +541,6 @@ func (c *AuthorityClient) mutate(ctx context.Context, m *AuthorityMutation) (Val
 		return (&AuthorityDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Authority mutation op: %q", m.Op())
-	}
-}
-
-// ClientTemplateClient is a client for the ClientTemplate schema.
-type ClientTemplateClient struct {
-	config
-}
-
-// NewClientTemplateClient returns a client for the ClientTemplate from the given config.
-func NewClientTemplateClient(c config) *ClientTemplateClient {
-	return &ClientTemplateClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `clienttemplate.Hooks(f(g(h())))`.
-func (c *ClientTemplateClient) Use(hooks ...Hook) {
-	c.hooks.ClientTemplate = append(c.hooks.ClientTemplate, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `clienttemplate.Intercept(f(g(h())))`.
-func (c *ClientTemplateClient) Intercept(interceptors ...Interceptor) {
-	c.inters.ClientTemplate = append(c.inters.ClientTemplate, interceptors...)
-}
-
-// Create returns a builder for creating a ClientTemplate entity.
-func (c *ClientTemplateClient) Create() *ClientTemplateCreate {
-	mutation := newClientTemplateMutation(c.config, OpCreate)
-	return &ClientTemplateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of ClientTemplate entities.
-func (c *ClientTemplateClient) CreateBulk(builders ...*ClientTemplateCreate) *ClientTemplateCreateBulk {
-	return &ClientTemplateCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for ClientTemplate.
-func (c *ClientTemplateClient) Update() *ClientTemplateUpdate {
-	mutation := newClientTemplateMutation(c.config, OpUpdate)
-	return &ClientTemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *ClientTemplateClient) UpdateOne(ct *ClientTemplate) *ClientTemplateUpdateOne {
-	mutation := newClientTemplateMutation(c.config, OpUpdateOne, withClientTemplate(ct))
-	return &ClientTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *ClientTemplateClient) UpdateOneID(id string) *ClientTemplateUpdateOne {
-	mutation := newClientTemplateMutation(c.config, OpUpdateOne, withClientTemplateID(id))
-	return &ClientTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for ClientTemplate.
-func (c *ClientTemplateClient) Delete() *ClientTemplateDelete {
-	mutation := newClientTemplateMutation(c.config, OpDelete)
-	return &ClientTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *ClientTemplateClient) DeleteOne(ct *ClientTemplate) *ClientTemplateDeleteOne {
-	return c.DeleteOneID(ct.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *ClientTemplateClient) DeleteOneID(id string) *ClientTemplateDeleteOne {
-	builder := c.Delete().Where(clienttemplate.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &ClientTemplateDeleteOne{builder}
-}
-
-// Query returns a query builder for ClientTemplate.
-func (c *ClientTemplateClient) Query() *ClientTemplateQuery {
-	return &ClientTemplateQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeClientTemplate},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a ClientTemplate entity by its id.
-func (c *ClientTemplateClient) Get(ctx context.Context, id string) (*ClientTemplate, error) {
-	return c.Query().Where(clienttemplate.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *ClientTemplateClient) GetX(ctx context.Context, id string) *ClientTemplate {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryAuthority queries the authority edge of a ClientTemplate.
-func (c *ClientTemplateClient) QueryAuthority(ct *ClientTemplate) *AuthorityQuery {
-	query := (&AuthorityClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ct.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(clienttemplate.Table, clienttemplate.FieldID, id),
-			sqlgraph.To(authority.Table, authority.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, clienttemplate.AuthorityTable, clienttemplate.AuthorityColumn),
-		)
-		fromV = sqlgraph.Neighbors(ct.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryAPIKeys queries the api_keys edge of a ClientTemplate.
-func (c *ClientTemplateClient) QueryAPIKeys(ct *ClientTemplate) *APIKeyQuery {
-	query := (&APIKeyClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := ct.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(clienttemplate.Table, clienttemplate.FieldID, id),
-			sqlgraph.To(apikey.Table, apikey.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, clienttemplate.APIKeysTable, clienttemplate.APIKeysColumn),
-		)
-		fromV = sqlgraph.Neighbors(ct.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *ClientTemplateClient) Hooks() []Hook {
-	return c.hooks.ClientTemplate
-}
-
-// Interceptors returns the client interceptors.
-func (c *ClientTemplateClient) Interceptors() []Interceptor {
-	return c.inters.ClientTemplate
-}
-
-func (c *ClientTemplateClient) mutate(ctx context.Context, m *ClientTemplateMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&ClientTemplateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&ClientTemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&ClientTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&ClientTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown ClientTemplate mutation op: %q", m.Op())
 	}
 }
 
@@ -868,92 +678,92 @@ func (c *RootKeyClient) mutate(ctx context.Context, m *RootKeyMutation) (Value, 
 	}
 }
 
-// ServerTemplateClient is a client for the ServerTemplate schema.
-type ServerTemplateClient struct {
+// TemplateClient is a client for the Template schema.
+type TemplateClient struct {
 	config
 }
 
-// NewServerTemplateClient returns a client for the ServerTemplate from the given config.
-func NewServerTemplateClient(c config) *ServerTemplateClient {
-	return &ServerTemplateClient{config: c}
+// NewTemplateClient returns a client for the Template from the given config.
+func NewTemplateClient(c config) *TemplateClient {
+	return &TemplateClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `servertemplate.Hooks(f(g(h())))`.
-func (c *ServerTemplateClient) Use(hooks ...Hook) {
-	c.hooks.ServerTemplate = append(c.hooks.ServerTemplate, hooks...)
+// A call to `Use(f, g, h)` equals to `template.Hooks(f(g(h())))`.
+func (c *TemplateClient) Use(hooks ...Hook) {
+	c.hooks.Template = append(c.hooks.Template, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `servertemplate.Intercept(f(g(h())))`.
-func (c *ServerTemplateClient) Intercept(interceptors ...Interceptor) {
-	c.inters.ServerTemplate = append(c.inters.ServerTemplate, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `template.Intercept(f(g(h())))`.
+func (c *TemplateClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Template = append(c.inters.Template, interceptors...)
 }
 
-// Create returns a builder for creating a ServerTemplate entity.
-func (c *ServerTemplateClient) Create() *ServerTemplateCreate {
-	mutation := newServerTemplateMutation(c.config, OpCreate)
-	return &ServerTemplateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a Template entity.
+func (c *TemplateClient) Create() *TemplateCreate {
+	mutation := newTemplateMutation(c.config, OpCreate)
+	return &TemplateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of ServerTemplate entities.
-func (c *ServerTemplateClient) CreateBulk(builders ...*ServerTemplateCreate) *ServerTemplateCreateBulk {
-	return &ServerTemplateCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Template entities.
+func (c *TemplateClient) CreateBulk(builders ...*TemplateCreate) *TemplateCreateBulk {
+	return &TemplateCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for ServerTemplate.
-func (c *ServerTemplateClient) Update() *ServerTemplateUpdate {
-	mutation := newServerTemplateMutation(c.config, OpUpdate)
-	return &ServerTemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Template.
+func (c *TemplateClient) Update() *TemplateUpdate {
+	mutation := newTemplateMutation(c.config, OpUpdate)
+	return &TemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *ServerTemplateClient) UpdateOne(st *ServerTemplate) *ServerTemplateUpdateOne {
-	mutation := newServerTemplateMutation(c.config, OpUpdateOne, withServerTemplate(st))
-	return &ServerTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *TemplateClient) UpdateOne(t *Template) *TemplateUpdateOne {
+	mutation := newTemplateMutation(c.config, OpUpdateOne, withTemplate(t))
+	return &TemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *ServerTemplateClient) UpdateOneID(id string) *ServerTemplateUpdateOne {
-	mutation := newServerTemplateMutation(c.config, OpUpdateOne, withServerTemplateID(id))
-	return &ServerTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *TemplateClient) UpdateOneID(id string) *TemplateUpdateOne {
+	mutation := newTemplateMutation(c.config, OpUpdateOne, withTemplateID(id))
+	return &TemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for ServerTemplate.
-func (c *ServerTemplateClient) Delete() *ServerTemplateDelete {
-	mutation := newServerTemplateMutation(c.config, OpDelete)
-	return &ServerTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Template.
+func (c *TemplateClient) Delete() *TemplateDelete {
+	mutation := newTemplateMutation(c.config, OpDelete)
+	return &TemplateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *ServerTemplateClient) DeleteOne(st *ServerTemplate) *ServerTemplateDeleteOne {
-	return c.DeleteOneID(st.ID)
+func (c *TemplateClient) DeleteOne(t *Template) *TemplateDeleteOne {
+	return c.DeleteOneID(t.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *ServerTemplateClient) DeleteOneID(id string) *ServerTemplateDeleteOne {
-	builder := c.Delete().Where(servertemplate.ID(id))
+func (c *TemplateClient) DeleteOneID(id string) *TemplateDeleteOne {
+	builder := c.Delete().Where(template.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &ServerTemplateDeleteOne{builder}
+	return &TemplateDeleteOne{builder}
 }
 
-// Query returns a query builder for ServerTemplate.
-func (c *ServerTemplateClient) Query() *ServerTemplateQuery {
-	return &ServerTemplateQuery{
+// Query returns a query builder for Template.
+func (c *TemplateClient) Query() *TemplateQuery {
+	return &TemplateQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypeServerTemplate},
+		ctx:    &QueryContext{Type: TypeTemplate},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a ServerTemplate entity by its id.
-func (c *ServerTemplateClient) Get(ctx context.Context, id string) (*ServerTemplate, error) {
-	return c.Query().Where(servertemplate.ID(id)).Only(ctx)
+// Get returns a Template entity by its id.
+func (c *TemplateClient) Get(ctx context.Context, id string) (*Template, error) {
+	return c.Query().Where(template.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *ServerTemplateClient) GetX(ctx context.Context, id string) *ServerTemplate {
+func (c *TemplateClient) GetX(ctx context.Context, id string) *Template {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -961,60 +771,60 @@ func (c *ServerTemplateClient) GetX(ctx context.Context, id string) *ServerTempl
 	return obj
 }
 
-// QueryAuthority queries the authority edge of a ServerTemplate.
-func (c *ServerTemplateClient) QueryAuthority(st *ServerTemplate) *AuthorityQuery {
+// QueryAuthority queries the authority edge of a Template.
+func (c *TemplateClient) QueryAuthority(t *Template) *AuthorityQuery {
 	query := (&AuthorityClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := st.ID
+		id := t.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(servertemplate.Table, servertemplate.FieldID, id),
+			sqlgraph.From(template.Table, template.FieldID, id),
 			sqlgraph.To(authority.Table, authority.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, servertemplate.AuthorityTable, servertemplate.AuthorityColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, template.AuthorityTable, template.AuthorityColumn),
 		)
-		fromV = sqlgraph.Neighbors(st.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
-// QueryAPIKeys queries the api_keys edge of a ServerTemplate.
-func (c *ServerTemplateClient) QueryAPIKeys(st *ServerTemplate) *APIKeyQuery {
+// QueryAPIKeys queries the api_keys edge of a Template.
+func (c *TemplateClient) QueryAPIKeys(t *Template) *APIKeyQuery {
 	query := (&APIKeyClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := st.ID
+		id := t.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(servertemplate.Table, servertemplate.FieldID, id),
+			sqlgraph.From(template.Table, template.FieldID, id),
 			sqlgraph.To(apikey.Table, apikey.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, servertemplate.APIKeysTable, servertemplate.APIKeysColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, template.APIKeysTable, template.APIKeysColumn),
 		)
-		fromV = sqlgraph.Neighbors(st.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // Hooks returns the client hooks.
-func (c *ServerTemplateClient) Hooks() []Hook {
-	return c.hooks.ServerTemplate
+func (c *TemplateClient) Hooks() []Hook {
+	return c.hooks.Template
 }
 
 // Interceptors returns the client interceptors.
-func (c *ServerTemplateClient) Interceptors() []Interceptor {
-	return c.inters.ServerTemplate
+func (c *TemplateClient) Interceptors() []Interceptor {
+	return c.inters.Template
 }
 
-func (c *ServerTemplateClient) mutate(ctx context.Context, m *ServerTemplateMutation) (Value, error) {
+func (c *TemplateClient) mutate(ctx context.Context, m *TemplateMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&ServerTemplateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&TemplateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&ServerTemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&TemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&ServerTemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&TemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&ServerTemplateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&TemplateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown ServerTemplate mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown Template mutation op: %q", m.Op())
 	}
 }
 
@@ -1171,10 +981,9 @@ func (c *UserKeyClient) mutate(ctx context.Context, m *UserKeyMutation) (Value, 
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		APIKey, Authority, ClientTemplate, RootKey, ServerTemplate, UserKey []ent.Hook
+		APIKey, Authority, RootKey, Template, UserKey []ent.Hook
 	}
 	inters struct {
-		APIKey, Authority, ClientTemplate, RootKey, ServerTemplate,
-		UserKey []ent.Interceptor
+		APIKey, Authority, RootKey, Template, UserKey []ent.Interceptor
 	}
 )

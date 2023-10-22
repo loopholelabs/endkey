@@ -29,14 +29,20 @@ type ModelsCertificateResponse struct {
 	// ca certificate
 	CaCertificate string `json:"ca_certificate,omitempty"`
 
+	// client
+	Client bool `json:"client,omitempty"`
+
+	// common name
+	CommonName string `json:"common_name,omitempty"`
+
 	// expiry
 	Expiry string `json:"expiry,omitempty"`
 
 	// public certificate
 	PublicCertificate string `json:"public_certificate,omitempty"`
 
-	// template kind
-	TemplateKind string `json:"template_kind,omitempty"`
+	// server
+	Server bool `json:"server,omitempty"`
 
 	// template name
 	TemplateName string `json:"template_name,omitempty"`

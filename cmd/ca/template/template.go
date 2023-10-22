@@ -19,11 +19,26 @@ package template
 import (
 	"github.com/loopholelabs/cmdutils"
 	"github.com/loopholelabs/cmdutils/pkg/command"
-	"github.com/loopholelabs/endkey/cmd/ca/template/client"
-	"github.com/loopholelabs/endkey/cmd/ca/template/server"
 	"github.com/loopholelabs/endkey/internal/config"
 	"github.com/spf13/cobra"
 )
+
+type templateModel struct {
+	Created            string `header:"created_at" json:"created_at"`
+	ID                 string `header:"id" json:"id"`
+	Name               string `header:"name" json:"name"`
+	Authority          string `header:"authority" json:"authority"`
+	CommonName         string `header:"common_name" json:"common_name"`
+	OverrideCommonName string `header:"override_common_name" json:"override_common_name"`
+	Tag                string `header:"tag" json:"tag"`
+	DNSNames           string `header:"dns_names" json:"dns_names"`
+	IPAddresses        string `header:"ip_addresses" json:"ip_addresses"`
+	Validity           string `header:"validity" json:"validity"`
+	AdditionalDNS      string `header:"allow_additional_dns_names" json:"allow_additional_dns_names"`
+	AdditionalIPs      string `header:"allow_additional_ips" json:"allow_additional_ips"`
+	Client             string `header:"client" json:"client"`
+	Server             string `header:"server" json:"server"`
+}
 
 // Cmd encapsulates the commands for template.
 func Cmd() command.SetupCommand[*config.Config] {
@@ -33,11 +48,14 @@ func Cmd() command.SetupCommand[*config.Config] {
 			Short: "Create, list, and manage Templates",
 		}
 
-		serverSetup := server.Cmd()
-		serverSetup(templateCmd, ch)
+		listSetup := ListCmd()
+		listSetup(templateCmd, ch)
 
-		clientSetup := client.Cmd()
-		clientSetup(templateCmd, ch)
+		createSetup := CreateCmd()
+		createSetup(templateCmd, ch)
+
+		deleteSetup := DeleteCmd()
+		deleteSetup(templateCmd, ch)
 
 		cmd.AddCommand(templateCmd)
 	}

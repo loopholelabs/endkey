@@ -32,9 +32,6 @@ type ModelsAPIKeyResponse struct {
 	// secret
 	Secret string `json:"secret,omitempty"`
 
-	// template kind
-	TemplateKind string `json:"template_kind,omitempty"`
-
 	// template name
 	TemplateName string `json:"template_name,omitempty"`
 }

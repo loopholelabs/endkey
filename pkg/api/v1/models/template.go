@@ -16,64 +16,39 @@
 
 package models
 
-type CreateServerTemplateRequest struct {
+type CreateTemplateRequest struct {
 	Name                    string   `json:"name"`
 	AuthorityName           string   `json:"authority_name"`
 	CommonName              string   `json:"common_name"`
+	AllowOverrideCommonName bool     `json:"allow_override_common_name"`
 	Tag                     string   `json:"tag"`
 	DNSNames                []string `json:"dns_names"`
 	AllowAdditionalDNSNames bool     `json:"allow_additional_dns_names"`
 	IPAddresses             []string `json:"ip_addresses"`
 	AllowAdditionalIPs      bool     `json:"allow_additional_ips"`
 	Validity                string   `json:"validity"`
+	Client                  bool     `json:"client"`
+	Server                  bool     `json:"server"`
 }
 
-type DeleteServerTemplateRequest struct {
+type DeleteTemplateRequest struct {
 	Name          string `json:"name"`
 	AuthorityName string `json:"authority_name"`
 }
 
-type ServerTemplateResponse struct {
+type TemplateResponse struct {
 	CreatedAt               string   `json:"created_at"`
 	ID                      string   `json:"id"`
 	Name                    string   `json:"name"`
 	AuthorityName           string   `json:"authority_name"`
 	CommonName              string   `json:"common_name"`
+	AllowOverrideCommonName bool     `json:"allow_override_common_name"`
 	Tag                     string   `json:"tag"`
 	DNSNames                []string `json:"dns_names"`
 	AllowAdditionalDNSNames bool     `json:"allow_additional_dns_names"`
 	IPAddresses             []string `json:"ip_addresses"`
 	AllowAdditionalIPs      bool     `json:"allow_additional_ips"`
 	Validity                string   `json:"validity"`
-}
-
-type CreateClientTemplateRequest struct {
-	Name                    string   `json:"name"`
-	AuthorityName           string   `json:"authority_name"`
-	CommonName              string   `json:"common_name"`
-	Tag                     string   `json:"tag"`
-	DNSNames                []string `json:"dns_names"`
-	AllowAdditionalDNSNames bool     `json:"allow_additional_dns_names"`
-	IPAddresses             []string `json:"ip_addresses"`
-	AllowAdditionalIPs      bool     `json:"allow_additional_ips"`
-	Validity                string   `json:"validity"`
-}
-
-type DeleteClientTemplateRequest struct {
-	Name          string `json:"name"`
-	AuthorityName string `json:"authority_name"`
-}
-
-type ClientTemplateResponse struct {
-	CreatedAt               string   `json:"created_at"`
-	ID                      string   `json:"id"`
-	Name                    string   `json:"name"`
-	AuthorityName           string   `json:"authority_name"`
-	CommonName              string   `json:"common_name"`
-	Tag                     string   `json:"tag"`
-	DNSNames                []string `json:"dns_names"`
-	AllowAdditionalDNSNames bool     `json:"allow_additional_dns_names"`
-	IPAddresses             []string `json:"ip_addresses"`
-	AllowAdditionalIPs      bool     `json:"allow_additional_ips"`
-	Validity                string   `json:"validity"`
+	Client                  bool     `json:"client"`
+	Server                  bool     `json:"server"`
 }

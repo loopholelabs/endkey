@@ -26,10 +26,8 @@ const (
 	EdgeUserKey = "user_key"
 	// EdgeAPIKeys holds the string denoting the api_keys edge name in mutations.
 	EdgeAPIKeys = "api_keys"
-	// EdgeServerTemplates holds the string denoting the server_templates edge name in mutations.
-	EdgeServerTemplates = "server_templates"
-	// EdgeClientTemplates holds the string denoting the client_templates edge name in mutations.
-	EdgeClientTemplates = "client_templates"
+	// EdgeTemplates holds the string denoting the templates edge name in mutations.
+	EdgeTemplates = "templates"
 	// Table holds the table name of the authority in the database.
 	Table = "authorities"
 	// UserKeyTable is the table that holds the user_key relation/edge.
@@ -46,20 +44,13 @@ const (
 	APIKeysInverseTable = "api_keys"
 	// APIKeysColumn is the table column denoting the api_keys relation/edge.
 	APIKeysColumn = "authority_api_keys"
-	// ServerTemplatesTable is the table that holds the server_templates relation/edge.
-	ServerTemplatesTable = "server_templates"
-	// ServerTemplatesInverseTable is the table name for the ServerTemplate entity.
-	// It exists in this package in order to avoid circular dependency with the "servertemplate" package.
-	ServerTemplatesInverseTable = "server_templates"
-	// ServerTemplatesColumn is the table column denoting the server_templates relation/edge.
-	ServerTemplatesColumn = "authority_server_templates"
-	// ClientTemplatesTable is the table that holds the client_templates relation/edge.
-	ClientTemplatesTable = "client_templates"
-	// ClientTemplatesInverseTable is the table name for the ClientTemplate entity.
-	// It exists in this package in order to avoid circular dependency with the "clienttemplate" package.
-	ClientTemplatesInverseTable = "client_templates"
-	// ClientTemplatesColumn is the table column denoting the client_templates relation/edge.
-	ClientTemplatesColumn = "authority_client_templates"
+	// TemplatesTable is the table that holds the templates relation/edge.
+	TemplatesTable = "templates"
+	// TemplatesInverseTable is the table name for the Template entity.
+	// It exists in this package in order to avoid circular dependency with the "template" package.
+	TemplatesInverseTable = "templates"
+	// TemplatesColumn is the table column denoting the templates relation/edge.
+	TemplatesColumn = "authority_templates"
 )
 
 // Columns holds all SQL columns for authority fields.
@@ -149,31 +140,17 @@ func ByAPIKeys(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByServerTemplatesCount orders the results by server_templates count.
-func ByServerTemplatesCount(opts ...sql.OrderTermOption) OrderOption {
+// ByTemplatesCount orders the results by templates count.
+func ByTemplatesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newServerTemplatesStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newTemplatesStep(), opts...)
 	}
 }
 
-// ByServerTemplates orders the results by server_templates terms.
-func ByServerTemplates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByTemplates orders the results by templates terms.
+func ByTemplates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newServerTemplatesStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByClientTemplatesCount orders the results by client_templates count.
-func ByClientTemplatesCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newClientTemplatesStep(), opts...)
-	}
-}
-
-// ByClientTemplates orders the results by client_templates terms.
-func ByClientTemplates(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newClientTemplatesStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newTemplatesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 func newUserKeyStep() *sqlgraph.Step {
@@ -190,17 +167,10 @@ func newAPIKeysStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, APIKeysTable, APIKeysColumn),
 	)
 }
-func newServerTemplatesStep() *sqlgraph.Step {
+func newTemplatesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ServerTemplatesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ServerTemplatesTable, ServerTemplatesColumn),
-	)
-}
-func newClientTemplatesStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ClientTemplatesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ClientTemplatesTable, ClientTemplatesColumn),
+		sqlgraph.To(TemplatesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TemplatesTable, TemplatesColumn),
 	)
 }

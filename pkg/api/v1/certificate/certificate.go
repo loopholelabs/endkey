@@ -27,7 +27,6 @@ import (
 	"github.com/loopholelabs/endkey/pkg/api/authorization"
 	"github.com/loopholelabs/endkey/pkg/api/v1/models"
 	"github.com/loopholelabs/endkey/pkg/api/v1/options"
-	"github.com/loopholelabs/endkey/pkg/template"
 	"github.com/rs/zerolog"
 	"math/big"
 	"net"
@@ -137,36 +136,22 @@ func (a *Certificate) CreateCertificate(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid public key algorithm")
 	}
 
-	var kind template.Kind
-	var name string
-	var commonName string
-	var tag string
-	var templateDNSNames []string
-	var templateIPAddresses []string
-	var validity string
-	clientTemplate, err := ak.Edges.ClientTemplateOrErr()
-	if err == nil {
-		kind = template.Client
-		name = clientTemplate.Name
-		commonName = clientTemplate.CommonName
-		tag = clientTemplate.Tag
-		templateDNSNames = clientTemplate.DNSNames
-		templateIPAddresses = clientTemplate.IPAddresses
-		validity = clientTemplate.Validity
-	} else {
-		serverTemplate, err := ak.Edges.ServerTemplateOrErr()
-		if err == nil {
-			kind = template.Server
-			name = serverTemplate.Name
-			commonName = serverTemplate.CommonName
-			tag = serverTemplate.Tag
-			templateDNSNames = serverTemplate.DNSNames
-			templateIPAddresses = serverTemplate.IPAddresses
-			validity = serverTemplate.Validity
-		} else {
-			a.logger.Error().Msg("failed to get template from api key")
-			return fiber.NewError(fiber.StatusInternalServerError, "error finding template for api key")
-		}
+	templ, err := ak.Edges.TemplateOrErr()
+	if err != nil {
+		a.logger.Error().Msg("failed to get template from api key")
+		return fiber.NewError(fiber.StatusInternalServerError, "error finding template for api key")
+	}
+
+	if !templ.AllowAdditionalDNSNames && len(body.AdditionalDNSNames) != 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "additional dns names not allowed")
+	}
+
+	if !templ.AllowAdditionalIps && len(body.AdditionalIPAddresses) != 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "additional ip addresses not allowed")
+	}
+
+	if !templ.AllowOverrideCommonName && len(body.OverrideCommonName) != 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "overriding common name not allowed")
 	}
 
 	ca, err := utils.DecodeX509Certificate(auth.CaCertificatePem)
@@ -187,8 +172,8 @@ func (a *Certificate) CreateCertificate(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "failed to decode authority private key")
 	}
 
-	dnsNames := make([]string, 0, len(templateDNSNames)+len(body.AdditionalDNSNames))
-	for _, dnsName := range templateDNSNames {
+	dnsNames := make([]string, 0, len(templ.DNSNames)+len(body.AdditionalDNSNames))
+	for _, dnsName := range templ.DNSNames {
 		if !utils.ValidDNS(dnsName) {
 			a.logger.Error().Msg("invalid dns name in template")
 			return fiber.NewError(fiber.StatusInternalServerError, "invalid dns name in template")
@@ -200,8 +185,8 @@ func (a *Certificate) CreateCertificate(ctx *fiber.Ctx) error {
 		dnsNames = append(dnsNames, dnsName)
 	}
 
-	ipAddress := make([]net.IP, 0, len(templateIPAddresses)+len(body.AdditionalIPAddresses))
-	for _, ip := range templateIPAddresses {
+	ipAddress := make([]net.IP, 0, len(templ.IPAddresses)+len(body.AdditionalIPAddresses))
+	for _, ip := range templ.IPAddresses {
 		parsedIP := net.ParseIP(ip)
 		if parsedIP == nil {
 			a.logger.Error().Msg("invalid ip address in template")
@@ -214,47 +199,50 @@ func (a *Certificate) CreateCertificate(ctx *fiber.Ctx) error {
 		ipAddress = append(ipAddress, net.ParseIP(ip))
 	}
 
-	parsedValidity, err := time.ParseDuration(validity)
+	parsedValidity, err := time.ParseDuration(templ.Validity)
 	if err != nil {
 		a.logger.Error().Err(err).Msg("failed to parse validity")
 		return fiber.NewError(fiber.StatusInternalServerError, "failed to parse validity")
 	}
 
-	templ := &x509.Certificate{
+	commonName := templ.CommonName
+	if body.OverrideCommonName != "" {
+		commonName = body.OverrideCommonName
+	}
+
+	t := &x509.Certificate{
 		SerialNumber:       big.NewInt(1),
 		Signature:          csr.Signature,
 		SignatureAlgorithm: x509.ECDSAWithSHA256,
 		PublicKeyAlgorithm: x509.ECDSA,
 		PublicKey:          csr.PublicKey,
-		Issuer:             ca.Subject,
 		Subject: pkix.Name{
 			CommonName:         commonName,
-			Organization:       []string{a.options.Identifier(), name},
+			Organization:       []string{a.options.Identifier(), templ.Name},
 			Country:            []string{"-"},
 			Province:           []string{"-"},
 			Locality:           []string{"-"},
-			OrganizationalUnit: []string{tag},
+			OrganizationalUnit: []string{templ.Tag},
 		},
 		DNSNames:    dnsNames,
 		IPAddresses: ipAddress,
 		NotBefore:   time.Now(),
 		NotAfter:    time.Now().Add(parsedValidity),
 		KeyUsage:    x509.KeyUsageDigitalSignature,
+		ExtKeyUsage: []x509.ExtKeyUsage{},
 	}
 
-	switch kind {
-	case template.Server:
-		templ.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}
-	case template.Client:
-		templ.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth}
-	default:
-		a.logger.Error().Msg("invalid template kind")
-		return fiber.NewError(fiber.StatusInternalServerError, "invalid template kind")
+	if templ.Client {
+		t.ExtKeyUsage = append(t.ExtKeyUsage, x509.ExtKeyUsageClientAuth)
 	}
 
-	a.logger.Info().Msgf("creating %s certificate for template '%s' with authority '%s' for api key %s", string(kind), name, auth.Name, ak.Name)
+	if templ.Server {
+		t.ExtKeyUsage = append(t.ExtKeyUsage, x509.ExtKeyUsageServerAuth)
+	}
 
-	certBytes, err := x509.CreateCertificate(rand.Reader, templ, ca, csr.PublicKey, privateKey)
+	a.logger.Info().Msgf("creating certificate for template '%s' with authority '%s' (client: %t, server: %t) for api key %s", templ.Name, auth.Name, templ.Client, templ.Server, ak.Name)
+
+	certBytes, err := x509.CreateCertificate(rand.Reader, t, ca, csr.PublicKey, privateKey)
 	if err != nil {
 		a.logger.Error().Err(err).Msg("failed to create certificate")
 		return fiber.NewError(fiber.StatusInternalServerError, "failed to create certificate")
@@ -268,11 +256,11 @@ func (a *Certificate) CreateCertificate(ctx *fiber.Ctx) error {
 
 	return ctx.JSON(&models.CertificateResponse{
 		AuthorityName:         auth.Name,
-		TemplateName:          name,
-		TemplateKind:          string(kind),
+		TemplateName:          templ.Name,
 		AdditionalDNSNames:    body.AdditionalDNSNames,
 		AdditionalIPAddresses: body.AdditionalIPAddresses,
-		Expiry:                templ.NotAfter.Format(time.RFC3339),
+		CommonName:            commonName,
+		Expiry:                t.NotAfter.Format(time.RFC3339),
 		CACertificate:         base64.StdEncoding.EncodeToString(auth.CaCertificatePem),
 		PublicCertificate:     base64.StdEncoding.EncodeToString(certPEM),
 	})

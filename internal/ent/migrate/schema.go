@@ -16,8 +16,7 @@ var (
 		{Name: "salt", Type: field.TypeBytes},
 		{Name: "hash", Type: field.TypeBytes},
 		{Name: "authority_api_keys", Type: field.TypeString},
-		{Name: "client_template_api_keys", Type: field.TypeString, Nullable: true},
-		{Name: "server_template_api_keys", Type: field.TypeString, Nullable: true},
+		{Name: "template_api_keys", Type: field.TypeString},
 	}
 	// APIKeysTable holds the schema information for the "api_keys" table.
 	APIKeysTable = &schema.Table{
@@ -32,16 +31,10 @@ var (
 				OnDelete:   schema.NoAction,
 			},
 			{
-				Symbol:     "api_keys_client_templates_api_keys",
+				Symbol:     "api_keys_templates_api_keys",
 				Columns:    []*schema.Column{APIKeysColumns[6]},
-				RefColumns: []*schema.Column{ClientTemplatesColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "api_keys_server_templates_api_keys",
-				Columns:    []*schema.Column{APIKeysColumns[7]},
-				RefColumns: []*schema.Column{ServerTemplatesColumns[0]},
-				OnDelete:   schema.SetNull,
+				RefColumns: []*schema.Column{TemplatesColumns[0]},
+				OnDelete:   schema.NoAction,
 			},
 		},
 		Indexes: []*schema.Index{
@@ -82,41 +75,6 @@ var (
 			},
 		},
 	}
-	// ClientTemplatesColumns holds the columns for the "client_templates" table.
-	ClientTemplatesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeString, Unique: true},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "name", Type: field.TypeString},
-		{Name: "common_name", Type: field.TypeString},
-		{Name: "tag", Type: field.TypeString},
-		{Name: "validity", Type: field.TypeString},
-		{Name: "dns_names", Type: field.TypeJSON, Nullable: true},
-		{Name: "allow_additional_dns_names", Type: field.TypeBool, Default: false},
-		{Name: "ip_addresses", Type: field.TypeJSON, Nullable: true},
-		{Name: "allow_additional_ips", Type: field.TypeBool, Default: false},
-		{Name: "authority_client_templates", Type: field.TypeString},
-	}
-	// ClientTemplatesTable holds the schema information for the "client_templates" table.
-	ClientTemplatesTable = &schema.Table{
-		Name:       "client_templates",
-		Columns:    ClientTemplatesColumns,
-		PrimaryKey: []*schema.Column{ClientTemplatesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "client_templates_authorities_client_templates",
-				Columns:    []*schema.Column{ClientTemplatesColumns[10]},
-				RefColumns: []*schema.Column{AuthoritiesColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "clienttemplate_name_authority_client_templates",
-				Unique:  true,
-				Columns: []*schema.Column{ClientTemplatesColumns[2], ClientTemplatesColumns[10]},
-			},
-		},
-	}
 	// RootKeysColumns holds the columns for the "root_keys" table.
 	RootKeysColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
@@ -131,8 +89,8 @@ var (
 		Columns:    RootKeysColumns,
 		PrimaryKey: []*schema.Column{RootKeysColumns[0]},
 	}
-	// ServerTemplatesColumns holds the columns for the "server_templates" table.
-	ServerTemplatesColumns = []*schema.Column{
+	// TemplatesColumns holds the columns for the "templates" table.
+	TemplatesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString},
@@ -143,26 +101,29 @@ var (
 		{Name: "allow_additional_dns_names", Type: field.TypeBool, Default: false},
 		{Name: "ip_addresses", Type: field.TypeJSON, Nullable: true},
 		{Name: "allow_additional_ips", Type: field.TypeBool, Default: false},
-		{Name: "authority_server_templates", Type: field.TypeString},
+		{Name: "allow_override_common_name", Type: field.TypeBool, Default: false},
+		{Name: "client", Type: field.TypeBool, Default: false},
+		{Name: "server", Type: field.TypeBool, Default: false},
+		{Name: "authority_templates", Type: field.TypeString},
 	}
-	// ServerTemplatesTable holds the schema information for the "server_templates" table.
-	ServerTemplatesTable = &schema.Table{
-		Name:       "server_templates",
-		Columns:    ServerTemplatesColumns,
-		PrimaryKey: []*schema.Column{ServerTemplatesColumns[0]},
+	// TemplatesTable holds the schema information for the "templates" table.
+	TemplatesTable = &schema.Table{
+		Name:       "templates",
+		Columns:    TemplatesColumns,
+		PrimaryKey: []*schema.Column{TemplatesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "server_templates_authorities_server_templates",
-				Columns:    []*schema.Column{ServerTemplatesColumns[10]},
+				Symbol:     "templates_authorities_templates",
+				Columns:    []*schema.Column{TemplatesColumns[13]},
 				RefColumns: []*schema.Column{AuthoritiesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "servertemplate_name_authority_server_templates",
+				Name:    "template_name_authority_templates",
 				Unique:  true,
-				Columns: []*schema.Column{ServerTemplatesColumns[2], ServerTemplatesColumns[10]},
+				Columns: []*schema.Column{TemplatesColumns[2], TemplatesColumns[13]},
 			},
 		},
 	}
@@ -193,19 +154,16 @@ var (
 	Tables = []*schema.Table{
 		APIKeysTable,
 		AuthoritiesTable,
-		ClientTemplatesTable,
 		RootKeysTable,
-		ServerTemplatesTable,
+		TemplatesTable,
 		UserKeysTable,
 	}
 )
 
 func init() {
 	APIKeysTable.ForeignKeys[0].RefTable = AuthoritiesTable
-	APIKeysTable.ForeignKeys[1].RefTable = ClientTemplatesTable
-	APIKeysTable.ForeignKeys[2].RefTable = ServerTemplatesTable
+	APIKeysTable.ForeignKeys[1].RefTable = TemplatesTable
 	AuthoritiesTable.ForeignKeys[0].RefTable = UserKeysTable
-	ClientTemplatesTable.ForeignKeys[0].RefTable = AuthoritiesTable
-	ServerTemplatesTable.ForeignKeys[0].RefTable = AuthoritiesTable
+	TemplatesTable.ForeignKeys[0].RefTable = AuthoritiesTable
 	UserKeysTable.ForeignKeys[0].RefTable = RootKeysTable
 }

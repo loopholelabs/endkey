@@ -18,23 +18,16 @@ package database
 
 import (
 	"context"
-	"errors"
 	"github.com/google/uuid"
 	"github.com/loopholelabs/endkey/internal/ent"
 	"github.com/loopholelabs/endkey/internal/ent/apikey"
 	"github.com/loopholelabs/endkey/internal/ent/authority"
-	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
-	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/template"
 	"github.com/loopholelabs/endkey/internal/ent/userkey"
-	"github.com/loopholelabs/endkey/pkg/template"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var (
-	ErrInvalidTemplateKind = errors.New("invalid template kind")
-)
-
-func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityName string, uk *ent.UserKey, templateName string, templateKind template.Kind) (*ent.APIKey, []byte, error) {
+func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityName string, uk *ent.UserKey, templateName string) (*ent.APIKey, []byte, error) {
 	id := uuid.New().String()
 	secret := []byte(uuid.New().String())
 	salt := []byte(uuid.New().String())
@@ -51,32 +44,15 @@ func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityName 
 		return nil, nil, err
 	}
 
-	akBuilder := d.sql.APIKey.Create().SetID(id).SetName(name).SetHash(hash).SetSalt(salt).SetAuthority(auth)
-
-	switch templateKind {
-	case template.Server:
-		st, err := d.sql.ServerTemplate.Query().Where(servertemplate.Name(templateName)).Only(ctx)
-		if err != nil {
-			if ent.IsNotFound(err) {
-				return nil, nil, ErrNotFound
-			}
-			return nil, nil, err
+	templ, err := d.sql.Template.Query().Where(template.Name(templateName)).Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, nil, ErrNotFound
 		}
-		akBuilder = akBuilder.SetServerTemplate(st)
-	case template.Client:
-		ct, err := d.sql.ClientTemplate.Query().Where(clienttemplate.Name(templateName)).Only(ctx)
-		if err != nil {
-			if ent.IsNotFound(err) {
-				return nil, nil, ErrNotFound
-			}
-			return nil, nil, err
-		}
-		akBuilder = akBuilder.SetClientTemplate(ct)
-	default:
-		return nil, nil, ErrInvalidTemplateKind
+		return nil, nil, err
 	}
 
-	ak, err := akBuilder.Save(ctx)
+	ak, err := d.sql.APIKey.Create().SetID(id).SetName(name).SetHash(hash).SetSalt(salt).SetAuthority(auth).SetTemplate(templ).Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
 			return nil, nil, ErrAlreadyExists
@@ -88,7 +64,7 @@ func (d *Database) CreateAPIKey(ctx context.Context, name string, authorityName 
 }
 
 func (d *Database) GetAPIKeyByID(ctx context.Context, id string) (*ent.APIKey, error) {
-	ak, err := d.sql.APIKey.Query().Where(apikey.ID(id)).WithAuthority().WithClientTemplate().WithServerTemplate().Only(ctx)
+	ak, err := d.sql.APIKey.Query().Where(apikey.ID(id)).WithAuthority().WithTemplate().Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, ErrNotFound
@@ -100,7 +76,7 @@ func (d *Database) GetAPIKeyByID(ctx context.Context, id string) (*ent.APIKey, e
 }
 
 func (d *Database) ListAPIKeys(ctx context.Context, authorityName string, uk *ent.UserKey) (ent.APIKeys, error) {
-	aks, err := d.sql.APIKey.Query().Where(apikey.HasAuthorityWith(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID)))).WithServerTemplate().WithClientTemplate().All(ctx)
+	aks, err := d.sql.APIKey.Query().Where(apikey.HasAuthorityWith(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID)))).WithTemplate().All(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, ErrNotFound

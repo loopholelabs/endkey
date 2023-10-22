@@ -29,7 +29,6 @@ type apiKeyModel struct {
 	Name         string `header:"name" json:"name"`
 	Authority    string `header:"authority" json:"authority"`
 	TemplateName string `header:"template" json:"template"`
-	TemplateKind string `header:"kind" json:"kind"`
 	Value        string `header:"value" json:"value"`
 }
 
@@ -39,10 +38,9 @@ type apiKeyRedactedModel struct {
 	Name         string `header:"name" json:"name"`
 	Authority    string `header:"authority" json:"authority"`
 	TemplateName string `header:"template" json:"template"`
-	TemplateKind string `header:"kind" json:"kind"`
 }
 
-// Cmd encapsulates the commands for rootkey.
+// Cmd encapsulates the commands for apikey.
 func Cmd() command.SetupCommand[*config.Config] {
 	return func(cmd *cobra.Command, ch *cmdutils.Helper[*config.Config]) {
 		apikeyCmd := &cobra.Command{

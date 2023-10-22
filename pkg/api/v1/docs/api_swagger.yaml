@@ -14,8 +14,6 @@ definitions:
         type: string
       secret:
         type: string
-      template_kind:
-        type: string
       template_name:
         type: string
     type: object
@@ -60,43 +58,18 @@ definitions:
       ca_certificate:
         format: base64
         type: string
+      client:
+        type: boolean
+      common_name:
+        type: string
       expiry:
         type: string
       public_certificate:
         format: base64
         type: string
-      template_kind:
-        type: string
+      server:
+        type: boolean
       template_name:
-        type: string
-    type: object
-  models.ClientTemplateResponse:
-    properties:
-      allow_additional_dns_names:
-        type: boolean
-      allow_additional_ips:
-        type: boolean
-      authority_name:
-        type: string
-      common_name:
-        type: string
-      created_at:
-        type: string
-      dns_names:
-        items:
-          type: string
-        type: array
-      id:
-        type: string
-      ip_addresses:
-        items:
-          type: string
-        type: array
-      name:
-        type: string
-      tag:
-        type: string
-      validity:
         type: string
     type: object
   models.CreateAPIKeyRequest:
@@ -104,8 +77,6 @@ definitions:
       authority_name:
         type: string
       name:
-        type: string
-      template_kind:
         type: string
       template_name:
         type: string
@@ -134,15 +105,21 @@ definitions:
       csr:
         format: base64
         type: string
+      override_common_name:
+        type: string
     type: object
-  models.CreateClientTemplateRequest:
+  models.CreateTemplateRequest:
     properties:
       allow_additional_dns_names:
         type: boolean
       allow_additional_ips:
         type: boolean
+      allow_override_common_name:
+        type: boolean
       authority_name:
         type: string
+      client:
+        type: boolean
       common_name:
         type: string
       dns_names:
@@ -155,31 +132,8 @@ definitions:
         type: array
       name:
         type: string
-      tag:
-        type: string
-      validity:
-        type: string
-    type: object
-  models.CreateServerTemplateRequest:
-    properties:
-      allow_additional_dns_names:
+      server:
         type: boolean
-      allow_additional_ips:
-        type: boolean
-      authority_name:
-        type: string
-      common_name:
-        type: string
-      dns_names:
-        items:
-          type: string
-        type: array
-      ip_addresses:
-        items:
-          type: string
-        type: array
-      name:
-        type: string
       tag:
         type: string
       validity:
@@ -192,14 +146,7 @@ definitions:
       name:
         type: string
     type: object
-  models.DeleteClientTemplateRequest:
-    properties:
-      authority_name:
-        type: string
-      name:
-        type: string
-    type: object
-  models.DeleteServerTemplateRequest:
+  models.DeleteTemplateRequest:
     properties:
       authority_name:
         type: string
@@ -222,14 +169,18 @@ definitions:
       secret:
         type: string
     type: object
-  models.ServerTemplateResponse:
+  models.TemplateResponse:
     properties:
       allow_additional_dns_names:
         type: boolean
       allow_additional_ips:
         type: boolean
+      allow_override_common_name:
+        type: boolean
       authority_name:
         type: string
+      client:
+        type: boolean
       common_name:
         type: string
       created_at:
@@ -246,6 +197,8 @@ definitions:
         type: array
       name:
         type: string
+      server:
+        type: boolean
       tag:
         type: string
       validity:
@@ -854,18 +807,18 @@ paths:
             type: string
       tags:
       - rootkey
-  /template/client:
+  /template:
     delete:
       consumes:
       - application/json
-      description: Delete a Client Template
+      description: Delete a Template
       parameters:
-      - description: Delete Client Template Request
+      - description: Delete Template Request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.DeleteClientTemplateRequest'
+          $ref: '#/definitions/models.DeleteTemplateRequest'
       produces:
       - application/json
       responses:
@@ -902,21 +855,21 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new Client Template
+      description: Create a new Template
       parameters:
-      - description: Create Client Template Request
+      - description: Create Template Request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.CreateClientTemplateRequest'
+          $ref: '#/definitions/models.CreateTemplateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.ClientTemplateResponse'
+            $ref: '#/definitions/models.TemplateResponse'
         "400":
           description: Bad Request
           schema:
@@ -943,11 +896,11 @@ paths:
             type: string
       tags:
       - template
-  /template/client/{authority_name}:
+  /template/{authority_name}:
     get:
       consumes:
       - application/json
-      description: List all Client Templates
+      description: List all Templates
       parameters:
       - description: Authority Name
         in: path
@@ -961,142 +914,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.ClientTemplateResponse'
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            type: string
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-        "409":
-          description: Conflict
-          schema:
-            type: string
-        "412":
-          description: Precondition Failed
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      tags:
-      - template
-  /template/server:
-    delete:
-      consumes:
-      - application/json
-      description: Delete a Server Template
-      parameters:
-      - description: Delete Server Template Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.DeleteServerTemplateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            type: string
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-        "409":
-          description: Conflict
-          schema:
-            type: string
-        "412":
-          description: Precondition Failed
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      tags:
-      - template
-    post:
-      consumes:
-      - application/json
-      description: Create a new Server Template
-      parameters:
-      - description: Create Server Template Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.CreateServerTemplateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.ServerTemplateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            type: string
-        "401":
-          description: Unauthorized
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-        "409":
-          description: Conflict
-          schema:
-            type: string
-        "412":
-          description: Precondition Failed
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      tags:
-      - template
-  /template/server/{authority_name}:
-    get:
-      consumes:
-      - application/json
-      description: List all Server Templates
-      parameters:
-      - description: Authority Name
-        in: path
-        name: authority_name
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/models.ServerTemplateResponse'
+              $ref: '#/definitions/models.TemplateResponse'
             type: array
         "400":
           description: Bad Request

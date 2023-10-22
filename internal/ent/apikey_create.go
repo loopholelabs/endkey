@@ -12,8 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/loopholelabs/endkey/internal/ent/apikey"
 	"github.com/loopholelabs/endkey/internal/ent/authority"
-	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
-	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/template"
 )
 
 // APIKeyCreate is the builder for creating a APIKey entity.
@@ -72,42 +71,15 @@ func (akc *APIKeyCreate) SetAuthority(a *Authority) *APIKeyCreate {
 	return akc.SetAuthorityID(a.ID)
 }
 
-// SetServerTemplateID sets the "server_template" edge to the ServerTemplate entity by ID.
-func (akc *APIKeyCreate) SetServerTemplateID(id string) *APIKeyCreate {
-	akc.mutation.SetServerTemplateID(id)
+// SetTemplateID sets the "template" edge to the Template entity by ID.
+func (akc *APIKeyCreate) SetTemplateID(id string) *APIKeyCreate {
+	akc.mutation.SetTemplateID(id)
 	return akc
 }
 
-// SetNillableServerTemplateID sets the "server_template" edge to the ServerTemplate entity by ID if the given value is not nil.
-func (akc *APIKeyCreate) SetNillableServerTemplateID(id *string) *APIKeyCreate {
-	if id != nil {
-		akc = akc.SetServerTemplateID(*id)
-	}
-	return akc
-}
-
-// SetServerTemplate sets the "server_template" edge to the ServerTemplate entity.
-func (akc *APIKeyCreate) SetServerTemplate(s *ServerTemplate) *APIKeyCreate {
-	return akc.SetServerTemplateID(s.ID)
-}
-
-// SetClientTemplateID sets the "client_template" edge to the ClientTemplate entity by ID.
-func (akc *APIKeyCreate) SetClientTemplateID(id string) *APIKeyCreate {
-	akc.mutation.SetClientTemplateID(id)
-	return akc
-}
-
-// SetNillableClientTemplateID sets the "client_template" edge to the ClientTemplate entity by ID if the given value is not nil.
-func (akc *APIKeyCreate) SetNillableClientTemplateID(id *string) *APIKeyCreate {
-	if id != nil {
-		akc = akc.SetClientTemplateID(*id)
-	}
-	return akc
-}
-
-// SetClientTemplate sets the "client_template" edge to the ClientTemplate entity.
-func (akc *APIKeyCreate) SetClientTemplate(c *ClientTemplate) *APIKeyCreate {
-	return akc.SetClientTemplateID(c.ID)
+// SetTemplate sets the "template" edge to the Template entity.
+func (akc *APIKeyCreate) SetTemplate(t *Template) *APIKeyCreate {
+	return akc.SetTemplateID(t.ID)
 }
 
 // Mutation returns the APIKeyMutation object of the builder.
@@ -188,6 +160,9 @@ func (akc *APIKeyCreate) check() error {
 	if _, ok := akc.mutation.AuthorityID(); !ok {
 		return &ValidationError{Name: "authority", err: errors.New(`ent: missing required edge "APIKey.authority"`)}
 	}
+	if _, ok := akc.mutation.TemplateID(); !ok {
+		return &ValidationError{Name: "template", err: errors.New(`ent: missing required edge "APIKey.template"`)}
+	}
 	return nil
 }
 
@@ -256,38 +231,21 @@ func (akc *APIKeyCreate) createSpec() (*APIKey, *sqlgraph.CreateSpec) {
 		_node.authority_api_keys = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := akc.mutation.ServerTemplateIDs(); len(nodes) > 0 {
+	if nodes := akc.mutation.TemplateIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   apikey.ServerTemplateTable,
-			Columns: []string{apikey.ServerTemplateColumn},
+			Table:   apikey.TemplateTable,
+			Columns: []string{apikey.TemplateColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(servertemplate.FieldID, field.TypeString),
+				IDSpec: sqlgraph.NewFieldSpec(template.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.server_template_api_keys = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := akc.mutation.ClientTemplateIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   apikey.ClientTemplateTable,
-			Columns: []string{apikey.ClientTemplateColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(clienttemplate.FieldID, field.TypeString),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.client_template_api_keys = &nodes[0]
+		_node.template_api_keys = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

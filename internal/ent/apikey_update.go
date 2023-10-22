@@ -64,6 +64,9 @@ func (aku *APIKeyUpdate) check() error {
 	if _, ok := aku.mutation.AuthorityID(); aku.mutation.AuthorityCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "APIKey.authority"`)
 	}
+	if _, ok := aku.mutation.TemplateID(); aku.mutation.TemplateCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "APIKey.template"`)
+	}
 	return nil
 }
 
@@ -148,6 +151,9 @@ func (akuo *APIKeyUpdateOne) ExecX(ctx context.Context) {
 func (akuo *APIKeyUpdateOne) check() error {
 	if _, ok := akuo.mutation.AuthorityID(); akuo.mutation.AuthorityCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "APIKey.authority"`)
+	}
+	if _, ok := akuo.mutation.TemplateID(); akuo.mutation.TemplateCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "APIKey.template"`)
 	}
 	return nil
 }

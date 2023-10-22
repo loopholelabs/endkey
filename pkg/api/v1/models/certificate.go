@@ -19,15 +19,18 @@ package models
 type CreateCertificateRequest struct {
 	AdditionalDNSNames    []string `json:"additional_dns_names"`
 	AdditionalIPAddresses []string `json:"additional_ip_addresses"`
+	OverrideCommonName    string   `json:"override_common_name"`
 	CSR                   string   `json:"csr" format:"base64"`
 }
 
 type CertificateResponse struct {
 	AuthorityName         string   `json:"authority_name"`
 	TemplateName          string   `json:"template_name"`
-	TemplateKind          string   `json:"template_kind"`
+	Client                bool     `json:"client"`
+	Server                bool     `json:"server"`
 	AdditionalDNSNames    []string `json:"additional_dns_names"`
 	AdditionalIPAddresses []string `json:"additional_ip_addresses"`
+	CommonName            string   `json:"common_name"`
 	Expiry                string   `json:"expiry"`
 	CACertificate         string   `json:"ca_certificate" format:"base64"`
 	PublicCertificate     string   `json:"public_certificate" format:"base64"`

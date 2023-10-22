@@ -13,24 +13,22 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/loopholelabs/endkey/internal/ent/apikey"
 	"github.com/loopholelabs/endkey/internal/ent/authority"
-	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
 	"github.com/loopholelabs/endkey/internal/ent/predicate"
-	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/template"
 	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
 // AuthorityQuery is the builder for querying Authority entities.
 type AuthorityQuery struct {
 	config
-	ctx                 *QueryContext
-	order               []authority.OrderOption
-	inters              []Interceptor
-	predicates          []predicate.Authority
-	withUserKey         *UserKeyQuery
-	withAPIKeys         *APIKeyQuery
-	withServerTemplates *ServerTemplateQuery
-	withClientTemplates *ClientTemplateQuery
-	withFKs             bool
+	ctx           *QueryContext
+	order         []authority.OrderOption
+	inters        []Interceptor
+	predicates    []predicate.Authority
+	withUserKey   *UserKeyQuery
+	withAPIKeys   *APIKeyQuery
+	withTemplates *TemplateQuery
+	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -111,9 +109,9 @@ func (aq *AuthorityQuery) QueryAPIKeys() *APIKeyQuery {
 	return query
 }
 
-// QueryServerTemplates chains the current query on the "server_templates" edge.
-func (aq *AuthorityQuery) QueryServerTemplates() *ServerTemplateQuery {
-	query := (&ServerTemplateClient{config: aq.config}).Query()
+// QueryTemplates chains the current query on the "templates" edge.
+func (aq *AuthorityQuery) QueryTemplates() *TemplateQuery {
+	query := (&TemplateClient{config: aq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := aq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -124,30 +122,8 @@ func (aq *AuthorityQuery) QueryServerTemplates() *ServerTemplateQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(authority.Table, authority.FieldID, selector),
-			sqlgraph.To(servertemplate.Table, servertemplate.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, authority.ServerTemplatesTable, authority.ServerTemplatesColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryClientTemplates chains the current query on the "client_templates" edge.
-func (aq *AuthorityQuery) QueryClientTemplates() *ClientTemplateQuery {
-	query := (&ClientTemplateClient{config: aq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := aq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := aq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(authority.Table, authority.FieldID, selector),
-			sqlgraph.To(clienttemplate.Table, clienttemplate.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, authority.ClientTemplatesTable, authority.ClientTemplatesColumn),
+			sqlgraph.To(template.Table, template.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, authority.TemplatesTable, authority.TemplatesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
 		return fromU, nil
@@ -342,15 +318,14 @@ func (aq *AuthorityQuery) Clone() *AuthorityQuery {
 		return nil
 	}
 	return &AuthorityQuery{
-		config:              aq.config,
-		ctx:                 aq.ctx.Clone(),
-		order:               append([]authority.OrderOption{}, aq.order...),
-		inters:              append([]Interceptor{}, aq.inters...),
-		predicates:          append([]predicate.Authority{}, aq.predicates...),
-		withUserKey:         aq.withUserKey.Clone(),
-		withAPIKeys:         aq.withAPIKeys.Clone(),
-		withServerTemplates: aq.withServerTemplates.Clone(),
-		withClientTemplates: aq.withClientTemplates.Clone(),
+		config:        aq.config,
+		ctx:           aq.ctx.Clone(),
+		order:         append([]authority.OrderOption{}, aq.order...),
+		inters:        append([]Interceptor{}, aq.inters...),
+		predicates:    append([]predicate.Authority{}, aq.predicates...),
+		withUserKey:   aq.withUserKey.Clone(),
+		withAPIKeys:   aq.withAPIKeys.Clone(),
+		withTemplates: aq.withTemplates.Clone(),
 		// clone intermediate query.
 		sql:  aq.sql.Clone(),
 		path: aq.path,
@@ -379,25 +354,14 @@ func (aq *AuthorityQuery) WithAPIKeys(opts ...func(*APIKeyQuery)) *AuthorityQuer
 	return aq
 }
 
-// WithServerTemplates tells the query-builder to eager-load the nodes that are connected to
-// the "server_templates" edge. The optional arguments are used to configure the query builder of the edge.
-func (aq *AuthorityQuery) WithServerTemplates(opts ...func(*ServerTemplateQuery)) *AuthorityQuery {
-	query := (&ServerTemplateClient{config: aq.config}).Query()
+// WithTemplates tells the query-builder to eager-load the nodes that are connected to
+// the "templates" edge. The optional arguments are used to configure the query builder of the edge.
+func (aq *AuthorityQuery) WithTemplates(opts ...func(*TemplateQuery)) *AuthorityQuery {
+	query := (&TemplateClient{config: aq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	aq.withServerTemplates = query
-	return aq
-}
-
-// WithClientTemplates tells the query-builder to eager-load the nodes that are connected to
-// the "client_templates" edge. The optional arguments are used to configure the query builder of the edge.
-func (aq *AuthorityQuery) WithClientTemplates(opts ...func(*ClientTemplateQuery)) *AuthorityQuery {
-	query := (&ClientTemplateClient{config: aq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	aq.withClientTemplates = query
+	aq.withTemplates = query
 	return aq
 }
 
@@ -480,11 +444,10 @@ func (aq *AuthorityQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Au
 		nodes       = []*Authority{}
 		withFKs     = aq.withFKs
 		_spec       = aq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [3]bool{
 			aq.withUserKey != nil,
 			aq.withAPIKeys != nil,
-			aq.withServerTemplates != nil,
-			aq.withClientTemplates != nil,
+			aq.withTemplates != nil,
 		}
 	)
 	if aq.withUserKey != nil {
@@ -524,17 +487,10 @@ func (aq *AuthorityQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Au
 			return nil, err
 		}
 	}
-	if query := aq.withServerTemplates; query != nil {
-		if err := aq.loadServerTemplates(ctx, query, nodes,
-			func(n *Authority) { n.Edges.ServerTemplates = []*ServerTemplate{} },
-			func(n *Authority, e *ServerTemplate) { n.Edges.ServerTemplates = append(n.Edges.ServerTemplates, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := aq.withClientTemplates; query != nil {
-		if err := aq.loadClientTemplates(ctx, query, nodes,
-			func(n *Authority) { n.Edges.ClientTemplates = []*ClientTemplate{} },
-			func(n *Authority, e *ClientTemplate) { n.Edges.ClientTemplates = append(n.Edges.ClientTemplates, e) }); err != nil {
+	if query := aq.withTemplates; query != nil {
+		if err := aq.loadTemplates(ctx, query, nodes,
+			func(n *Authority) { n.Edges.Templates = []*Template{} },
+			func(n *Authority, e *Template) { n.Edges.Templates = append(n.Edges.Templates, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -604,7 +560,7 @@ func (aq *AuthorityQuery) loadAPIKeys(ctx context.Context, query *APIKeyQuery, n
 	}
 	return nil
 }
-func (aq *AuthorityQuery) loadServerTemplates(ctx context.Context, query *ServerTemplateQuery, nodes []*Authority, init func(*Authority), assign func(*Authority, *ServerTemplate)) error {
+func (aq *AuthorityQuery) loadTemplates(ctx context.Context, query *TemplateQuery, nodes []*Authority, init func(*Authority), assign func(*Authority, *Template)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[string]*Authority)
 	for i := range nodes {
@@ -615,52 +571,21 @@ func (aq *AuthorityQuery) loadServerTemplates(ctx context.Context, query *Server
 		}
 	}
 	query.withFKs = true
-	query.Where(predicate.ServerTemplate(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(authority.ServerTemplatesColumn), fks...))
+	query.Where(predicate.Template(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(authority.TemplatesColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.authority_server_templates
+		fk := n.authority_templates
 		if fk == nil {
-			return fmt.Errorf(`foreign-key "authority_server_templates" is nil for node %v`, n.ID)
+			return fmt.Errorf(`foreign-key "authority_templates" is nil for node %v`, n.ID)
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "authority_server_templates" returned %v for node %v`, *fk, n.ID)
-		}
-		assign(node, n)
-	}
-	return nil
-}
-func (aq *AuthorityQuery) loadClientTemplates(ctx context.Context, query *ClientTemplateQuery, nodes []*Authority, init func(*Authority), assign func(*Authority, *ClientTemplate)) error {
-	fks := make([]driver.Value, 0, len(nodes))
-	nodeids := make(map[string]*Authority)
-	for i := range nodes {
-		fks = append(fks, nodes[i].ID)
-		nodeids[nodes[i].ID] = nodes[i]
-		if init != nil {
-			init(nodes[i])
-		}
-	}
-	query.withFKs = true
-	query.Where(predicate.ClientTemplate(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(authority.ClientTemplatesColumn), fks...))
-	}))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		fk := n.authority_client_templates
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "authority_client_templates" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
-		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "authority_client_templates" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "authority_templates" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

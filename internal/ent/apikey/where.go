@@ -293,44 +293,21 @@ func HasAuthorityWith(preds ...predicate.Authority) predicate.APIKey {
 	})
 }
 
-// HasServerTemplate applies the HasEdge predicate on the "server_template" edge.
-func HasServerTemplate() predicate.APIKey {
+// HasTemplate applies the HasEdge predicate on the "template" edge.
+func HasTemplate() predicate.APIKey {
 	return predicate.APIKey(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ServerTemplateTable, ServerTemplateColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, TemplateTable, TemplateColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasServerTemplateWith applies the HasEdge predicate on the "server_template" edge with a given conditions (other predicates).
-func HasServerTemplateWith(preds ...predicate.ServerTemplate) predicate.APIKey {
+// HasTemplateWith applies the HasEdge predicate on the "template" edge with a given conditions (other predicates).
+func HasTemplateWith(preds ...predicate.Template) predicate.APIKey {
 	return predicate.APIKey(func(s *sql.Selector) {
-		step := newServerTemplateStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasClientTemplate applies the HasEdge predicate on the "client_template" edge.
-func HasClientTemplate() predicate.APIKey {
-	return predicate.APIKey(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, ClientTemplateTable, ClientTemplateColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasClientTemplateWith applies the HasEdge predicate on the "client_template" edge with a given conditions (other predicates).
-func HasClientTemplateWith(preds ...predicate.ClientTemplate) predicate.APIKey {
-	return predicate.APIKey(func(s *sql.Selector) {
-		step := newClientTemplateStep()
+		step := newTemplateStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

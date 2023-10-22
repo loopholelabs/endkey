@@ -13,10 +13,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/loopholelabs/endkey/internal/ent/apikey"
 	"github.com/loopholelabs/endkey/internal/ent/authority"
-	"github.com/loopholelabs/endkey/internal/ent/clienttemplate"
 	"github.com/loopholelabs/endkey/internal/ent/predicate"
 	"github.com/loopholelabs/endkey/internal/ent/rootkey"
-	"github.com/loopholelabs/endkey/internal/ent/servertemplate"
+	"github.com/loopholelabs/endkey/internal/ent/template"
 	"github.com/loopholelabs/endkey/internal/ent/userkey"
 )
 
@@ -29,34 +28,31 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeAPIKey         = "APIKey"
-	TypeAuthority      = "Authority"
-	TypeClientTemplate = "ClientTemplate"
-	TypeRootKey        = "RootKey"
-	TypeServerTemplate = "ServerTemplate"
-	TypeUserKey        = "UserKey"
+	TypeAPIKey    = "APIKey"
+	TypeAuthority = "Authority"
+	TypeRootKey   = "RootKey"
+	TypeTemplate  = "Template"
+	TypeUserKey   = "UserKey"
 )
 
 // APIKeyMutation represents an operation that mutates the APIKey nodes in the graph.
 type APIKeyMutation struct {
 	config
-	op                     Op
-	typ                    string
-	id                     *string
-	created_at             *time.Time
-	name                   *string
-	salt                   *[]byte
-	hash                   *[]byte
-	clearedFields          map[string]struct{}
-	authority              *string
-	clearedauthority       bool
-	server_template        *string
-	clearedserver_template bool
-	client_template        *string
-	clearedclient_template bool
-	done                   bool
-	oldValue               func(context.Context) (*APIKey, error)
-	predicates             []predicate.APIKey
+	op               Op
+	typ              string
+	id               *string
+	created_at       *time.Time
+	name             *string
+	salt             *[]byte
+	hash             *[]byte
+	clearedFields    map[string]struct{}
+	authority        *string
+	clearedauthority bool
+	template         *string
+	clearedtemplate  bool
+	done             bool
+	oldValue         func(context.Context) (*APIKey, error)
+	predicates       []predicate.APIKey
 }
 
 var _ ent.Mutation = (*APIKeyMutation)(nil)
@@ -346,82 +342,43 @@ func (m *APIKeyMutation) ResetAuthority() {
 	m.clearedauthority = false
 }
 
-// SetServerTemplateID sets the "server_template" edge to the ServerTemplate entity by id.
-func (m *APIKeyMutation) SetServerTemplateID(id string) {
-	m.server_template = &id
+// SetTemplateID sets the "template" edge to the Template entity by id.
+func (m *APIKeyMutation) SetTemplateID(id string) {
+	m.template = &id
 }
 
-// ClearServerTemplate clears the "server_template" edge to the ServerTemplate entity.
-func (m *APIKeyMutation) ClearServerTemplate() {
-	m.clearedserver_template = true
+// ClearTemplate clears the "template" edge to the Template entity.
+func (m *APIKeyMutation) ClearTemplate() {
+	m.clearedtemplate = true
 }
 
-// ServerTemplateCleared reports if the "server_template" edge to the ServerTemplate entity was cleared.
-func (m *APIKeyMutation) ServerTemplateCleared() bool {
-	return m.clearedserver_template
+// TemplateCleared reports if the "template" edge to the Template entity was cleared.
+func (m *APIKeyMutation) TemplateCleared() bool {
+	return m.clearedtemplate
 }
 
-// ServerTemplateID returns the "server_template" edge ID in the mutation.
-func (m *APIKeyMutation) ServerTemplateID() (id string, exists bool) {
-	if m.server_template != nil {
-		return *m.server_template, true
+// TemplateID returns the "template" edge ID in the mutation.
+func (m *APIKeyMutation) TemplateID() (id string, exists bool) {
+	if m.template != nil {
+		return *m.template, true
 	}
 	return
 }
 
-// ServerTemplateIDs returns the "server_template" edge IDs in the mutation.
+// TemplateIDs returns the "template" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// ServerTemplateID instead. It exists only for internal usage by the builders.
-func (m *APIKeyMutation) ServerTemplateIDs() (ids []string) {
-	if id := m.server_template; id != nil {
+// TemplateID instead. It exists only for internal usage by the builders.
+func (m *APIKeyMutation) TemplateIDs() (ids []string) {
+	if id := m.template; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetServerTemplate resets all changes to the "server_template" edge.
-func (m *APIKeyMutation) ResetServerTemplate() {
-	m.server_template = nil
-	m.clearedserver_template = false
-}
-
-// SetClientTemplateID sets the "client_template" edge to the ClientTemplate entity by id.
-func (m *APIKeyMutation) SetClientTemplateID(id string) {
-	m.client_template = &id
-}
-
-// ClearClientTemplate clears the "client_template" edge to the ClientTemplate entity.
-func (m *APIKeyMutation) ClearClientTemplate() {
-	m.clearedclient_template = true
-}
-
-// ClientTemplateCleared reports if the "client_template" edge to the ClientTemplate entity was cleared.
-func (m *APIKeyMutation) ClientTemplateCleared() bool {
-	return m.clearedclient_template
-}
-
-// ClientTemplateID returns the "client_template" edge ID in the mutation.
-func (m *APIKeyMutation) ClientTemplateID() (id string, exists bool) {
-	if m.client_template != nil {
-		return *m.client_template, true
-	}
-	return
-}
-
-// ClientTemplateIDs returns the "client_template" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// ClientTemplateID instead. It exists only for internal usage by the builders.
-func (m *APIKeyMutation) ClientTemplateIDs() (ids []string) {
-	if id := m.client_template; id != nil {
-		ids = append(ids, *id)
-	}
-	return
-}
-
-// ResetClientTemplate resets all changes to the "client_template" edge.
-func (m *APIKeyMutation) ResetClientTemplate() {
-	m.client_template = nil
-	m.clearedclient_template = false
+// ResetTemplate resets all changes to the "template" edge.
+func (m *APIKeyMutation) ResetTemplate() {
+	m.template = nil
+	m.clearedtemplate = false
 }
 
 // Where appends a list predicates to the APIKeyMutation builder.
@@ -608,15 +565,12 @@ func (m *APIKeyMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *APIKeyMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 2)
 	if m.authority != nil {
 		edges = append(edges, apikey.EdgeAuthority)
 	}
-	if m.server_template != nil {
-		edges = append(edges, apikey.EdgeServerTemplate)
-	}
-	if m.client_template != nil {
-		edges = append(edges, apikey.EdgeClientTemplate)
+	if m.template != nil {
+		edges = append(edges, apikey.EdgeTemplate)
 	}
 	return edges
 }
@@ -629,12 +583,8 @@ func (m *APIKeyMutation) AddedIDs(name string) []ent.Value {
 		if id := m.authority; id != nil {
 			return []ent.Value{*id}
 		}
-	case apikey.EdgeServerTemplate:
-		if id := m.server_template; id != nil {
-			return []ent.Value{*id}
-		}
-	case apikey.EdgeClientTemplate:
-		if id := m.client_template; id != nil {
+	case apikey.EdgeTemplate:
+		if id := m.template; id != nil {
 			return []ent.Value{*id}
 		}
 	}
@@ -643,7 +593,7 @@ func (m *APIKeyMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *APIKeyMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 2)
 	return edges
 }
 
@@ -655,15 +605,12 @@ func (m *APIKeyMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *APIKeyMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 2)
 	if m.clearedauthority {
 		edges = append(edges, apikey.EdgeAuthority)
 	}
-	if m.clearedserver_template {
-		edges = append(edges, apikey.EdgeServerTemplate)
-	}
-	if m.clearedclient_template {
-		edges = append(edges, apikey.EdgeClientTemplate)
+	if m.clearedtemplate {
+		edges = append(edges, apikey.EdgeTemplate)
 	}
 	return edges
 }
@@ -674,10 +621,8 @@ func (m *APIKeyMutation) EdgeCleared(name string) bool {
 	switch name {
 	case apikey.EdgeAuthority:
 		return m.clearedauthority
-	case apikey.EdgeServerTemplate:
-		return m.clearedserver_template
-	case apikey.EdgeClientTemplate:
-		return m.clearedclient_template
+	case apikey.EdgeTemplate:
+		return m.clearedtemplate
 	}
 	return false
 }
@@ -689,11 +634,8 @@ func (m *APIKeyMutation) ClearEdge(name string) error {
 	case apikey.EdgeAuthority:
 		m.ClearAuthority()
 		return nil
-	case apikey.EdgeServerTemplate:
-		m.ClearServerTemplate()
-		return nil
-	case apikey.EdgeClientTemplate:
-		m.ClearClientTemplate()
+	case apikey.EdgeTemplate:
+		m.ClearTemplate()
 		return nil
 	}
 	return fmt.Errorf("unknown APIKey unique edge %s", name)
@@ -706,11 +648,8 @@ func (m *APIKeyMutation) ResetEdge(name string) error {
 	case apikey.EdgeAuthority:
 		m.ResetAuthority()
 		return nil
-	case apikey.EdgeServerTemplate:
-		m.ResetServerTemplate()
-		return nil
-	case apikey.EdgeClientTemplate:
-		m.ResetClientTemplate()
+	case apikey.EdgeTemplate:
+		m.ResetTemplate()
 		return nil
 	}
 	return fmt.Errorf("unknown APIKey edge %s", name)
@@ -719,28 +658,25 @@ func (m *APIKeyMutation) ResetEdge(name string) error {
 // AuthorityMutation represents an operation that mutates the Authority nodes in the graph.
 type AuthorityMutation struct {
 	config
-	op                      Op
-	typ                     string
-	id                      *string
-	created_at              *time.Time
-	name                    *string
-	ca_certificate_pem      *[]byte
-	encrypted_private_key   *string
-	clearedFields           map[string]struct{}
-	user_key                *string
-	cleareduser_key         bool
-	api_keys                map[string]struct{}
-	removedapi_keys         map[string]struct{}
-	clearedapi_keys         bool
-	server_templates        map[string]struct{}
-	removedserver_templates map[string]struct{}
-	clearedserver_templates bool
-	client_templates        map[string]struct{}
-	removedclient_templates map[string]struct{}
-	clearedclient_templates bool
-	done                    bool
-	oldValue                func(context.Context) (*Authority, error)
-	predicates              []predicate.Authority
+	op                    Op
+	typ                   string
+	id                    *string
+	created_at            *time.Time
+	name                  *string
+	ca_certificate_pem    *[]byte
+	encrypted_private_key *string
+	clearedFields         map[string]struct{}
+	user_key              *string
+	cleareduser_key       bool
+	api_keys              map[string]struct{}
+	removedapi_keys       map[string]struct{}
+	clearedapi_keys       bool
+	templates             map[string]struct{}
+	removedtemplates      map[string]struct{}
+	clearedtemplates      bool
+	done                  bool
+	oldValue              func(context.Context) (*Authority, error)
+	predicates            []predicate.Authority
 }
 
 var _ ent.Mutation = (*AuthorityMutation)(nil)
@@ -1084,112 +1020,58 @@ func (m *AuthorityMutation) ResetAPIKeys() {
 	m.removedapi_keys = nil
 }
 
-// AddServerTemplateIDs adds the "server_templates" edge to the ServerTemplate entity by ids.
-func (m *AuthorityMutation) AddServerTemplateIDs(ids ...string) {
-	if m.server_templates == nil {
-		m.server_templates = make(map[string]struct{})
+// AddTemplateIDs adds the "templates" edge to the Template entity by ids.
+func (m *AuthorityMutation) AddTemplateIDs(ids ...string) {
+	if m.templates == nil {
+		m.templates = make(map[string]struct{})
 	}
 	for i := range ids {
-		m.server_templates[ids[i]] = struct{}{}
+		m.templates[ids[i]] = struct{}{}
 	}
 }
 
-// ClearServerTemplates clears the "server_templates" edge to the ServerTemplate entity.
-func (m *AuthorityMutation) ClearServerTemplates() {
-	m.clearedserver_templates = true
+// ClearTemplates clears the "templates" edge to the Template entity.
+func (m *AuthorityMutation) ClearTemplates() {
+	m.clearedtemplates = true
 }
 
-// ServerTemplatesCleared reports if the "server_templates" edge to the ServerTemplate entity was cleared.
-func (m *AuthorityMutation) ServerTemplatesCleared() bool {
-	return m.clearedserver_templates
+// TemplatesCleared reports if the "templates" edge to the Template entity was cleared.
+func (m *AuthorityMutation) TemplatesCleared() bool {
+	return m.clearedtemplates
 }
 
-// RemoveServerTemplateIDs removes the "server_templates" edge to the ServerTemplate entity by IDs.
-func (m *AuthorityMutation) RemoveServerTemplateIDs(ids ...string) {
-	if m.removedserver_templates == nil {
-		m.removedserver_templates = make(map[string]struct{})
+// RemoveTemplateIDs removes the "templates" edge to the Template entity by IDs.
+func (m *AuthorityMutation) RemoveTemplateIDs(ids ...string) {
+	if m.removedtemplates == nil {
+		m.removedtemplates = make(map[string]struct{})
 	}
 	for i := range ids {
-		delete(m.server_templates, ids[i])
-		m.removedserver_templates[ids[i]] = struct{}{}
+		delete(m.templates, ids[i])
+		m.removedtemplates[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedServerTemplates returns the removed IDs of the "server_templates" edge to the ServerTemplate entity.
-func (m *AuthorityMutation) RemovedServerTemplatesIDs() (ids []string) {
-	for id := range m.removedserver_templates {
+// RemovedTemplates returns the removed IDs of the "templates" edge to the Template entity.
+func (m *AuthorityMutation) RemovedTemplatesIDs() (ids []string) {
+	for id := range m.removedtemplates {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ServerTemplatesIDs returns the "server_templates" edge IDs in the mutation.
-func (m *AuthorityMutation) ServerTemplatesIDs() (ids []string) {
-	for id := range m.server_templates {
+// TemplatesIDs returns the "templates" edge IDs in the mutation.
+func (m *AuthorityMutation) TemplatesIDs() (ids []string) {
+	for id := range m.templates {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetServerTemplates resets all changes to the "server_templates" edge.
-func (m *AuthorityMutation) ResetServerTemplates() {
-	m.server_templates = nil
-	m.clearedserver_templates = false
-	m.removedserver_templates = nil
-}
-
-// AddClientTemplateIDs adds the "client_templates" edge to the ClientTemplate entity by ids.
-func (m *AuthorityMutation) AddClientTemplateIDs(ids ...string) {
-	if m.client_templates == nil {
-		m.client_templates = make(map[string]struct{})
-	}
-	for i := range ids {
-		m.client_templates[ids[i]] = struct{}{}
-	}
-}
-
-// ClearClientTemplates clears the "client_templates" edge to the ClientTemplate entity.
-func (m *AuthorityMutation) ClearClientTemplates() {
-	m.clearedclient_templates = true
-}
-
-// ClientTemplatesCleared reports if the "client_templates" edge to the ClientTemplate entity was cleared.
-func (m *AuthorityMutation) ClientTemplatesCleared() bool {
-	return m.clearedclient_templates
-}
-
-// RemoveClientTemplateIDs removes the "client_templates" edge to the ClientTemplate entity by IDs.
-func (m *AuthorityMutation) RemoveClientTemplateIDs(ids ...string) {
-	if m.removedclient_templates == nil {
-		m.removedclient_templates = make(map[string]struct{})
-	}
-	for i := range ids {
-		delete(m.client_templates, ids[i])
-		m.removedclient_templates[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedClientTemplates returns the removed IDs of the "client_templates" edge to the ClientTemplate entity.
-func (m *AuthorityMutation) RemovedClientTemplatesIDs() (ids []string) {
-	for id := range m.removedclient_templates {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ClientTemplatesIDs returns the "client_templates" edge IDs in the mutation.
-func (m *AuthorityMutation) ClientTemplatesIDs() (ids []string) {
-	for id := range m.client_templates {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetClientTemplates resets all changes to the "client_templates" edge.
-func (m *AuthorityMutation) ResetClientTemplates() {
-	m.client_templates = nil
-	m.clearedclient_templates = false
-	m.removedclient_templates = nil
+// ResetTemplates resets all changes to the "templates" edge.
+func (m *AuthorityMutation) ResetTemplates() {
+	m.templates = nil
+	m.clearedtemplates = false
+	m.removedtemplates = nil
 }
 
 // Where appends a list predicates to the AuthorityMutation builder.
@@ -1376,18 +1258,15 @@ func (m *AuthorityMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *AuthorityMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 3)
 	if m.user_key != nil {
 		edges = append(edges, authority.EdgeUserKey)
 	}
 	if m.api_keys != nil {
 		edges = append(edges, authority.EdgeAPIKeys)
 	}
-	if m.server_templates != nil {
-		edges = append(edges, authority.EdgeServerTemplates)
-	}
-	if m.client_templates != nil {
-		edges = append(edges, authority.EdgeClientTemplates)
+	if m.templates != nil {
+		edges = append(edges, authority.EdgeTemplates)
 	}
 	return edges
 }
@@ -1406,15 +1285,9 @@ func (m *AuthorityMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case authority.EdgeServerTemplates:
-		ids := make([]ent.Value, 0, len(m.server_templates))
-		for id := range m.server_templates {
-			ids = append(ids, id)
-		}
-		return ids
-	case authority.EdgeClientTemplates:
-		ids := make([]ent.Value, 0, len(m.client_templates))
-		for id := range m.client_templates {
+	case authority.EdgeTemplates:
+		ids := make([]ent.Value, 0, len(m.templates))
+		for id := range m.templates {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1424,15 +1297,12 @@ func (m *AuthorityMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *AuthorityMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 3)
 	if m.removedapi_keys != nil {
 		edges = append(edges, authority.EdgeAPIKeys)
 	}
-	if m.removedserver_templates != nil {
-		edges = append(edges, authority.EdgeServerTemplates)
-	}
-	if m.removedclient_templates != nil {
-		edges = append(edges, authority.EdgeClientTemplates)
+	if m.removedtemplates != nil {
+		edges = append(edges, authority.EdgeTemplates)
 	}
 	return edges
 }
@@ -1447,15 +1317,9 @@ func (m *AuthorityMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case authority.EdgeServerTemplates:
-		ids := make([]ent.Value, 0, len(m.removedserver_templates))
-		for id := range m.removedserver_templates {
-			ids = append(ids, id)
-		}
-		return ids
-	case authority.EdgeClientTemplates:
-		ids := make([]ent.Value, 0, len(m.removedclient_templates))
-		for id := range m.removedclient_templates {
+	case authority.EdgeTemplates:
+		ids := make([]ent.Value, 0, len(m.removedtemplates))
+		for id := range m.removedtemplates {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1465,18 +1329,15 @@ func (m *AuthorityMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *AuthorityMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 3)
 	if m.cleareduser_key {
 		edges = append(edges, authority.EdgeUserKey)
 	}
 	if m.clearedapi_keys {
 		edges = append(edges, authority.EdgeAPIKeys)
 	}
-	if m.clearedserver_templates {
-		edges = append(edges, authority.EdgeServerTemplates)
-	}
-	if m.clearedclient_templates {
-		edges = append(edges, authority.EdgeClientTemplates)
+	if m.clearedtemplates {
+		edges = append(edges, authority.EdgeTemplates)
 	}
 	return edges
 }
@@ -1489,10 +1350,8 @@ func (m *AuthorityMutation) EdgeCleared(name string) bool {
 		return m.cleareduser_key
 	case authority.EdgeAPIKeys:
 		return m.clearedapi_keys
-	case authority.EdgeServerTemplates:
-		return m.clearedserver_templates
-	case authority.EdgeClientTemplates:
-		return m.clearedclient_templates
+	case authority.EdgeTemplates:
+		return m.clearedtemplates
 	}
 	return false
 }
@@ -1518,1005 +1377,11 @@ func (m *AuthorityMutation) ResetEdge(name string) error {
 	case authority.EdgeAPIKeys:
 		m.ResetAPIKeys()
 		return nil
-	case authority.EdgeServerTemplates:
-		m.ResetServerTemplates()
-		return nil
-	case authority.EdgeClientTemplates:
-		m.ResetClientTemplates()
+	case authority.EdgeTemplates:
+		m.ResetTemplates()
 		return nil
 	}
 	return fmt.Errorf("unknown Authority edge %s", name)
-}
-
-// ClientTemplateMutation represents an operation that mutates the ClientTemplate nodes in the graph.
-type ClientTemplateMutation struct {
-	config
-	op                         Op
-	typ                        string
-	id                         *string
-	created_at                 *time.Time
-	name                       *string
-	common_name                *string
-	tag                        *string
-	validity                   *string
-	dns_names                  *[]string
-	appenddns_names            []string
-	allow_additional_dns_names *bool
-	ip_addresses               *[]string
-	appendip_addresses         []string
-	allow_additional_ips       *bool
-	clearedFields              map[string]struct{}
-	authority                  *string
-	clearedauthority           bool
-	api_keys                   map[string]struct{}
-	removedapi_keys            map[string]struct{}
-	clearedapi_keys            bool
-	done                       bool
-	oldValue                   func(context.Context) (*ClientTemplate, error)
-	predicates                 []predicate.ClientTemplate
-}
-
-var _ ent.Mutation = (*ClientTemplateMutation)(nil)
-
-// clienttemplateOption allows management of the mutation configuration using functional options.
-type clienttemplateOption func(*ClientTemplateMutation)
-
-// newClientTemplateMutation creates new mutation for the ClientTemplate entity.
-func newClientTemplateMutation(c config, op Op, opts ...clienttemplateOption) *ClientTemplateMutation {
-	m := &ClientTemplateMutation{
-		config:        c,
-		op:            op,
-		typ:           TypeClientTemplate,
-		clearedFields: make(map[string]struct{}),
-	}
-	for _, opt := range opts {
-		opt(m)
-	}
-	return m
-}
-
-// withClientTemplateID sets the ID field of the mutation.
-func withClientTemplateID(id string) clienttemplateOption {
-	return func(m *ClientTemplateMutation) {
-		var (
-			err   error
-			once  sync.Once
-			value *ClientTemplate
-		)
-		m.oldValue = func(ctx context.Context) (*ClientTemplate, error) {
-			once.Do(func() {
-				if m.done {
-					err = errors.New("querying old values post mutation is not allowed")
-				} else {
-					value, err = m.Client().ClientTemplate.Get(ctx, id)
-				}
-			})
-			return value, err
-		}
-		m.id = &id
-	}
-}
-
-// withClientTemplate sets the old ClientTemplate of the mutation.
-func withClientTemplate(node *ClientTemplate) clienttemplateOption {
-	return func(m *ClientTemplateMutation) {
-		m.oldValue = func(context.Context) (*ClientTemplate, error) {
-			return node, nil
-		}
-		m.id = &node.ID
-	}
-}
-
-// Client returns a new `ent.Client` from the mutation. If the mutation was
-// executed in a transaction (ent.Tx), a transactional client is returned.
-func (m ClientTemplateMutation) Client() *Client {
-	client := &Client{config: m.config}
-	client.init()
-	return client
-}
-
-// Tx returns an `ent.Tx` for mutations that were executed in transactions;
-// it returns an error otherwise.
-func (m ClientTemplateMutation) Tx() (*Tx, error) {
-	if _, ok := m.driver.(*txDriver); !ok {
-		return nil, errors.New("ent: mutation is not running in a transaction")
-	}
-	tx := &Tx{config: m.config}
-	tx.init()
-	return tx, nil
-}
-
-// SetID sets the value of the id field. Note that this
-// operation is only accepted on creation of ClientTemplate entities.
-func (m *ClientTemplateMutation) SetID(id string) {
-	m.id = &id
-}
-
-// ID returns the ID value in the mutation. Note that the ID is only available
-// if it was provided to the builder or after it was returned from the database.
-func (m *ClientTemplateMutation) ID() (id string, exists bool) {
-	if m.id == nil {
-		return
-	}
-	return *m.id, true
-}
-
-// IDs queries the database and returns the entity ids that match the mutation's predicate.
-// That means, if the mutation is applied within a transaction with an isolation level such
-// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
-// or updated by the mutation.
-func (m *ClientTemplateMutation) IDs(ctx context.Context) ([]string, error) {
-	switch {
-	case m.op.Is(OpUpdateOne | OpDeleteOne):
-		id, exists := m.ID()
-		if exists {
-			return []string{id}, nil
-		}
-		fallthrough
-	case m.op.Is(OpUpdate | OpDelete):
-		return m.Client().ClientTemplate.Query().Where(m.predicates...).IDs(ctx)
-	default:
-		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
-	}
-}
-
-// SetCreatedAt sets the "created_at" field.
-func (m *ClientTemplateMutation) SetCreatedAt(t time.Time) {
-	m.created_at = &t
-}
-
-// CreatedAt returns the value of the "created_at" field in the mutation.
-func (m *ClientTemplateMutation) CreatedAt() (r time.Time, exists bool) {
-	v := m.created_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldCreatedAt returns the old "created_at" field's value of the ClientTemplate entity.
-// If the ClientTemplate object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ClientTemplateMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
-	}
-	return oldValue.CreatedAt, nil
-}
-
-// ResetCreatedAt resets all changes to the "created_at" field.
-func (m *ClientTemplateMutation) ResetCreatedAt() {
-	m.created_at = nil
-}
-
-// SetName sets the "name" field.
-func (m *ClientTemplateMutation) SetName(s string) {
-	m.name = &s
-}
-
-// Name returns the value of the "name" field in the mutation.
-func (m *ClientTemplateMutation) Name() (r string, exists bool) {
-	v := m.name
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldName returns the old "name" field's value of the ClientTemplate entity.
-// If the ClientTemplate object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ClientTemplateMutation) OldName(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldName is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldName requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldName: %w", err)
-	}
-	return oldValue.Name, nil
-}
-
-// ResetName resets all changes to the "name" field.
-func (m *ClientTemplateMutation) ResetName() {
-	m.name = nil
-}
-
-// SetCommonName sets the "common_name" field.
-func (m *ClientTemplateMutation) SetCommonName(s string) {
-	m.common_name = &s
-}
-
-// CommonName returns the value of the "common_name" field in the mutation.
-func (m *ClientTemplateMutation) CommonName() (r string, exists bool) {
-	v := m.common_name
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldCommonName returns the old "common_name" field's value of the ClientTemplate entity.
-// If the ClientTemplate object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ClientTemplateMutation) OldCommonName(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCommonName is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCommonName requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCommonName: %w", err)
-	}
-	return oldValue.CommonName, nil
-}
-
-// ResetCommonName resets all changes to the "common_name" field.
-func (m *ClientTemplateMutation) ResetCommonName() {
-	m.common_name = nil
-}
-
-// SetTag sets the "tag" field.
-func (m *ClientTemplateMutation) SetTag(s string) {
-	m.tag = &s
-}
-
-// Tag returns the value of the "tag" field in the mutation.
-func (m *ClientTemplateMutation) Tag() (r string, exists bool) {
-	v := m.tag
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldTag returns the old "tag" field's value of the ClientTemplate entity.
-// If the ClientTemplate object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ClientTemplateMutation) OldTag(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldTag is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldTag requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldTag: %w", err)
-	}
-	return oldValue.Tag, nil
-}
-
-// ResetTag resets all changes to the "tag" field.
-func (m *ClientTemplateMutation) ResetTag() {
-	m.tag = nil
-}
-
-// SetValidity sets the "validity" field.
-func (m *ClientTemplateMutation) SetValidity(s string) {
-	m.validity = &s
-}
-
-// Validity returns the value of the "validity" field in the mutation.
-func (m *ClientTemplateMutation) Validity() (r string, exists bool) {
-	v := m.validity
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldValidity returns the old "validity" field's value of the ClientTemplate entity.
-// If the ClientTemplate object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ClientTemplateMutation) OldValidity(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldValidity is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldValidity requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldValidity: %w", err)
-	}
-	return oldValue.Validity, nil
-}
-
-// ResetValidity resets all changes to the "validity" field.
-func (m *ClientTemplateMutation) ResetValidity() {
-	m.validity = nil
-}
-
-// SetDNSNames sets the "dns_names" field.
-func (m *ClientTemplateMutation) SetDNSNames(s []string) {
-	m.dns_names = &s
-	m.appenddns_names = nil
-}
-
-// DNSNames returns the value of the "dns_names" field in the mutation.
-func (m *ClientTemplateMutation) DNSNames() (r []string, exists bool) {
-	v := m.dns_names
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDNSNames returns the old "dns_names" field's value of the ClientTemplate entity.
-// If the ClientTemplate object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ClientTemplateMutation) OldDNSNames(ctx context.Context) (v []string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldDNSNames is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldDNSNames requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDNSNames: %w", err)
-	}
-	return oldValue.DNSNames, nil
-}
-
-// AppendDNSNames adds s to the "dns_names" field.
-func (m *ClientTemplateMutation) AppendDNSNames(s []string) {
-	m.appenddns_names = append(m.appenddns_names, s...)
-}
-
-// AppendedDNSNames returns the list of values that were appended to the "dns_names" field in this mutation.
-func (m *ClientTemplateMutation) AppendedDNSNames() ([]string, bool) {
-	if len(m.appenddns_names) == 0 {
-		return nil, false
-	}
-	return m.appenddns_names, true
-}
-
-// ClearDNSNames clears the value of the "dns_names" field.
-func (m *ClientTemplateMutation) ClearDNSNames() {
-	m.dns_names = nil
-	m.appenddns_names = nil
-	m.clearedFields[clienttemplate.FieldDNSNames] = struct{}{}
-}
-
-// DNSNamesCleared returns if the "dns_names" field was cleared in this mutation.
-func (m *ClientTemplateMutation) DNSNamesCleared() bool {
-	_, ok := m.clearedFields[clienttemplate.FieldDNSNames]
-	return ok
-}
-
-// ResetDNSNames resets all changes to the "dns_names" field.
-func (m *ClientTemplateMutation) ResetDNSNames() {
-	m.dns_names = nil
-	m.appenddns_names = nil
-	delete(m.clearedFields, clienttemplate.FieldDNSNames)
-}
-
-// SetAllowAdditionalDNSNames sets the "allow_additional_dns_names" field.
-func (m *ClientTemplateMutation) SetAllowAdditionalDNSNames(b bool) {
-	m.allow_additional_dns_names = &b
-}
-
-// AllowAdditionalDNSNames returns the value of the "allow_additional_dns_names" field in the mutation.
-func (m *ClientTemplateMutation) AllowAdditionalDNSNames() (r bool, exists bool) {
-	v := m.allow_additional_dns_names
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldAllowAdditionalDNSNames returns the old "allow_additional_dns_names" field's value of the ClientTemplate entity.
-// If the ClientTemplate object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ClientTemplateMutation) OldAllowAdditionalDNSNames(ctx context.Context) (v bool, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldAllowAdditionalDNSNames is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldAllowAdditionalDNSNames requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldAllowAdditionalDNSNames: %w", err)
-	}
-	return oldValue.AllowAdditionalDNSNames, nil
-}
-
-// ResetAllowAdditionalDNSNames resets all changes to the "allow_additional_dns_names" field.
-func (m *ClientTemplateMutation) ResetAllowAdditionalDNSNames() {
-	m.allow_additional_dns_names = nil
-}
-
-// SetIPAddresses sets the "ip_addresses" field.
-func (m *ClientTemplateMutation) SetIPAddresses(s []string) {
-	m.ip_addresses = &s
-	m.appendip_addresses = nil
-}
-
-// IPAddresses returns the value of the "ip_addresses" field in the mutation.
-func (m *ClientTemplateMutation) IPAddresses() (r []string, exists bool) {
-	v := m.ip_addresses
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldIPAddresses returns the old "ip_addresses" field's value of the ClientTemplate entity.
-// If the ClientTemplate object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ClientTemplateMutation) OldIPAddresses(ctx context.Context) (v []string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldIPAddresses is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldIPAddresses requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldIPAddresses: %w", err)
-	}
-	return oldValue.IPAddresses, nil
-}
-
-// AppendIPAddresses adds s to the "ip_addresses" field.
-func (m *ClientTemplateMutation) AppendIPAddresses(s []string) {
-	m.appendip_addresses = append(m.appendip_addresses, s...)
-}
-
-// AppendedIPAddresses returns the list of values that were appended to the "ip_addresses" field in this mutation.
-func (m *ClientTemplateMutation) AppendedIPAddresses() ([]string, bool) {
-	if len(m.appendip_addresses) == 0 {
-		return nil, false
-	}
-	return m.appendip_addresses, true
-}
-
-// ClearIPAddresses clears the value of the "ip_addresses" field.
-func (m *ClientTemplateMutation) ClearIPAddresses() {
-	m.ip_addresses = nil
-	m.appendip_addresses = nil
-	m.clearedFields[clienttemplate.FieldIPAddresses] = struct{}{}
-}
-
-// IPAddressesCleared returns if the "ip_addresses" field was cleared in this mutation.
-func (m *ClientTemplateMutation) IPAddressesCleared() bool {
-	_, ok := m.clearedFields[clienttemplate.FieldIPAddresses]
-	return ok
-}
-
-// ResetIPAddresses resets all changes to the "ip_addresses" field.
-func (m *ClientTemplateMutation) ResetIPAddresses() {
-	m.ip_addresses = nil
-	m.appendip_addresses = nil
-	delete(m.clearedFields, clienttemplate.FieldIPAddresses)
-}
-
-// SetAllowAdditionalIps sets the "allow_additional_ips" field.
-func (m *ClientTemplateMutation) SetAllowAdditionalIps(b bool) {
-	m.allow_additional_ips = &b
-}
-
-// AllowAdditionalIps returns the value of the "allow_additional_ips" field in the mutation.
-func (m *ClientTemplateMutation) AllowAdditionalIps() (r bool, exists bool) {
-	v := m.allow_additional_ips
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldAllowAdditionalIps returns the old "allow_additional_ips" field's value of the ClientTemplate entity.
-// If the ClientTemplate object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ClientTemplateMutation) OldAllowAdditionalIps(ctx context.Context) (v bool, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldAllowAdditionalIps is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldAllowAdditionalIps requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldAllowAdditionalIps: %w", err)
-	}
-	return oldValue.AllowAdditionalIps, nil
-}
-
-// ResetAllowAdditionalIps resets all changes to the "allow_additional_ips" field.
-func (m *ClientTemplateMutation) ResetAllowAdditionalIps() {
-	m.allow_additional_ips = nil
-}
-
-// SetAuthorityID sets the "authority" edge to the Authority entity by id.
-func (m *ClientTemplateMutation) SetAuthorityID(id string) {
-	m.authority = &id
-}
-
-// ClearAuthority clears the "authority" edge to the Authority entity.
-func (m *ClientTemplateMutation) ClearAuthority() {
-	m.clearedauthority = true
-}
-
-// AuthorityCleared reports if the "authority" edge to the Authority entity was cleared.
-func (m *ClientTemplateMutation) AuthorityCleared() bool {
-	return m.clearedauthority
-}
-
-// AuthorityID returns the "authority" edge ID in the mutation.
-func (m *ClientTemplateMutation) AuthorityID() (id string, exists bool) {
-	if m.authority != nil {
-		return *m.authority, true
-	}
-	return
-}
-
-// AuthorityIDs returns the "authority" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// AuthorityID instead. It exists only for internal usage by the builders.
-func (m *ClientTemplateMutation) AuthorityIDs() (ids []string) {
-	if id := m.authority; id != nil {
-		ids = append(ids, *id)
-	}
-	return
-}
-
-// ResetAuthority resets all changes to the "authority" edge.
-func (m *ClientTemplateMutation) ResetAuthority() {
-	m.authority = nil
-	m.clearedauthority = false
-}
-
-// AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by ids.
-func (m *ClientTemplateMutation) AddAPIKeyIDs(ids ...string) {
-	if m.api_keys == nil {
-		m.api_keys = make(map[string]struct{})
-	}
-	for i := range ids {
-		m.api_keys[ids[i]] = struct{}{}
-	}
-}
-
-// ClearAPIKeys clears the "api_keys" edge to the APIKey entity.
-func (m *ClientTemplateMutation) ClearAPIKeys() {
-	m.clearedapi_keys = true
-}
-
-// APIKeysCleared reports if the "api_keys" edge to the APIKey entity was cleared.
-func (m *ClientTemplateMutation) APIKeysCleared() bool {
-	return m.clearedapi_keys
-}
-
-// RemoveAPIKeyIDs removes the "api_keys" edge to the APIKey entity by IDs.
-func (m *ClientTemplateMutation) RemoveAPIKeyIDs(ids ...string) {
-	if m.removedapi_keys == nil {
-		m.removedapi_keys = make(map[string]struct{})
-	}
-	for i := range ids {
-		delete(m.api_keys, ids[i])
-		m.removedapi_keys[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedAPIKeys returns the removed IDs of the "api_keys" edge to the APIKey entity.
-func (m *ClientTemplateMutation) RemovedAPIKeysIDs() (ids []string) {
-	for id := range m.removedapi_keys {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// APIKeysIDs returns the "api_keys" edge IDs in the mutation.
-func (m *ClientTemplateMutation) APIKeysIDs() (ids []string) {
-	for id := range m.api_keys {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetAPIKeys resets all changes to the "api_keys" edge.
-func (m *ClientTemplateMutation) ResetAPIKeys() {
-	m.api_keys = nil
-	m.clearedapi_keys = false
-	m.removedapi_keys = nil
-}
-
-// Where appends a list predicates to the ClientTemplateMutation builder.
-func (m *ClientTemplateMutation) Where(ps ...predicate.ClientTemplate) {
-	m.predicates = append(m.predicates, ps...)
-}
-
-// WhereP appends storage-level predicates to the ClientTemplateMutation builder. Using this method,
-// users can use type-assertion to append predicates that do not depend on any generated package.
-func (m *ClientTemplateMutation) WhereP(ps ...func(*sql.Selector)) {
-	p := make([]predicate.ClientTemplate, len(ps))
-	for i := range ps {
-		p[i] = ps[i]
-	}
-	m.Where(p...)
-}
-
-// Op returns the operation name.
-func (m *ClientTemplateMutation) Op() Op {
-	return m.op
-}
-
-// SetOp allows setting the mutation operation.
-func (m *ClientTemplateMutation) SetOp(op Op) {
-	m.op = op
-}
-
-// Type returns the node type of this mutation (ClientTemplate).
-func (m *ClientTemplateMutation) Type() string {
-	return m.typ
-}
-
-// Fields returns all fields that were changed during this mutation. Note that in
-// order to get all numeric fields that were incremented/decremented, call
-// AddedFields().
-func (m *ClientTemplateMutation) Fields() []string {
-	fields := make([]string, 0, 9)
-	if m.created_at != nil {
-		fields = append(fields, clienttemplate.FieldCreatedAt)
-	}
-	if m.name != nil {
-		fields = append(fields, clienttemplate.FieldName)
-	}
-	if m.common_name != nil {
-		fields = append(fields, clienttemplate.FieldCommonName)
-	}
-	if m.tag != nil {
-		fields = append(fields, clienttemplate.FieldTag)
-	}
-	if m.validity != nil {
-		fields = append(fields, clienttemplate.FieldValidity)
-	}
-	if m.dns_names != nil {
-		fields = append(fields, clienttemplate.FieldDNSNames)
-	}
-	if m.allow_additional_dns_names != nil {
-		fields = append(fields, clienttemplate.FieldAllowAdditionalDNSNames)
-	}
-	if m.ip_addresses != nil {
-		fields = append(fields, clienttemplate.FieldIPAddresses)
-	}
-	if m.allow_additional_ips != nil {
-		fields = append(fields, clienttemplate.FieldAllowAdditionalIps)
-	}
-	return fields
-}
-
-// Field returns the value of a field with the given name. The second boolean
-// return value indicates that this field was not set, or was not defined in the
-// schema.
-func (m *ClientTemplateMutation) Field(name string) (ent.Value, bool) {
-	switch name {
-	case clienttemplate.FieldCreatedAt:
-		return m.CreatedAt()
-	case clienttemplate.FieldName:
-		return m.Name()
-	case clienttemplate.FieldCommonName:
-		return m.CommonName()
-	case clienttemplate.FieldTag:
-		return m.Tag()
-	case clienttemplate.FieldValidity:
-		return m.Validity()
-	case clienttemplate.FieldDNSNames:
-		return m.DNSNames()
-	case clienttemplate.FieldAllowAdditionalDNSNames:
-		return m.AllowAdditionalDNSNames()
-	case clienttemplate.FieldIPAddresses:
-		return m.IPAddresses()
-	case clienttemplate.FieldAllowAdditionalIps:
-		return m.AllowAdditionalIps()
-	}
-	return nil, false
-}
-
-// OldField returns the old value of the field from the database. An error is
-// returned if the mutation operation is not UpdateOne, or the query to the
-// database failed.
-func (m *ClientTemplateMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
-	switch name {
-	case clienttemplate.FieldCreatedAt:
-		return m.OldCreatedAt(ctx)
-	case clienttemplate.FieldName:
-		return m.OldName(ctx)
-	case clienttemplate.FieldCommonName:
-		return m.OldCommonName(ctx)
-	case clienttemplate.FieldTag:
-		return m.OldTag(ctx)
-	case clienttemplate.FieldValidity:
-		return m.OldValidity(ctx)
-	case clienttemplate.FieldDNSNames:
-		return m.OldDNSNames(ctx)
-	case clienttemplate.FieldAllowAdditionalDNSNames:
-		return m.OldAllowAdditionalDNSNames(ctx)
-	case clienttemplate.FieldIPAddresses:
-		return m.OldIPAddresses(ctx)
-	case clienttemplate.FieldAllowAdditionalIps:
-		return m.OldAllowAdditionalIps(ctx)
-	}
-	return nil, fmt.Errorf("unknown ClientTemplate field %s", name)
-}
-
-// SetField sets the value of a field with the given name. It returns an error if
-// the field is not defined in the schema, or if the type mismatched the field
-// type.
-func (m *ClientTemplateMutation) SetField(name string, value ent.Value) error {
-	switch name {
-	case clienttemplate.FieldCreatedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetCreatedAt(v)
-		return nil
-	case clienttemplate.FieldName:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetName(v)
-		return nil
-	case clienttemplate.FieldCommonName:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetCommonName(v)
-		return nil
-	case clienttemplate.FieldTag:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetTag(v)
-		return nil
-	case clienttemplate.FieldValidity:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetValidity(v)
-		return nil
-	case clienttemplate.FieldDNSNames:
-		v, ok := value.([]string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDNSNames(v)
-		return nil
-	case clienttemplate.FieldAllowAdditionalDNSNames:
-		v, ok := value.(bool)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetAllowAdditionalDNSNames(v)
-		return nil
-	case clienttemplate.FieldIPAddresses:
-		v, ok := value.([]string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetIPAddresses(v)
-		return nil
-	case clienttemplate.FieldAllowAdditionalIps:
-		v, ok := value.(bool)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetAllowAdditionalIps(v)
-		return nil
-	}
-	return fmt.Errorf("unknown ClientTemplate field %s", name)
-}
-
-// AddedFields returns all numeric fields that were incremented/decremented during
-// this mutation.
-func (m *ClientTemplateMutation) AddedFields() []string {
-	return nil
-}
-
-// AddedField returns the numeric value that was incremented/decremented on a field
-// with the given name. The second boolean return value indicates that this field
-// was not set, or was not defined in the schema.
-func (m *ClientTemplateMutation) AddedField(name string) (ent.Value, bool) {
-	return nil, false
-}
-
-// AddField adds the value to the field with the given name. It returns an error if
-// the field is not defined in the schema, or if the type mismatched the field
-// type.
-func (m *ClientTemplateMutation) AddField(name string, value ent.Value) error {
-	switch name {
-	}
-	return fmt.Errorf("unknown ClientTemplate numeric field %s", name)
-}
-
-// ClearedFields returns all nullable fields that were cleared during this
-// mutation.
-func (m *ClientTemplateMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(clienttemplate.FieldDNSNames) {
-		fields = append(fields, clienttemplate.FieldDNSNames)
-	}
-	if m.FieldCleared(clienttemplate.FieldIPAddresses) {
-		fields = append(fields, clienttemplate.FieldIPAddresses)
-	}
-	return fields
-}
-
-// FieldCleared returns a boolean indicating if a field with the given name was
-// cleared in this mutation.
-func (m *ClientTemplateMutation) FieldCleared(name string) bool {
-	_, ok := m.clearedFields[name]
-	return ok
-}
-
-// ClearField clears the value of the field with the given name. It returns an
-// error if the field is not defined in the schema.
-func (m *ClientTemplateMutation) ClearField(name string) error {
-	switch name {
-	case clienttemplate.FieldDNSNames:
-		m.ClearDNSNames()
-		return nil
-	case clienttemplate.FieldIPAddresses:
-		m.ClearIPAddresses()
-		return nil
-	}
-	return fmt.Errorf("unknown ClientTemplate nullable field %s", name)
-}
-
-// ResetField resets all changes in the mutation for the field with the given name.
-// It returns an error if the field is not defined in the schema.
-func (m *ClientTemplateMutation) ResetField(name string) error {
-	switch name {
-	case clienttemplate.FieldCreatedAt:
-		m.ResetCreatedAt()
-		return nil
-	case clienttemplate.FieldName:
-		m.ResetName()
-		return nil
-	case clienttemplate.FieldCommonName:
-		m.ResetCommonName()
-		return nil
-	case clienttemplate.FieldTag:
-		m.ResetTag()
-		return nil
-	case clienttemplate.FieldValidity:
-		m.ResetValidity()
-		return nil
-	case clienttemplate.FieldDNSNames:
-		m.ResetDNSNames()
-		return nil
-	case clienttemplate.FieldAllowAdditionalDNSNames:
-		m.ResetAllowAdditionalDNSNames()
-		return nil
-	case clienttemplate.FieldIPAddresses:
-		m.ResetIPAddresses()
-		return nil
-	case clienttemplate.FieldAllowAdditionalIps:
-		m.ResetAllowAdditionalIps()
-		return nil
-	}
-	return fmt.Errorf("unknown ClientTemplate field %s", name)
-}
-
-// AddedEdges returns all edge names that were set/added in this mutation.
-func (m *ClientTemplateMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
-	if m.authority != nil {
-		edges = append(edges, clienttemplate.EdgeAuthority)
-	}
-	if m.api_keys != nil {
-		edges = append(edges, clienttemplate.EdgeAPIKeys)
-	}
-	return edges
-}
-
-// AddedIDs returns all IDs (to other nodes) that were added for the given edge
-// name in this mutation.
-func (m *ClientTemplateMutation) AddedIDs(name string) []ent.Value {
-	switch name {
-	case clienttemplate.EdgeAuthority:
-		if id := m.authority; id != nil {
-			return []ent.Value{*id}
-		}
-	case clienttemplate.EdgeAPIKeys:
-		ids := make([]ent.Value, 0, len(m.api_keys))
-		for id := range m.api_keys {
-			ids = append(ids, id)
-		}
-		return ids
-	}
-	return nil
-}
-
-// RemovedEdges returns all edge names that were removed in this mutation.
-func (m *ClientTemplateMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
-	if m.removedapi_keys != nil {
-		edges = append(edges, clienttemplate.EdgeAPIKeys)
-	}
-	return edges
-}
-
-// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
-// the given name in this mutation.
-func (m *ClientTemplateMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case clienttemplate.EdgeAPIKeys:
-		ids := make([]ent.Value, 0, len(m.removedapi_keys))
-		for id := range m.removedapi_keys {
-			ids = append(ids, id)
-		}
-		return ids
-	}
-	return nil
-}
-
-// ClearedEdges returns all edge names that were cleared in this mutation.
-func (m *ClientTemplateMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
-	if m.clearedauthority {
-		edges = append(edges, clienttemplate.EdgeAuthority)
-	}
-	if m.clearedapi_keys {
-		edges = append(edges, clienttemplate.EdgeAPIKeys)
-	}
-	return edges
-}
-
-// EdgeCleared returns a boolean which indicates if the edge with the given name
-// was cleared in this mutation.
-func (m *ClientTemplateMutation) EdgeCleared(name string) bool {
-	switch name {
-	case clienttemplate.EdgeAuthority:
-		return m.clearedauthority
-	case clienttemplate.EdgeAPIKeys:
-		return m.clearedapi_keys
-	}
-	return false
-}
-
-// ClearEdge clears the value of the edge with the given name. It returns an error
-// if that edge is not defined in the schema.
-func (m *ClientTemplateMutation) ClearEdge(name string) error {
-	switch name {
-	case clienttemplate.EdgeAuthority:
-		m.ClearAuthority()
-		return nil
-	}
-	return fmt.Errorf("unknown ClientTemplate unique edge %s", name)
-}
-
-// ResetEdge resets all changes to the edge with the given name in this mutation.
-// It returns an error if the edge is not defined in the schema.
-func (m *ClientTemplateMutation) ResetEdge(name string) error {
-	switch name {
-	case clienttemplate.EdgeAuthority:
-		m.ResetAuthority()
-		return nil
-	case clienttemplate.EdgeAPIKeys:
-		m.ResetAPIKeys()
-		return nil
-	}
-	return fmt.Errorf("unknown ClientTemplate edge %s", name)
 }
 
 // RootKeyMutation represents an operation that mutates the RootKey nodes in the graph.
@@ -3106,8 +1971,8 @@ func (m *RootKeyMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown RootKey edge %s", name)
 }
 
-// ServerTemplateMutation represents an operation that mutates the ServerTemplate nodes in the graph.
-type ServerTemplateMutation struct {
+// TemplateMutation represents an operation that mutates the Template nodes in the graph.
+type TemplateMutation struct {
 	config
 	op                         Op
 	typ                        string
@@ -3123,6 +1988,9 @@ type ServerTemplateMutation struct {
 	ip_addresses               *[]string
 	appendip_addresses         []string
 	allow_additional_ips       *bool
+	allow_override_common_name *bool
+	client                     *bool
+	server                     *bool
 	clearedFields              map[string]struct{}
 	authority                  *string
 	clearedauthority           bool
@@ -3130,21 +1998,21 @@ type ServerTemplateMutation struct {
 	removedapi_keys            map[string]struct{}
 	clearedapi_keys            bool
 	done                       bool
-	oldValue                   func(context.Context) (*ServerTemplate, error)
-	predicates                 []predicate.ServerTemplate
+	oldValue                   func(context.Context) (*Template, error)
+	predicates                 []predicate.Template
 }
 
-var _ ent.Mutation = (*ServerTemplateMutation)(nil)
+var _ ent.Mutation = (*TemplateMutation)(nil)
 
-// servertemplateOption allows management of the mutation configuration using functional options.
-type servertemplateOption func(*ServerTemplateMutation)
+// templateOption allows management of the mutation configuration using functional options.
+type templateOption func(*TemplateMutation)
 
-// newServerTemplateMutation creates new mutation for the ServerTemplate entity.
-func newServerTemplateMutation(c config, op Op, opts ...servertemplateOption) *ServerTemplateMutation {
-	m := &ServerTemplateMutation{
+// newTemplateMutation creates new mutation for the Template entity.
+func newTemplateMutation(c config, op Op, opts ...templateOption) *TemplateMutation {
+	m := &TemplateMutation{
 		config:        c,
 		op:            op,
-		typ:           TypeServerTemplate,
+		typ:           TypeTemplate,
 		clearedFields: make(map[string]struct{}),
 	}
 	for _, opt := range opts {
@@ -3153,20 +2021,20 @@ func newServerTemplateMutation(c config, op Op, opts ...servertemplateOption) *S
 	return m
 }
 
-// withServerTemplateID sets the ID field of the mutation.
-func withServerTemplateID(id string) servertemplateOption {
-	return func(m *ServerTemplateMutation) {
+// withTemplateID sets the ID field of the mutation.
+func withTemplateID(id string) templateOption {
+	return func(m *TemplateMutation) {
 		var (
 			err   error
 			once  sync.Once
-			value *ServerTemplate
+			value *Template
 		)
-		m.oldValue = func(ctx context.Context) (*ServerTemplate, error) {
+		m.oldValue = func(ctx context.Context) (*Template, error) {
 			once.Do(func() {
 				if m.done {
 					err = errors.New("querying old values post mutation is not allowed")
 				} else {
-					value, err = m.Client().ServerTemplate.Get(ctx, id)
+					value, err = m.Client().Template.Get(ctx, id)
 				}
 			})
 			return value, err
@@ -3175,10 +2043,10 @@ func withServerTemplateID(id string) servertemplateOption {
 	}
 }
 
-// withServerTemplate sets the old ServerTemplate of the mutation.
-func withServerTemplate(node *ServerTemplate) servertemplateOption {
-	return func(m *ServerTemplateMutation) {
-		m.oldValue = func(context.Context) (*ServerTemplate, error) {
+// withTemplate sets the old Template of the mutation.
+func withTemplate(node *Template) templateOption {
+	return func(m *TemplateMutation) {
+		m.oldValue = func(context.Context) (*Template, error) {
 			return node, nil
 		}
 		m.id = &node.ID
@@ -3187,7 +2055,7 @@ func withServerTemplate(node *ServerTemplate) servertemplateOption {
 
 // Client returns a new `ent.Client` from the mutation. If the mutation was
 // executed in a transaction (ent.Tx), a transactional client is returned.
-func (m ServerTemplateMutation) Client() *Client {
+func (m TemplateMutation) Client() *Client {
 	client := &Client{config: m.config}
 	client.init()
 	return client
@@ -3195,7 +2063,7 @@ func (m ServerTemplateMutation) Client() *Client {
 
 // Tx returns an `ent.Tx` for mutations that were executed in transactions;
 // it returns an error otherwise.
-func (m ServerTemplateMutation) Tx() (*Tx, error) {
+func (m TemplateMutation) Tx() (*Tx, error) {
 	if _, ok := m.driver.(*txDriver); !ok {
 		return nil, errors.New("ent: mutation is not running in a transaction")
 	}
@@ -3205,14 +2073,14 @@ func (m ServerTemplateMutation) Tx() (*Tx, error) {
 }
 
 // SetID sets the value of the id field. Note that this
-// operation is only accepted on creation of ServerTemplate entities.
-func (m *ServerTemplateMutation) SetID(id string) {
+// operation is only accepted on creation of Template entities.
+func (m *TemplateMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *ServerTemplateMutation) ID() (id string, exists bool) {
+func (m *TemplateMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -3223,7 +2091,7 @@ func (m *ServerTemplateMutation) ID() (id string, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *ServerTemplateMutation) IDs(ctx context.Context) ([]string, error) {
+func (m *TemplateMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
@@ -3232,19 +2100,19 @@ func (m *ServerTemplateMutation) IDs(ctx context.Context) ([]string, error) {
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
-		return m.Client().ServerTemplate.Query().Where(m.predicates...).IDs(ctx)
+		return m.Client().Template.Query().Where(m.predicates...).IDs(ctx)
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (m *ServerTemplateMutation) SetCreatedAt(t time.Time) {
+func (m *TemplateMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
 }
 
 // CreatedAt returns the value of the "created_at" field in the mutation.
-func (m *ServerTemplateMutation) CreatedAt() (r time.Time, exists bool) {
+func (m *TemplateMutation) CreatedAt() (r time.Time, exists bool) {
 	v := m.created_at
 	if v == nil {
 		return
@@ -3252,10 +2120,10 @@ func (m *ServerTemplateMutation) CreatedAt() (r time.Time, exists bool) {
 	return *v, true
 }
 
-// OldCreatedAt returns the old "created_at" field's value of the ServerTemplate entity.
-// If the ServerTemplate object wasn't provided to the builder, the object is fetched from the database.
+// OldCreatedAt returns the old "created_at" field's value of the Template entity.
+// If the Template object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ServerTemplateMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+func (m *TemplateMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
 	}
@@ -3270,17 +2138,17 @@ func (m *ServerTemplateMutation) OldCreatedAt(ctx context.Context) (v time.Time,
 }
 
 // ResetCreatedAt resets all changes to the "created_at" field.
-func (m *ServerTemplateMutation) ResetCreatedAt() {
+func (m *TemplateMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
 // SetName sets the "name" field.
-func (m *ServerTemplateMutation) SetName(s string) {
+func (m *TemplateMutation) SetName(s string) {
 	m.name = &s
 }
 
 // Name returns the value of the "name" field in the mutation.
-func (m *ServerTemplateMutation) Name() (r string, exists bool) {
+func (m *TemplateMutation) Name() (r string, exists bool) {
 	v := m.name
 	if v == nil {
 		return
@@ -3288,10 +2156,10 @@ func (m *ServerTemplateMutation) Name() (r string, exists bool) {
 	return *v, true
 }
 
-// OldName returns the old "name" field's value of the ServerTemplate entity.
-// If the ServerTemplate object wasn't provided to the builder, the object is fetched from the database.
+// OldName returns the old "name" field's value of the Template entity.
+// If the Template object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ServerTemplateMutation) OldName(ctx context.Context) (v string, err error) {
+func (m *TemplateMutation) OldName(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldName is only allowed on UpdateOne operations")
 	}
@@ -3306,17 +2174,17 @@ func (m *ServerTemplateMutation) OldName(ctx context.Context) (v string, err err
 }
 
 // ResetName resets all changes to the "name" field.
-func (m *ServerTemplateMutation) ResetName() {
+func (m *TemplateMutation) ResetName() {
 	m.name = nil
 }
 
 // SetCommonName sets the "common_name" field.
-func (m *ServerTemplateMutation) SetCommonName(s string) {
+func (m *TemplateMutation) SetCommonName(s string) {
 	m.common_name = &s
 }
 
 // CommonName returns the value of the "common_name" field in the mutation.
-func (m *ServerTemplateMutation) CommonName() (r string, exists bool) {
+func (m *TemplateMutation) CommonName() (r string, exists bool) {
 	v := m.common_name
 	if v == nil {
 		return
@@ -3324,10 +2192,10 @@ func (m *ServerTemplateMutation) CommonName() (r string, exists bool) {
 	return *v, true
 }
 
-// OldCommonName returns the old "common_name" field's value of the ServerTemplate entity.
-// If the ServerTemplate object wasn't provided to the builder, the object is fetched from the database.
+// OldCommonName returns the old "common_name" field's value of the Template entity.
+// If the Template object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ServerTemplateMutation) OldCommonName(ctx context.Context) (v string, err error) {
+func (m *TemplateMutation) OldCommonName(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldCommonName is only allowed on UpdateOne operations")
 	}
@@ -3342,17 +2210,17 @@ func (m *ServerTemplateMutation) OldCommonName(ctx context.Context) (v string, e
 }
 
 // ResetCommonName resets all changes to the "common_name" field.
-func (m *ServerTemplateMutation) ResetCommonName() {
+func (m *TemplateMutation) ResetCommonName() {
 	m.common_name = nil
 }
 
 // SetTag sets the "tag" field.
-func (m *ServerTemplateMutation) SetTag(s string) {
+func (m *TemplateMutation) SetTag(s string) {
 	m.tag = &s
 }
 
 // Tag returns the value of the "tag" field in the mutation.
-func (m *ServerTemplateMutation) Tag() (r string, exists bool) {
+func (m *TemplateMutation) Tag() (r string, exists bool) {
 	v := m.tag
 	if v == nil {
 		return
@@ -3360,10 +2228,10 @@ func (m *ServerTemplateMutation) Tag() (r string, exists bool) {
 	return *v, true
 }
 
-// OldTag returns the old "tag" field's value of the ServerTemplate entity.
-// If the ServerTemplate object wasn't provided to the builder, the object is fetched from the database.
+// OldTag returns the old "tag" field's value of the Template entity.
+// If the Template object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ServerTemplateMutation) OldTag(ctx context.Context) (v string, err error) {
+func (m *TemplateMutation) OldTag(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldTag is only allowed on UpdateOne operations")
 	}
@@ -3378,17 +2246,17 @@ func (m *ServerTemplateMutation) OldTag(ctx context.Context) (v string, err erro
 }
 
 // ResetTag resets all changes to the "tag" field.
-func (m *ServerTemplateMutation) ResetTag() {
+func (m *TemplateMutation) ResetTag() {
 	m.tag = nil
 }
 
 // SetValidity sets the "validity" field.
-func (m *ServerTemplateMutation) SetValidity(s string) {
+func (m *TemplateMutation) SetValidity(s string) {
 	m.validity = &s
 }
 
 // Validity returns the value of the "validity" field in the mutation.
-func (m *ServerTemplateMutation) Validity() (r string, exists bool) {
+func (m *TemplateMutation) Validity() (r string, exists bool) {
 	v := m.validity
 	if v == nil {
 		return
@@ -3396,10 +2264,10 @@ func (m *ServerTemplateMutation) Validity() (r string, exists bool) {
 	return *v, true
 }
 
-// OldValidity returns the old "validity" field's value of the ServerTemplate entity.
-// If the ServerTemplate object wasn't provided to the builder, the object is fetched from the database.
+// OldValidity returns the old "validity" field's value of the Template entity.
+// If the Template object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ServerTemplateMutation) OldValidity(ctx context.Context) (v string, err error) {
+func (m *TemplateMutation) OldValidity(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldValidity is only allowed on UpdateOne operations")
 	}
@@ -3414,18 +2282,18 @@ func (m *ServerTemplateMutation) OldValidity(ctx context.Context) (v string, err
 }
 
 // ResetValidity resets all changes to the "validity" field.
-func (m *ServerTemplateMutation) ResetValidity() {
+func (m *TemplateMutation) ResetValidity() {
 	m.validity = nil
 }
 
 // SetDNSNames sets the "dns_names" field.
-func (m *ServerTemplateMutation) SetDNSNames(s []string) {
+func (m *TemplateMutation) SetDNSNames(s []string) {
 	m.dns_names = &s
 	m.appenddns_names = nil
 }
 
 // DNSNames returns the value of the "dns_names" field in the mutation.
-func (m *ServerTemplateMutation) DNSNames() (r []string, exists bool) {
+func (m *TemplateMutation) DNSNames() (r []string, exists bool) {
 	v := m.dns_names
 	if v == nil {
 		return
@@ -3433,10 +2301,10 @@ func (m *ServerTemplateMutation) DNSNames() (r []string, exists bool) {
 	return *v, true
 }
 
-// OldDNSNames returns the old "dns_names" field's value of the ServerTemplate entity.
-// If the ServerTemplate object wasn't provided to the builder, the object is fetched from the database.
+// OldDNSNames returns the old "dns_names" field's value of the Template entity.
+// If the Template object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ServerTemplateMutation) OldDNSNames(ctx context.Context) (v []string, err error) {
+func (m *TemplateMutation) OldDNSNames(ctx context.Context) (v []string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldDNSNames is only allowed on UpdateOne operations")
 	}
@@ -3451,12 +2319,12 @@ func (m *ServerTemplateMutation) OldDNSNames(ctx context.Context) (v []string, e
 }
 
 // AppendDNSNames adds s to the "dns_names" field.
-func (m *ServerTemplateMutation) AppendDNSNames(s []string) {
+func (m *TemplateMutation) AppendDNSNames(s []string) {
 	m.appenddns_names = append(m.appenddns_names, s...)
 }
 
 // AppendedDNSNames returns the list of values that were appended to the "dns_names" field in this mutation.
-func (m *ServerTemplateMutation) AppendedDNSNames() ([]string, bool) {
+func (m *TemplateMutation) AppendedDNSNames() ([]string, bool) {
 	if len(m.appenddns_names) == 0 {
 		return nil, false
 	}
@@ -3464,32 +2332,32 @@ func (m *ServerTemplateMutation) AppendedDNSNames() ([]string, bool) {
 }
 
 // ClearDNSNames clears the value of the "dns_names" field.
-func (m *ServerTemplateMutation) ClearDNSNames() {
+func (m *TemplateMutation) ClearDNSNames() {
 	m.dns_names = nil
 	m.appenddns_names = nil
-	m.clearedFields[servertemplate.FieldDNSNames] = struct{}{}
+	m.clearedFields[template.FieldDNSNames] = struct{}{}
 }
 
 // DNSNamesCleared returns if the "dns_names" field was cleared in this mutation.
-func (m *ServerTemplateMutation) DNSNamesCleared() bool {
-	_, ok := m.clearedFields[servertemplate.FieldDNSNames]
+func (m *TemplateMutation) DNSNamesCleared() bool {
+	_, ok := m.clearedFields[template.FieldDNSNames]
 	return ok
 }
 
 // ResetDNSNames resets all changes to the "dns_names" field.
-func (m *ServerTemplateMutation) ResetDNSNames() {
+func (m *TemplateMutation) ResetDNSNames() {
 	m.dns_names = nil
 	m.appenddns_names = nil
-	delete(m.clearedFields, servertemplate.FieldDNSNames)
+	delete(m.clearedFields, template.FieldDNSNames)
 }
 
 // SetAllowAdditionalDNSNames sets the "allow_additional_dns_names" field.
-func (m *ServerTemplateMutation) SetAllowAdditionalDNSNames(b bool) {
+func (m *TemplateMutation) SetAllowAdditionalDNSNames(b bool) {
 	m.allow_additional_dns_names = &b
 }
 
 // AllowAdditionalDNSNames returns the value of the "allow_additional_dns_names" field in the mutation.
-func (m *ServerTemplateMutation) AllowAdditionalDNSNames() (r bool, exists bool) {
+func (m *TemplateMutation) AllowAdditionalDNSNames() (r bool, exists bool) {
 	v := m.allow_additional_dns_names
 	if v == nil {
 		return
@@ -3497,10 +2365,10 @@ func (m *ServerTemplateMutation) AllowAdditionalDNSNames() (r bool, exists bool)
 	return *v, true
 }
 
-// OldAllowAdditionalDNSNames returns the old "allow_additional_dns_names" field's value of the ServerTemplate entity.
-// If the ServerTemplate object wasn't provided to the builder, the object is fetched from the database.
+// OldAllowAdditionalDNSNames returns the old "allow_additional_dns_names" field's value of the Template entity.
+// If the Template object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ServerTemplateMutation) OldAllowAdditionalDNSNames(ctx context.Context) (v bool, err error) {
+func (m *TemplateMutation) OldAllowAdditionalDNSNames(ctx context.Context) (v bool, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldAllowAdditionalDNSNames is only allowed on UpdateOne operations")
 	}
@@ -3515,18 +2383,18 @@ func (m *ServerTemplateMutation) OldAllowAdditionalDNSNames(ctx context.Context)
 }
 
 // ResetAllowAdditionalDNSNames resets all changes to the "allow_additional_dns_names" field.
-func (m *ServerTemplateMutation) ResetAllowAdditionalDNSNames() {
+func (m *TemplateMutation) ResetAllowAdditionalDNSNames() {
 	m.allow_additional_dns_names = nil
 }
 
 // SetIPAddresses sets the "ip_addresses" field.
-func (m *ServerTemplateMutation) SetIPAddresses(s []string) {
+func (m *TemplateMutation) SetIPAddresses(s []string) {
 	m.ip_addresses = &s
 	m.appendip_addresses = nil
 }
 
 // IPAddresses returns the value of the "ip_addresses" field in the mutation.
-func (m *ServerTemplateMutation) IPAddresses() (r []string, exists bool) {
+func (m *TemplateMutation) IPAddresses() (r []string, exists bool) {
 	v := m.ip_addresses
 	if v == nil {
 		return
@@ -3534,10 +2402,10 @@ func (m *ServerTemplateMutation) IPAddresses() (r []string, exists bool) {
 	return *v, true
 }
 
-// OldIPAddresses returns the old "ip_addresses" field's value of the ServerTemplate entity.
-// If the ServerTemplate object wasn't provided to the builder, the object is fetched from the database.
+// OldIPAddresses returns the old "ip_addresses" field's value of the Template entity.
+// If the Template object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ServerTemplateMutation) OldIPAddresses(ctx context.Context) (v []string, err error) {
+func (m *TemplateMutation) OldIPAddresses(ctx context.Context) (v []string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldIPAddresses is only allowed on UpdateOne operations")
 	}
@@ -3552,12 +2420,12 @@ func (m *ServerTemplateMutation) OldIPAddresses(ctx context.Context) (v []string
 }
 
 // AppendIPAddresses adds s to the "ip_addresses" field.
-func (m *ServerTemplateMutation) AppendIPAddresses(s []string) {
+func (m *TemplateMutation) AppendIPAddresses(s []string) {
 	m.appendip_addresses = append(m.appendip_addresses, s...)
 }
 
 // AppendedIPAddresses returns the list of values that were appended to the "ip_addresses" field in this mutation.
-func (m *ServerTemplateMutation) AppendedIPAddresses() ([]string, bool) {
+func (m *TemplateMutation) AppendedIPAddresses() ([]string, bool) {
 	if len(m.appendip_addresses) == 0 {
 		return nil, false
 	}
@@ -3565,32 +2433,32 @@ func (m *ServerTemplateMutation) AppendedIPAddresses() ([]string, bool) {
 }
 
 // ClearIPAddresses clears the value of the "ip_addresses" field.
-func (m *ServerTemplateMutation) ClearIPAddresses() {
+func (m *TemplateMutation) ClearIPAddresses() {
 	m.ip_addresses = nil
 	m.appendip_addresses = nil
-	m.clearedFields[servertemplate.FieldIPAddresses] = struct{}{}
+	m.clearedFields[template.FieldIPAddresses] = struct{}{}
 }
 
 // IPAddressesCleared returns if the "ip_addresses" field was cleared in this mutation.
-func (m *ServerTemplateMutation) IPAddressesCleared() bool {
-	_, ok := m.clearedFields[servertemplate.FieldIPAddresses]
+func (m *TemplateMutation) IPAddressesCleared() bool {
+	_, ok := m.clearedFields[template.FieldIPAddresses]
 	return ok
 }
 
 // ResetIPAddresses resets all changes to the "ip_addresses" field.
-func (m *ServerTemplateMutation) ResetIPAddresses() {
+func (m *TemplateMutation) ResetIPAddresses() {
 	m.ip_addresses = nil
 	m.appendip_addresses = nil
-	delete(m.clearedFields, servertemplate.FieldIPAddresses)
+	delete(m.clearedFields, template.FieldIPAddresses)
 }
 
 // SetAllowAdditionalIps sets the "allow_additional_ips" field.
-func (m *ServerTemplateMutation) SetAllowAdditionalIps(b bool) {
+func (m *TemplateMutation) SetAllowAdditionalIps(b bool) {
 	m.allow_additional_ips = &b
 }
 
 // AllowAdditionalIps returns the value of the "allow_additional_ips" field in the mutation.
-func (m *ServerTemplateMutation) AllowAdditionalIps() (r bool, exists bool) {
+func (m *TemplateMutation) AllowAdditionalIps() (r bool, exists bool) {
 	v := m.allow_additional_ips
 	if v == nil {
 		return
@@ -3598,10 +2466,10 @@ func (m *ServerTemplateMutation) AllowAdditionalIps() (r bool, exists bool) {
 	return *v, true
 }
 
-// OldAllowAdditionalIps returns the old "allow_additional_ips" field's value of the ServerTemplate entity.
-// If the ServerTemplate object wasn't provided to the builder, the object is fetched from the database.
+// OldAllowAdditionalIps returns the old "allow_additional_ips" field's value of the Template entity.
+// If the Template object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ServerTemplateMutation) OldAllowAdditionalIps(ctx context.Context) (v bool, err error) {
+func (m *TemplateMutation) OldAllowAdditionalIps(ctx context.Context) (v bool, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldAllowAdditionalIps is only allowed on UpdateOne operations")
 	}
@@ -3616,27 +2484,135 @@ func (m *ServerTemplateMutation) OldAllowAdditionalIps(ctx context.Context) (v b
 }
 
 // ResetAllowAdditionalIps resets all changes to the "allow_additional_ips" field.
-func (m *ServerTemplateMutation) ResetAllowAdditionalIps() {
+func (m *TemplateMutation) ResetAllowAdditionalIps() {
 	m.allow_additional_ips = nil
 }
 
+// SetAllowOverrideCommonName sets the "allow_override_common_name" field.
+func (m *TemplateMutation) SetAllowOverrideCommonName(b bool) {
+	m.allow_override_common_name = &b
+}
+
+// AllowOverrideCommonName returns the value of the "allow_override_common_name" field in the mutation.
+func (m *TemplateMutation) AllowOverrideCommonName() (r bool, exists bool) {
+	v := m.allow_override_common_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAllowOverrideCommonName returns the old "allow_override_common_name" field's value of the Template entity.
+// If the Template object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TemplateMutation) OldAllowOverrideCommonName(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAllowOverrideCommonName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAllowOverrideCommonName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAllowOverrideCommonName: %w", err)
+	}
+	return oldValue.AllowOverrideCommonName, nil
+}
+
+// ResetAllowOverrideCommonName resets all changes to the "allow_override_common_name" field.
+func (m *TemplateMutation) ResetAllowOverrideCommonName() {
+	m.allow_override_common_name = nil
+}
+
+// SetClient sets the "client" field.
+func (m *TemplateMutation) SetClient(b bool) {
+	m.client = &b
+}
+
+// GetClient returns the value of the "client" field in the mutation.
+func (m *TemplateMutation) GetClient() (r bool, exists bool) {
+	v := m.client
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClient returns the old "client" field's value of the Template entity.
+// If the Template object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TemplateMutation) OldClient(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClient is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClient requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClient: %w", err)
+	}
+	return oldValue.Client, nil
+}
+
+// ResetClient resets all changes to the "client" field.
+func (m *TemplateMutation) ResetClient() {
+	m.client = nil
+}
+
+// SetServer sets the "server" field.
+func (m *TemplateMutation) SetServer(b bool) {
+	m.server = &b
+}
+
+// Server returns the value of the "server" field in the mutation.
+func (m *TemplateMutation) Server() (r bool, exists bool) {
+	v := m.server
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldServer returns the old "server" field's value of the Template entity.
+// If the Template object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TemplateMutation) OldServer(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldServer is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldServer requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldServer: %w", err)
+	}
+	return oldValue.Server, nil
+}
+
+// ResetServer resets all changes to the "server" field.
+func (m *TemplateMutation) ResetServer() {
+	m.server = nil
+}
+
 // SetAuthorityID sets the "authority" edge to the Authority entity by id.
-func (m *ServerTemplateMutation) SetAuthorityID(id string) {
+func (m *TemplateMutation) SetAuthorityID(id string) {
 	m.authority = &id
 }
 
 // ClearAuthority clears the "authority" edge to the Authority entity.
-func (m *ServerTemplateMutation) ClearAuthority() {
+func (m *TemplateMutation) ClearAuthority() {
 	m.clearedauthority = true
 }
 
 // AuthorityCleared reports if the "authority" edge to the Authority entity was cleared.
-func (m *ServerTemplateMutation) AuthorityCleared() bool {
+func (m *TemplateMutation) AuthorityCleared() bool {
 	return m.clearedauthority
 }
 
 // AuthorityID returns the "authority" edge ID in the mutation.
-func (m *ServerTemplateMutation) AuthorityID() (id string, exists bool) {
+func (m *TemplateMutation) AuthorityID() (id string, exists bool) {
 	if m.authority != nil {
 		return *m.authority, true
 	}
@@ -3646,7 +2622,7 @@ func (m *ServerTemplateMutation) AuthorityID() (id string, exists bool) {
 // AuthorityIDs returns the "authority" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
 // AuthorityID instead. It exists only for internal usage by the builders.
-func (m *ServerTemplateMutation) AuthorityIDs() (ids []string) {
+func (m *TemplateMutation) AuthorityIDs() (ids []string) {
 	if id := m.authority; id != nil {
 		ids = append(ids, *id)
 	}
@@ -3654,13 +2630,13 @@ func (m *ServerTemplateMutation) AuthorityIDs() (ids []string) {
 }
 
 // ResetAuthority resets all changes to the "authority" edge.
-func (m *ServerTemplateMutation) ResetAuthority() {
+func (m *TemplateMutation) ResetAuthority() {
 	m.authority = nil
 	m.clearedauthority = false
 }
 
 // AddAPIKeyIDs adds the "api_keys" edge to the APIKey entity by ids.
-func (m *ServerTemplateMutation) AddAPIKeyIDs(ids ...string) {
+func (m *TemplateMutation) AddAPIKeyIDs(ids ...string) {
 	if m.api_keys == nil {
 		m.api_keys = make(map[string]struct{})
 	}
@@ -3670,17 +2646,17 @@ func (m *ServerTemplateMutation) AddAPIKeyIDs(ids ...string) {
 }
 
 // ClearAPIKeys clears the "api_keys" edge to the APIKey entity.
-func (m *ServerTemplateMutation) ClearAPIKeys() {
+func (m *TemplateMutation) ClearAPIKeys() {
 	m.clearedapi_keys = true
 }
 
 // APIKeysCleared reports if the "api_keys" edge to the APIKey entity was cleared.
-func (m *ServerTemplateMutation) APIKeysCleared() bool {
+func (m *TemplateMutation) APIKeysCleared() bool {
 	return m.clearedapi_keys
 }
 
 // RemoveAPIKeyIDs removes the "api_keys" edge to the APIKey entity by IDs.
-func (m *ServerTemplateMutation) RemoveAPIKeyIDs(ids ...string) {
+func (m *TemplateMutation) RemoveAPIKeyIDs(ids ...string) {
 	if m.removedapi_keys == nil {
 		m.removedapi_keys = make(map[string]struct{})
 	}
@@ -3691,7 +2667,7 @@ func (m *ServerTemplateMutation) RemoveAPIKeyIDs(ids ...string) {
 }
 
 // RemovedAPIKeys returns the removed IDs of the "api_keys" edge to the APIKey entity.
-func (m *ServerTemplateMutation) RemovedAPIKeysIDs() (ids []string) {
+func (m *TemplateMutation) RemovedAPIKeysIDs() (ids []string) {
 	for id := range m.removedapi_keys {
 		ids = append(ids, id)
 	}
@@ -3699,7 +2675,7 @@ func (m *ServerTemplateMutation) RemovedAPIKeysIDs() (ids []string) {
 }
 
 // APIKeysIDs returns the "api_keys" edge IDs in the mutation.
-func (m *ServerTemplateMutation) APIKeysIDs() (ids []string) {
+func (m *TemplateMutation) APIKeysIDs() (ids []string) {
 	for id := range m.api_keys {
 		ids = append(ids, id)
 	}
@@ -3707,21 +2683,21 @@ func (m *ServerTemplateMutation) APIKeysIDs() (ids []string) {
 }
 
 // ResetAPIKeys resets all changes to the "api_keys" edge.
-func (m *ServerTemplateMutation) ResetAPIKeys() {
+func (m *TemplateMutation) ResetAPIKeys() {
 	m.api_keys = nil
 	m.clearedapi_keys = false
 	m.removedapi_keys = nil
 }
 
-// Where appends a list predicates to the ServerTemplateMutation builder.
-func (m *ServerTemplateMutation) Where(ps ...predicate.ServerTemplate) {
+// Where appends a list predicates to the TemplateMutation builder.
+func (m *TemplateMutation) Where(ps ...predicate.Template) {
 	m.predicates = append(m.predicates, ps...)
 }
 
-// WhereP appends storage-level predicates to the ServerTemplateMutation builder. Using this method,
+// WhereP appends storage-level predicates to the TemplateMutation builder. Using this method,
 // users can use type-assertion to append predicates that do not depend on any generated package.
-func (m *ServerTemplateMutation) WhereP(ps ...func(*sql.Selector)) {
-	p := make([]predicate.ServerTemplate, len(ps))
+func (m *TemplateMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Template, len(ps))
 	for i := range ps {
 		p[i] = ps[i]
 	}
@@ -3729,51 +2705,60 @@ func (m *ServerTemplateMutation) WhereP(ps ...func(*sql.Selector)) {
 }
 
 // Op returns the operation name.
-func (m *ServerTemplateMutation) Op() Op {
+func (m *TemplateMutation) Op() Op {
 	return m.op
 }
 
 // SetOp allows setting the mutation operation.
-func (m *ServerTemplateMutation) SetOp(op Op) {
+func (m *TemplateMutation) SetOp(op Op) {
 	m.op = op
 }
 
-// Type returns the node type of this mutation (ServerTemplate).
-func (m *ServerTemplateMutation) Type() string {
+// Type returns the node type of this mutation (Template).
+func (m *TemplateMutation) Type() string {
 	return m.typ
 }
 
 // Fields returns all fields that were changed during this mutation. Note that in
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
-func (m *ServerTemplateMutation) Fields() []string {
-	fields := make([]string, 0, 9)
+func (m *TemplateMutation) Fields() []string {
+	fields := make([]string, 0, 12)
 	if m.created_at != nil {
-		fields = append(fields, servertemplate.FieldCreatedAt)
+		fields = append(fields, template.FieldCreatedAt)
 	}
 	if m.name != nil {
-		fields = append(fields, servertemplate.FieldName)
+		fields = append(fields, template.FieldName)
 	}
 	if m.common_name != nil {
-		fields = append(fields, servertemplate.FieldCommonName)
+		fields = append(fields, template.FieldCommonName)
 	}
 	if m.tag != nil {
-		fields = append(fields, servertemplate.FieldTag)
+		fields = append(fields, template.FieldTag)
 	}
 	if m.validity != nil {
-		fields = append(fields, servertemplate.FieldValidity)
+		fields = append(fields, template.FieldValidity)
 	}
 	if m.dns_names != nil {
-		fields = append(fields, servertemplate.FieldDNSNames)
+		fields = append(fields, template.FieldDNSNames)
 	}
 	if m.allow_additional_dns_names != nil {
-		fields = append(fields, servertemplate.FieldAllowAdditionalDNSNames)
+		fields = append(fields, template.FieldAllowAdditionalDNSNames)
 	}
 	if m.ip_addresses != nil {
-		fields = append(fields, servertemplate.FieldIPAddresses)
+		fields = append(fields, template.FieldIPAddresses)
 	}
 	if m.allow_additional_ips != nil {
-		fields = append(fields, servertemplate.FieldAllowAdditionalIps)
+		fields = append(fields, template.FieldAllowAdditionalIps)
+	}
+	if m.allow_override_common_name != nil {
+		fields = append(fields, template.FieldAllowOverrideCommonName)
+	}
+	if m.client != nil {
+		fields = append(fields, template.FieldClient)
+	}
+	if m.server != nil {
+		fields = append(fields, template.FieldServer)
 	}
 	return fields
 }
@@ -3781,26 +2766,32 @@ func (m *ServerTemplateMutation) Fields() []string {
 // Field returns the value of a field with the given name. The second boolean
 // return value indicates that this field was not set, or was not defined in the
 // schema.
-func (m *ServerTemplateMutation) Field(name string) (ent.Value, bool) {
+func (m *TemplateMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case servertemplate.FieldCreatedAt:
+	case template.FieldCreatedAt:
 		return m.CreatedAt()
-	case servertemplate.FieldName:
+	case template.FieldName:
 		return m.Name()
-	case servertemplate.FieldCommonName:
+	case template.FieldCommonName:
 		return m.CommonName()
-	case servertemplate.FieldTag:
+	case template.FieldTag:
 		return m.Tag()
-	case servertemplate.FieldValidity:
+	case template.FieldValidity:
 		return m.Validity()
-	case servertemplate.FieldDNSNames:
+	case template.FieldDNSNames:
 		return m.DNSNames()
-	case servertemplate.FieldAllowAdditionalDNSNames:
+	case template.FieldAllowAdditionalDNSNames:
 		return m.AllowAdditionalDNSNames()
-	case servertemplate.FieldIPAddresses:
+	case template.FieldIPAddresses:
 		return m.IPAddresses()
-	case servertemplate.FieldAllowAdditionalIps:
+	case template.FieldAllowAdditionalIps:
 		return m.AllowAdditionalIps()
+	case template.FieldAllowOverrideCommonName:
+		return m.AllowOverrideCommonName()
+	case template.FieldClient:
+		return m.GetClient()
+	case template.FieldServer:
+		return m.Server()
 	}
 	return nil, false
 }
@@ -3808,214 +2799,250 @@ func (m *ServerTemplateMutation) Field(name string) (ent.Value, bool) {
 // OldField returns the old value of the field from the database. An error is
 // returned if the mutation operation is not UpdateOne, or the query to the
 // database failed.
-func (m *ServerTemplateMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+func (m *TemplateMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case servertemplate.FieldCreatedAt:
+	case template.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
-	case servertemplate.FieldName:
+	case template.FieldName:
 		return m.OldName(ctx)
-	case servertemplate.FieldCommonName:
+	case template.FieldCommonName:
 		return m.OldCommonName(ctx)
-	case servertemplate.FieldTag:
+	case template.FieldTag:
 		return m.OldTag(ctx)
-	case servertemplate.FieldValidity:
+	case template.FieldValidity:
 		return m.OldValidity(ctx)
-	case servertemplate.FieldDNSNames:
+	case template.FieldDNSNames:
 		return m.OldDNSNames(ctx)
-	case servertemplate.FieldAllowAdditionalDNSNames:
+	case template.FieldAllowAdditionalDNSNames:
 		return m.OldAllowAdditionalDNSNames(ctx)
-	case servertemplate.FieldIPAddresses:
+	case template.FieldIPAddresses:
 		return m.OldIPAddresses(ctx)
-	case servertemplate.FieldAllowAdditionalIps:
+	case template.FieldAllowAdditionalIps:
 		return m.OldAllowAdditionalIps(ctx)
+	case template.FieldAllowOverrideCommonName:
+		return m.OldAllowOverrideCommonName(ctx)
+	case template.FieldClient:
+		return m.OldClient(ctx)
+	case template.FieldServer:
+		return m.OldServer(ctx)
 	}
-	return nil, fmt.Errorf("unknown ServerTemplate field %s", name)
+	return nil, fmt.Errorf("unknown Template field %s", name)
 }
 
 // SetField sets the value of a field with the given name. It returns an error if
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
-func (m *ServerTemplateMutation) SetField(name string, value ent.Value) error {
+func (m *TemplateMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case servertemplate.FieldCreatedAt:
+	case template.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCreatedAt(v)
 		return nil
-	case servertemplate.FieldName:
+	case template.FieldName:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetName(v)
 		return nil
-	case servertemplate.FieldCommonName:
+	case template.FieldCommonName:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCommonName(v)
 		return nil
-	case servertemplate.FieldTag:
+	case template.FieldTag:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTag(v)
 		return nil
-	case servertemplate.FieldValidity:
+	case template.FieldValidity:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetValidity(v)
 		return nil
-	case servertemplate.FieldDNSNames:
+	case template.FieldDNSNames:
 		v, ok := value.([]string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDNSNames(v)
 		return nil
-	case servertemplate.FieldAllowAdditionalDNSNames:
+	case template.FieldAllowAdditionalDNSNames:
 		v, ok := value.(bool)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAllowAdditionalDNSNames(v)
 		return nil
-	case servertemplate.FieldIPAddresses:
+	case template.FieldIPAddresses:
 		v, ok := value.([]string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIPAddresses(v)
 		return nil
-	case servertemplate.FieldAllowAdditionalIps:
+	case template.FieldAllowAdditionalIps:
 		v, ok := value.(bool)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAllowAdditionalIps(v)
 		return nil
+	case template.FieldAllowOverrideCommonName:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAllowOverrideCommonName(v)
+		return nil
+	case template.FieldClient:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClient(v)
+		return nil
+	case template.FieldServer:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetServer(v)
+		return nil
 	}
-	return fmt.Errorf("unknown ServerTemplate field %s", name)
+	return fmt.Errorf("unknown Template field %s", name)
 }
 
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
-func (m *ServerTemplateMutation) AddedFields() []string {
+func (m *TemplateMutation) AddedFields() []string {
 	return nil
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
-func (m *ServerTemplateMutation) AddedField(name string) (ent.Value, bool) {
+func (m *TemplateMutation) AddedField(name string) (ent.Value, bool) {
 	return nil, false
 }
 
 // AddField adds the value to the field with the given name. It returns an error if
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
-func (m *ServerTemplateMutation) AddField(name string, value ent.Value) error {
+func (m *TemplateMutation) AddField(name string, value ent.Value) error {
 	switch name {
 	}
-	return fmt.Errorf("unknown ServerTemplate numeric field %s", name)
+	return fmt.Errorf("unknown Template numeric field %s", name)
 }
 
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
-func (m *ServerTemplateMutation) ClearedFields() []string {
+func (m *TemplateMutation) ClearedFields() []string {
 	var fields []string
-	if m.FieldCleared(servertemplate.FieldDNSNames) {
-		fields = append(fields, servertemplate.FieldDNSNames)
+	if m.FieldCleared(template.FieldDNSNames) {
+		fields = append(fields, template.FieldDNSNames)
 	}
-	if m.FieldCleared(servertemplate.FieldIPAddresses) {
-		fields = append(fields, servertemplate.FieldIPAddresses)
+	if m.FieldCleared(template.FieldIPAddresses) {
+		fields = append(fields, template.FieldIPAddresses)
 	}
 	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
 // cleared in this mutation.
-func (m *ServerTemplateMutation) FieldCleared(name string) bool {
+func (m *TemplateMutation) FieldCleared(name string) bool {
 	_, ok := m.clearedFields[name]
 	return ok
 }
 
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
-func (m *ServerTemplateMutation) ClearField(name string) error {
+func (m *TemplateMutation) ClearField(name string) error {
 	switch name {
-	case servertemplate.FieldDNSNames:
+	case template.FieldDNSNames:
 		m.ClearDNSNames()
 		return nil
-	case servertemplate.FieldIPAddresses:
+	case template.FieldIPAddresses:
 		m.ClearIPAddresses()
 		return nil
 	}
-	return fmt.Errorf("unknown ServerTemplate nullable field %s", name)
+	return fmt.Errorf("unknown Template nullable field %s", name)
 }
 
 // ResetField resets all changes in the mutation for the field with the given name.
 // It returns an error if the field is not defined in the schema.
-func (m *ServerTemplateMutation) ResetField(name string) error {
+func (m *TemplateMutation) ResetField(name string) error {
 	switch name {
-	case servertemplate.FieldCreatedAt:
+	case template.FieldCreatedAt:
 		m.ResetCreatedAt()
 		return nil
-	case servertemplate.FieldName:
+	case template.FieldName:
 		m.ResetName()
 		return nil
-	case servertemplate.FieldCommonName:
+	case template.FieldCommonName:
 		m.ResetCommonName()
 		return nil
-	case servertemplate.FieldTag:
+	case template.FieldTag:
 		m.ResetTag()
 		return nil
-	case servertemplate.FieldValidity:
+	case template.FieldValidity:
 		m.ResetValidity()
 		return nil
-	case servertemplate.FieldDNSNames:
+	case template.FieldDNSNames:
 		m.ResetDNSNames()
 		return nil
-	case servertemplate.FieldAllowAdditionalDNSNames:
+	case template.FieldAllowAdditionalDNSNames:
 		m.ResetAllowAdditionalDNSNames()
 		return nil
-	case servertemplate.FieldIPAddresses:
+	case template.FieldIPAddresses:
 		m.ResetIPAddresses()
 		return nil
-	case servertemplate.FieldAllowAdditionalIps:
+	case template.FieldAllowAdditionalIps:
 		m.ResetAllowAdditionalIps()
 		return nil
+	case template.FieldAllowOverrideCommonName:
+		m.ResetAllowOverrideCommonName()
+		return nil
+	case template.FieldClient:
+		m.ResetClient()
+		return nil
+	case template.FieldServer:
+		m.ResetServer()
+		return nil
 	}
-	return fmt.Errorf("unknown ServerTemplate field %s", name)
+	return fmt.Errorf("unknown Template field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
-func (m *ServerTemplateMutation) AddedEdges() []string {
+func (m *TemplateMutation) AddedEdges() []string {
 	edges := make([]string, 0, 2)
 	if m.authority != nil {
-		edges = append(edges, servertemplate.EdgeAuthority)
+		edges = append(edges, template.EdgeAuthority)
 	}
 	if m.api_keys != nil {
-		edges = append(edges, servertemplate.EdgeAPIKeys)
+		edges = append(edges, template.EdgeAPIKeys)
 	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
-func (m *ServerTemplateMutation) AddedIDs(name string) []ent.Value {
+func (m *TemplateMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case servertemplate.EdgeAuthority:
+	case template.EdgeAuthority:
 		if id := m.authority; id != nil {
 			return []ent.Value{*id}
 		}
-	case servertemplate.EdgeAPIKeys:
+	case template.EdgeAPIKeys:
 		ids := make([]ent.Value, 0, len(m.api_keys))
 		for id := range m.api_keys {
 			ids = append(ids, id)
@@ -4026,19 +3053,19 @@ func (m *ServerTemplateMutation) AddedIDs(name string) []ent.Value {
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
-func (m *ServerTemplateMutation) RemovedEdges() []string {
+func (m *TemplateMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 2)
 	if m.removedapi_keys != nil {
-		edges = append(edges, servertemplate.EdgeAPIKeys)
+		edges = append(edges, template.EdgeAPIKeys)
 	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
-func (m *ServerTemplateMutation) RemovedIDs(name string) []ent.Value {
+func (m *TemplateMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case servertemplate.EdgeAPIKeys:
+	case template.EdgeAPIKeys:
 		ids := make([]ent.Value, 0, len(m.removedapi_keys))
 		for id := range m.removedapi_keys {
 			ids = append(ids, id)
@@ -4049,24 +3076,24 @@ func (m *ServerTemplateMutation) RemovedIDs(name string) []ent.Value {
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
-func (m *ServerTemplateMutation) ClearedEdges() []string {
+func (m *TemplateMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 2)
 	if m.clearedauthority {
-		edges = append(edges, servertemplate.EdgeAuthority)
+		edges = append(edges, template.EdgeAuthority)
 	}
 	if m.clearedapi_keys {
-		edges = append(edges, servertemplate.EdgeAPIKeys)
+		edges = append(edges, template.EdgeAPIKeys)
 	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
-func (m *ServerTemplateMutation) EdgeCleared(name string) bool {
+func (m *TemplateMutation) EdgeCleared(name string) bool {
 	switch name {
-	case servertemplate.EdgeAuthority:
+	case template.EdgeAuthority:
 		return m.clearedauthority
-	case servertemplate.EdgeAPIKeys:
+	case template.EdgeAPIKeys:
 		return m.clearedapi_keys
 	}
 	return false
@@ -4074,27 +3101,27 @@ func (m *ServerTemplateMutation) EdgeCleared(name string) bool {
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
-func (m *ServerTemplateMutation) ClearEdge(name string) error {
+func (m *TemplateMutation) ClearEdge(name string) error {
 	switch name {
-	case servertemplate.EdgeAuthority:
+	case template.EdgeAuthority:
 		m.ClearAuthority()
 		return nil
 	}
-	return fmt.Errorf("unknown ServerTemplate unique edge %s", name)
+	return fmt.Errorf("unknown Template unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
-func (m *ServerTemplateMutation) ResetEdge(name string) error {
+func (m *TemplateMutation) ResetEdge(name string) error {
 	switch name {
-	case servertemplate.EdgeAuthority:
+	case template.EdgeAuthority:
 		m.ResetAuthority()
 		return nil
-	case servertemplate.EdgeAPIKeys:
+	case template.EdgeAPIKeys:
 		m.ResetAPIKeys()
 		return nil
 	}
-	return fmt.Errorf("unknown ServerTemplate edge %s", name)
+	return fmt.Errorf("unknown Template edge %s", name)
 }
 
 // UserKeyMutation represents an operation that mutates the UserKey nodes in the graph.

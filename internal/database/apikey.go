@@ -88,7 +88,7 @@ func (d *Database) ListAPIKeys(ctx context.Context, authorityName string, uk *en
 }
 
 func (d *Database) DeleteAPIKeyByName(ctx context.Context, name string, authorityName string, uk *ent.UserKey) error {
-	_, err := d.sql.APIKey.Delete().Where(apikey.Name(name), apikey.HasAuthorityWith(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID)))).Exec(ctx)
+	n, err := d.sql.APIKey.Delete().Where(apikey.Name(name), apikey.HasAuthorityWith(authority.Name(authorityName), authority.HasUserKeyWith(userkey.ID(uk.ID)))).Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return ErrNotFound
@@ -99,6 +99,10 @@ func (d *Database) DeleteAPIKeyByName(ctx context.Context, name string, authorit
 		}
 
 		return err
+	}
+
+	if n == 0 {
+		return ErrNotFound
 	}
 
 	return nil
